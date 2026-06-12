@@ -1,0 +1,24 @@
+C4Container
+    title Container Diagram - Tesoreria Guarani Service
+
+    Person(user, "Usuario", "Consume APIs")
+
+    System_Boundary(guarani, "Tesoreria Guarani Service") {
+        Container(api, "API REST", "Spring Boot, Tomcat", "Expone endpoints REST en puerto 8080")
+        Container(controller, "Controllers", "Spring MVC", "Maneja solicitudes HTTP")
+        Container(service, "Services", "Java", "Lógica de negocio")
+        Container(client, "Feign Clients", "OpenFeign", "Clientes HTTP declarativos")
+        Container(cache, "Cache Layer", "Caffeine", "Caché en memoria")
+        Container(openapi, "API Docs", "SpringDoc OpenAPI", "Documentación Swagger UI")
+    }
+
+    System_Ext(consul, "Consul", "Service discovery :8500")
+    System_Ext(internal_svc, "Servicios Internos", "Microservicios del ecosistema")
+
+    Rel(user, api, "HTTP", "REST/JSON")
+    Rel(api, controller, "Enrutamiento")
+    Rel(controller, service, "Llamadas")
+    Rel(service, client, "Invocación")
+    Rel(service, cache, "Cache consultas")
+    Rel(client, internal_svc, "HTTP/Feign")
+    Rel(guarani, consul, "Registro", "HTTP")

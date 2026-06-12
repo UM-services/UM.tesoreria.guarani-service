@@ -1,0 +1,13 @@
+C4Context
+    title System Context - Tesoreria Guarani Service
+
+    Person(user, "Usuario", "Consume APIs del servicio de tesorería")
+
+    System(guarani, "Tesoreria Guarani Service", "Microservicio de tesorería para el sistema Guarani")
+
+    System_Ext(consul, "HashiCorp Consul", "Service discovery y registro")
+    System_Ext(feign_clients, "Servicios Internos", "Otros microservicios (Feign clients)")
+
+    Rel(user, guarani, "Consulta endpoints REST", "HTTP/JSON")
+    Rel(guarani, consul, "Registro y descubrimiento", "HTTP/8500")
+    Rel(guarani, feign_clients, "Comunicación interna", "HTTP/OpenFeign")

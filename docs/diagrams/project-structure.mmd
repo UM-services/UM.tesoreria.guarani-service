@@ -1,0 +1,16 @@
+classDiagram
+    class GuaraniApplication {
+        +main(String[] args) void
+    }
+
+    class GuaraniConfiguration {
+        <<Configuration>>
+        <<EnableFeignClients>>
+    }
+
+    class GuaraniApplicationTests {
+        <<SpringBootTest>>
+        +contextLoads() void
+    }
+
+    GuaraniApplication --> GuaraniConfiguration : uses
