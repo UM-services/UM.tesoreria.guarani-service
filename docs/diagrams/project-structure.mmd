@@ -8,6 +8,11 @@ classDiagram
         <<EnableFeignClients>>
     }
 
+    class HelloTest {
+        <<RestController>>
+        +test() ResponseEntity~String~
+    }
+
     class GuaraniApplicationTests {
         <<SpringBootTest>>
         +contextLoads() void

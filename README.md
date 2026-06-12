@@ -3,7 +3,7 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.7-brightgreen)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-25-orange)](https://openjdk.org/projects/jdk/25/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.1.0-blue)](pom.xml)
+[![Version](https://img.shields.io/badge/version-0.2.0-blue)](pom.xml)
 
 Microservicio de tesorería integrado con el sistema Guarani. Proporciona APIs REST para la gestión de operaciones de tesorería, con registro en Consul, comunicación Feign con otros microservicios, y documentación OpenAPI.
 
@@ -56,6 +56,19 @@ C4Container
     Rel(guarani, consul, "Registro", "HTTP")
 ```
 
+### Diagrama de Secuencia — Endpoint Hello
+
+```mermaid
+sequenceDiagram
+    participant User as Usuario
+    participant Hello as HelloTest Controller
+    participant SB as Spring Boot
+
+    User->>Hello: GET /api/tesoreria/guarani/hello/test
+    Hello->>Hello: test()
+    Hello-->>User: 200 OK "hello"
+```
+
 ### Estructura del Proyecto
 
 ```mermaid
@@ -67,6 +80,11 @@ classDiagram
     class GuaraniConfiguration {
         <<Configuration>>
         <<EnableFeignClients>>
+    }
+
+    class HelloTest {
+        <<RestController>>
+        +test() ResponseEntity~String~
     }
 
     class GuaraniApplicationTests {
@@ -82,8 +100,10 @@ src/
 ├── main/
 │   ├── java/um/tesoreria/guarani/
 │   │   ├── GuaraniApplication.java
-│   │   └── configuration/
-│   │       └── GuaraniConfiguration.java
+│   │   ├── configuration/
+│   │   │   └── GuaraniConfiguration.java
+│   │   └── test/
+│   │       └── HelloTest.java
 │   └── resources/
 │       ├── bootstrap.yml
 │       └── banner.txt

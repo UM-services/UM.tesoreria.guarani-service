@@ -1,0 +1,8 @@
+sequenceDiagram
+    participant User as Usuario
+    participant Hello as HelloTest Controller
+    participant SB as Spring Boot
+
+    User->>Hello: GET /api/tesoreria/guarani/hello/test
+    Hello->>Hello: test()
+    Hello-->>User: 200 OK "hello"
