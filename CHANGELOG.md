@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0] - 2026-06-12
+
+### Added
+- New REST controller `HelloTest` with endpoint `GET /api/tesoreria/guarani/hello/test` for service health verification
+- GitHub Actions CI/CD pipeline (`maven.yml`) with SonarCloud analysis, Docker image build and push
+- GitHub Actions documentation pipeline (`generate-docs.yml`) with Mermaid diagram injection and GitHub Pages deployment
+
 ## [0.1.0] - 2026-06-12
 
 ### Added
