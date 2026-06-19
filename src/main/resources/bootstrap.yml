@@ -1,6 +1,10 @@
 app:
   port: ${APP_PORT:8080}
   logging: debug
+  server: ${APP_SERVER:server}
+  database: ${APP_DATABASE:database}
+  username: ${APP_USERNAME:username}
+  password: ${APP_PASSWORD:password}
   consul:
     host: consul-service
     port: 8500
@@ -11,6 +15,21 @@ server:
 spring:
   application:
     name: tesoreria-guarani-service
+  datasource:
+    url: jdbc:postgresql://${app.server}/${app.database}
+    username: ${app.username}
+    password: ${app.password}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          lob:
+            non_contextual_creation: true
   cloud:
     openfeign:
       client:
@@ -23,7 +42,7 @@ spring:
       port: ${app.consul.port}
       discovery:
         prefer-ip-address: true
-        tags: tesoreria,report
+        tags: tesoreria,guarani
 
 logging:
   level:
