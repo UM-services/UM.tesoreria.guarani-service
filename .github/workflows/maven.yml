@@ -1,5 +1,5 @@
 
-name: UM.tesoreria.umhub-service Build JVM Image
+name: UM.tesoreria.guarani-service Build JVM Image
 
 on:
   push:
