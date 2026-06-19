@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.3.0] - 2026-06-18
+
+### Added
+- New hexagonal architecture modules:
+  - **AlumnoGuarani**: Domain model, use case, service, JPA adapter, REST controller (`GET /api/tesoreria/guarani/alumno/{alumno}`)
+  - **PersonaGuarani**: Domain model, use case, service, JPA adapter, REST controller (`GET /api/tesoreria/guarani/persona/{persona}`)
+  - **PropuestaGuarani**: Domain model, use case, service, JPA adapter, REST controller (`GET /api/tesoreria/guarani/propuesta/{propuesta}`)
+  - **UbicacionGuarani**: Domain model, use case, service, JPA adapter, REST controller (`GET /api/tesoreria/guarani/ubicacion/{ubicacion}`)
+- Spring Data JPA with PostgreSQL support (`spring-boot-starter-data-jpa`, `postgresql`)
+- Lombok dependency for boilerplate reduction
+
+### Changed
+- Upgraded Spring Boot from `4.0.7` to `4.1.0`
+- Upgraded Spring Cloud from `2025.1.1` to `2025.1.2`
+- Upgraded SpringDoc OpenAPI from `3.0.2` to `3.0.3`
+- Updated Consul discovery tags from `tesoreria,report` to `tesoreria,guarani`
+- Added PostgreSQL datasource configuration in `bootstrap.yml`
+- Added JPA/Hibernate configuration with `ddl-auto: validate`
+- Disabled context load test (`@Disabled`) as it now requires PostgreSQL
+
 ## [0.2.0] - 2026-06-12
 
 ### Added

@@ -1,0 +1,21 @@
+sequenceDiagram
+    participant User as Usuario
+    participant REST as REST Controller
+    participant Service as Application Service
+    participant UseCase as Use Case
+    participant JPA as JPA Repository Adapter
+    participant DB as PostgreSQL
+
+    User->>REST: GET /api/tesoreria/guarani/{recurso}/{id}
+    REST->>Service: getBy{Id}(id)
+    Service->>UseCase: getBy{Id}(id)
+    UseCase->>JPA: findBy{Id}(id)
+    JPA->>DB: SELECT * FROM table WHERE id=?
+    DB-->>JPA: Entity
+    JPA->>JPA: mapper::toDomain(entity)
+    JPA-->>UseCase: Domain model
+    UseCase-->>Service: Domain model
+    Service-->>REST: Domain model
+    REST->>REST: mapper::toResponse(domain)
+    REST-->>User: 200 OK DTO
+    Note over REST,DB: Aplica a alumno, persona, propuesta, ubicacion

@@ -13,9 +13,49 @@ classDiagram
         +test() ResponseEntity~String~
     }
 
+    class AlumnoGuaraniController {
+        <<RestController>>
+        +getAlumnoGuarani(alumno) ResponseEntity
+    }
+
+    class PersonaGuaraniController {
+        <<RestController>>
+        +getPersonaGuarani(persona) ResponseEntity
+    }
+
+    class PropuestaGuaraniController {
+        <<RestController>>
+        +getPropuestaGuarani(propuesta) ResponseEntity
+    }
+
+    class UbicacionGuaraniController {
+        <<RestController>>
+        +getUbicacionGuarani(ubicacion) ResponseEntity
+    }
+
+    class AlumnoGuaraniService {
+        <<Service>>
+    }
+
+    class PersonaGuaraniService {
+        <<Service>>
+    }
+
+    class PropuestaGuaraniService {
+        <<Service>>
+    }
+
+    class UbicacionGuaraniService {
+        <<Service>>
+    }
+
     class GuaraniApplicationTests {
         <<SpringBootTest>>
         +contextLoads() void
     }
 
     GuaraniApplication --> GuaraniConfiguration : uses
+    AlumnoGuaraniController --> AlumnoGuaraniService : uses
+    PersonaGuaraniController --> PersonaGuaraniService : uses
+    PropuestaGuaraniController --> PropuestaGuaraniService : uses
+    UbicacionGuaraniController --> UbicacionGuaraniService : uses

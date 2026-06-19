@@ -1,11 +1,11 @@
 # UM.tesoreria.guarani-service
 
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.7-brightgreen)](https://spring.io/projects/spring-boot)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-brightgreen)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-25-orange)](https://openjdk.org/projects/jdk/25/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.2.0-blue)](pom.xml)
+[![Version](https://img.shields.io/badge/version-0.3.0-blue)](pom.xml)
 
-Microservicio de tesorería integrado con el sistema Guarani. Proporciona APIs REST para la gestión de operaciones de tesorería, con registro en Consul, comunicación Feign con otros microservicios, y documentación OpenAPI.
+Microservicio de tesorería integrado con el sistema Guarani. Proporciona APIs REST para la gestión de alumnos, personas, propuestas y ubicaciones, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, y documentación OpenAPI.
 
 ## Arquitectura
 
@@ -21,10 +21,12 @@ C4Context
 
     System_Ext(consul, "HashiCorp Consul", "Service discovery y registro")
     System_Ext(feign_clients, "Servicios Internos", "Otros microservicios (Feign clients)")
+    System_Ext(postgresql, "PostgreSQL", "Base de datos relacional (esquema negocio)")
 
     Rel(user, guarani, "Consulta endpoints REST", "HTTP/JSON")
     Rel(guarani, consul, "Registro y descubrimiento", "HTTP/8500")
     Rel(guarani, feign_clients, "Comunicación interna", "HTTP/OpenFeign")
+    Rel(guarani, postgresql, "Persistencia JPA", "JDBC/5432")
 ```
 
 ### Diagrama de Contenedores
@@ -39,6 +41,8 @@ C4Container
         Container(api, "API REST", "Spring Boot, Tomcat", "Expone endpoints REST en puerto 8080")
         Container(controller, "Controllers", "Spring MVC", "Maneja solicitudes HTTP")
         Container(service, "Services", "Java", "Lógica de negocio")
+        Container(hexagonal, "Hexagonal Modules", "Java", "Alumno, Persona, Propuesta, Ubicacion")
+        Container(jpa, "JPA Repositories", "Spring Data JPA", "Persistencia y mapeo ORM")
         Container(client, "Feign Clients", "OpenFeign", "Clientes HTTP declarativos")
         Container(cache, "Cache Layer", "Caffeine", "Caché en memoria")
         Container(openapi, "API Docs", "SpringDoc OpenAPI", "Documentación Swagger UI")
@@ -46,13 +50,17 @@ C4Container
 
     System_Ext(consul, "Consul", "Service discovery :8500")
     System_Ext(internal_svc, "Servicios Internos", "Microservicios del ecosistema")
+    System_Ext(postgresql, "PostgreSQL", "Base de datos (esquema negocio)")
 
     Rel(user, api, "HTTP", "REST/JSON")
     Rel(api, controller, "Enrutamiento")
+    Rel(controller, hexagonal, "Delega a módulos")
     Rel(controller, service, "Llamadas")
+    Rel(hexagonal, jpa, "Persistencia")
     Rel(service, client, "Invocación")
     Rel(service, cache, "Cache consultas")
     Rel(client, internal_svc, "HTTP/Feign")
+    Rel(jpa, postgresql, "JDBC", "5432")
     Rel(guarani, consul, "Registro", "HTTP")
 ```
 
@@ -67,6 +75,32 @@ sequenceDiagram
     User->>Hello: GET /api/tesoreria/guarani/hello/test
     Hello->>Hello: test()
     Hello-->>User: 200 OK "hello"
+```
+
+### Diagrama de Secuencia — Endpoints Hexagonales
+
+```mermaid
+sequenceDiagram
+    participant User as Usuario
+    participant REST as REST Controller
+    participant Service as Application Service
+    participant UseCase as Use Case
+    participant JPA as JPA Repository Adapter
+    participant DB as PostgreSQL
+
+    User->>REST: GET /api/tesoreria/guarani/{recurso}/{id}
+    REST->>Service: getBy{Id}(id)
+    Service->>UseCase: getBy{Id}(id)
+    UseCase->>JPA: findBy{Id}(id)
+    JPA->>DB: SELECT * FROM table WHERE id=?
+    DB-->>JPA: Entity
+    JPA->>JPA: mapper::toDomain(entity)
+    JPA-->>UseCase: Domain model
+    UseCase-->>Service: Domain model
+    Service-->>REST: Domain model
+    REST->>REST: mapper::toResponse(domain)
+    REST-->>User: 200 OK DTO
+    Note over REST,DB: Aplica a alumno, persona, propuesta, ubicacion
 ```
 
 ### Estructura del Proyecto
@@ -87,13 +121,63 @@ classDiagram
         +test() ResponseEntity~String~
     }
 
+    class AlumnoGuaraniController {
+        <<RestController>>
+        +getAlumnoGuarani(alumno) ResponseEntity
+    }
+
+    class PersonaGuaraniController {
+        <<RestController>>
+        +getPersonaGuarani(persona) ResponseEntity
+    }
+
+    class PropuestaGuaraniController {
+        <<RestController>>
+        +getPropuestaGuarani(propuesta) ResponseEntity
+    }
+
+    class UbicacionGuaraniController {
+        <<RestController>>
+        +getUbicacionGuarani(ubicacion) ResponseEntity
+    }
+
+    class AlumnoGuaraniService {
+        <<Service>>
+    }
+
+    class PersonaGuaraniService {
+        <<Service>>
+    }
+
+    class PropuestaGuaraniService {
+        <<Service>>
+    }
+
+    class UbicacionGuaraniService {
+        <<Service>>
+    }
+
     class GuaraniApplicationTests {
         <<SpringBootTest>>
         +contextLoads() void
     }
 
     GuaraniApplication --> GuaraniConfiguration : uses
+    AlumnoGuaraniController --> AlumnoGuaraniService : uses
+    PersonaGuaraniController --> PersonaGuaraniService : uses
+    PropuestaGuaraniController --> PropuestaGuaraniService : uses
+    UbicacionGuaraniController --> UbicacionGuaraniService : uses
 ```
+
+### Endpoints de la API
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/tesoreria/guarani/hello/test` | Health check del servicio |
+| GET | `/api/tesoreria/guarani/alumno/{id}` | Obtiene un alumno por ID |
+| GET | `/api/tesoreria/guarani/persona/{id}` | Obtiene una persona por ID |
+| GET | `/api/tesoreria/guarani/propuesta/{id}` | Obtiene una propuesta por ID |
+| GET | `/api/tesoreria/guarani/ubicacion/{id}` | Obtiene una ubicación por ID |
 
 ```
 src/
@@ -102,8 +186,13 @@ src/
 │   │   ├── GuaraniApplication.java
 │   │   ├── configuration/
 │   │   │   └── GuaraniConfiguration.java
-│   │   └── test/
-│   │       └── HelloTest.java
+│   │   ├── test/
+│   │   │   └── HelloTest.java
+│   │   └── hexagonal/guarani/
+│   │       ├── alumno/
+│   │       ├── persona/
+│   │       ├── propuesta/
+│   │       └── ubicacion/
 │   └── resources/
 │       ├── bootstrap.yml
 │       └── banner.txt
@@ -117,18 +206,22 @@ src/
 | Tecnología | Versión | Propósito |
 |---|---|---|
 | Java | 25 | Lenguaje de programación |
-| Spring Boot | 4.0.7 | Framework principal |
-| Spring Cloud | 2025.1.1 | Microservicios |
+| Spring Boot | 4.1.0 | Framework principal |
+| Spring Cloud | 2025.1.2 | Microservicios |
+| Spring Data JPA | - | Persistencia ORM |
+| PostgreSQL | - | Base de datos relacional |
 | Consul Discovery | - | Service discovery |
 | OpenFeign | - | Clientes HTTP declarativos |
 | Caffeine | - | Caché en memoria |
-| SpringDoc OpenAPI | 3.0.2 | Documentación de APIs |
+| SpringDoc OpenAPI | 3.0.3 | Documentación de APIs |
+| Lombok | - | Reducción de boilerplate |
 | Maven | 3+ | Build tool |
 
 ## Requisitos
 
 - **Java 25** (JDK)
 - **Maven 3.x** (o usar el wrapper `./mvnw`)
+- **PostgreSQL** (base de datos, esquema `negocio`)
 - **Consul** (para service discovery)
 - **Docker** (opcional, para contenedor)
 
@@ -161,10 +254,14 @@ Las propiedades se definen en `bootstrap.yml` y pueden sobrescribirse por variab
 |---|---|---|
 | `APP_PORT` | `8080` | Puerto del servidor |
 | `APP_LOGGING` | `debug` | Nivel de log |
+| `APP_SERVER` | `server` | Host de PostgreSQL |
+| `APP_DATABASE` | `database` | Nombre de la base de datos |
+| `APP_USERNAME` | `username` | Usuario de PostgreSQL |
+| `APP_PASSWORD` | `password` | Contraseña de PostgreSQL |
 
 El servicio se registra en Consul con:
 - **Nombre:** `tesoreria-guarani-service`
-- **Tags:** `tesoreria`, `report`
+- **Tags:** `tesoreria`, `guarani`
 
 ## API
 
