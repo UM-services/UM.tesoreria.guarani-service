@@ -13,6 +13,8 @@ import um.tesoreria.guarani.hexagonal.guarani.propuesta.application.service.Prop
 import um.tesoreria.guarani.hexagonal.guarani.propuesta.infrastructure.web.dto.PropuestaGuaraniResponse;
 import um.tesoreria.guarani.hexagonal.guarani.propuesta.infrastructure.web.mapper.PropuestaGuaraniDtoMapper;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/tesoreria/guarani/propuesta")
 @RequiredArgsConstructor
@@ -20,6 +22,13 @@ public class PropuestaGuaraniController {
 
     private final PropuestaGuaraniService service;
     private final PropuestaGuaraniDtoMapper mapper;
+
+    @GetMapping("/")
+    public ResponseEntity<List<PropuestaGuaraniResponse>> getAllPropuestas() {
+        return ResponseEntity.ok(service.getAllPropuestas().stream()
+                .map(mapper::toResponse)
+                .toList());
+    }
 
     @GetMapping("/{propuesta}")
     public ResponseEntity<PropuestaGuaraniResponse> getPropuestaGuarani(@PathVariable Integer propuesta) {

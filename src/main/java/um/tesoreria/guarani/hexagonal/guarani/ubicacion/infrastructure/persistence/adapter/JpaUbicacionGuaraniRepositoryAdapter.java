@@ -7,6 +7,7 @@ import um.tesoreria.guarani.hexagonal.guarani.ubicacion.domain.ports.out.Ubicaci
 import um.tesoreria.guarani.hexagonal.guarani.ubicacion.infrastructure.persistence.mapper.UbicacionGuaraniMapper;
 import um.tesoreria.guarani.hexagonal.guarani.ubicacion.infrastructure.persistence.repository.JpaUbicacionGuaraniRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -20,5 +21,12 @@ public class JpaUbicacionGuaraniRepositoryAdapter implements UbicacionGuaraniRep
     public Optional<UbicacionGuarani> findByUbicacionId(Integer ubicacionId) {
         return jpaUbicacionGuaraniRepository.findById(ubicacionId)
                 .map(mapper::toDomain);
+    }
+
+    @Override
+    public List<UbicacionGuarani> findAll() {
+        return jpaUbicacionGuaraniRepository.findAll().stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 }

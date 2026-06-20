@@ -17,4 +17,5 @@ public class GetPropuestaGuaraniUseCaseImpl implements GetPropuestaGuaraniUseCas
     public PropuestaGuarani getByPropuestaId(Integer propuestaId) {
         return repository.findByPropuestaId(propuestaId).orElseThrow(() -> new PropuestaGuaraniException(propuestaId));
     }
+
 }

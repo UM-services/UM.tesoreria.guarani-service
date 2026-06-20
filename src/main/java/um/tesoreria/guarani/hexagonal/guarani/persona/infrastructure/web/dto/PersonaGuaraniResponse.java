@@ -1,8 +1,12 @@
 package um.tesoreria.guarani.hexagonal.guarani.persona.infrastructure.web.dto;
 
 import lombok.*;
+import um.tesoreria.guarani.hexagonal.guarani.personaContacto.infrastructure.web.dto.PersonaContactoGuaraniResponse;
+import um.tesoreria.guarani.hexagonal.guarani.personaDocumento.infrastructure.web.dto.PersonaDocumentoGuaraniResponse;
+
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -25,6 +29,8 @@ public class PersonaGuaraniResponse {
     private LocalDate fechaIngresoPais;
     private Integer paisOrigen;
     private Integer documentoPrincipal;
+    private PersonaDocumentoGuaraniResponse documentoPrincipalRel;
+    private List<PersonaContactoGuaraniResponse> contactos;
     private String usuario;
     private String clave;
     private LocalDate fechaVencimientoClave;

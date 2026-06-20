@@ -3,9 +3,21 @@ package um.tesoreria.guarani.hexagonal.guarani.persona.infrastructure.persistenc
 import org.springframework.stereotype.Component;
 import um.tesoreria.guarani.hexagonal.guarani.persona.domain.model.PersonaGuarani;
 import um.tesoreria.guarani.hexagonal.guarani.persona.infrastructure.persistence.entity.PersonaGuaraniEntity;
+import um.tesoreria.guarani.hexagonal.guarani.personaContacto.infrastructure.persistence.mapper.PersonaContactoGuaraniMapper;
+import um.tesoreria.guarani.hexagonal.guarani.personaDocumento.infrastructure.persistence.mapper.PersonaDocumentoGuaraniMapper;
+
+import java.util.stream.Collectors;
 
 @Component
 public class PersonaGuaraniMapper {
+
+    private final PersonaDocumentoGuaraniMapper personaDocumentoMapper;
+    private final PersonaContactoGuaraniMapper personaContactoMapper;
+
+    public PersonaGuaraniMapper(PersonaDocumentoGuaraniMapper personaDocumentoMapper, PersonaContactoGuaraniMapper personaContactoMapper) {
+        this.personaDocumentoMapper = personaDocumentoMapper;
+        this.personaContactoMapper = personaContactoMapper;
+    }
 
     public PersonaGuaraniEntity toEntity(PersonaGuarani domain) {
         if (domain == null) return null;
@@ -24,6 +36,8 @@ public class PersonaGuaraniMapper {
                 .fechaIngresoPais(domain.getFechaIngresoPais())
                 .paisOrigen(domain.getPaisOrigen())
                 .documentoPrincipal(domain.getDocumentoPrincipal())
+                .documentoPrincipalRel(personaDocumentoMapper.toEntity(domain.getDocumentoPrincipalRel()))
+                .contactos(domain.getContactos() == null ? null : domain.getContactos().stream().map(personaContactoMapper::toEntity).collect(Collectors.toList()))
                 .usuario(domain.getUsuario())
                 .clave(domain.getClave())
                 .fechaVencimientoClave(domain.getFechaVencimientoClave())
@@ -60,6 +74,8 @@ public class PersonaGuaraniMapper {
                 .fechaIngresoPais(entity.getFechaIngresoPais())
                 .paisOrigen(entity.getPaisOrigen())
                 .documentoPrincipal(entity.getDocumentoPrincipal())
+                .documentoPrincipalRel(personaDocumentoMapper.toDomain(entity.getDocumentoPrincipalRel()))
+                .contactos(entity.getContactos() == null ? null : entity.getContactos().stream().map(personaContactoMapper::toDomain).collect(Collectors.toList()))
                 .usuario(entity.getUsuario())
                 .clave(entity.getClave())
                 .fechaVencimientoClave(entity.getFechaVencimientoClave())

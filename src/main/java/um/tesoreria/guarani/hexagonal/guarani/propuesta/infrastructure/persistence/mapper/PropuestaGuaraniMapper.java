@@ -3,9 +3,16 @@ package um.tesoreria.guarani.hexagonal.guarani.propuesta.infrastructure.persiste
 import org.springframework.stereotype.Component;
 import um.tesoreria.guarani.hexagonal.guarani.propuesta.domain.model.PropuestaGuarani;
 import um.tesoreria.guarani.hexagonal.guarani.propuesta.infrastructure.persistence.entity.PropuestaGuaraniEntity;
+import um.tesoreria.guarani.hexagonal.guarani.propuestaTipo.infrastructure.persistence.mapper.PropuestaTipoGuaraniMapper;
 
 @Component
 public class PropuestaGuaraniMapper {
+
+    private final PropuestaTipoGuaraniMapper propuestaTipoMapper;
+
+    public PropuestaGuaraniMapper(PropuestaTipoGuaraniMapper propuestaTipoMapper) {
+        this.propuestaTipoMapper = propuestaTipoMapper;
+    }
 
     public PropuestaGuaraniEntity toEntity(PropuestaGuarani domain) {
         if (domain == null) return null;
@@ -15,6 +22,7 @@ public class PropuestaGuaraniMapper {
                 .nombreAbreviado(domain.getNombreAbreviado())
                 .codigo(domain.getCodigo())
                 .propuestaTipo(domain.getPropuestaTipo())
+                .propuestaTipoRel(propuestaTipoMapper.toEntity(domain.getPropuestaTipoRel()))
                 .publica(domain.getPublica())
                 .documentoAlta(domain.getDocumentoAlta())
                 .fechaAlta(domain.getFechaAlta())
@@ -36,6 +44,7 @@ public class PropuestaGuaraniMapper {
                 .nombreAbreviado(entity.getNombreAbreviado())
                 .codigo(entity.getCodigo())
                 .propuestaTipo(entity.getPropuestaTipo())
+                .propuestaTipoRel(propuestaTipoMapper.toDomain(entity.getPropuestaTipoRel()))
                 .publica(entity.getPublica())
                 .documentoAlta(entity.getDocumentoAlta())
                 .fechaAlta(entity.getFechaAlta())

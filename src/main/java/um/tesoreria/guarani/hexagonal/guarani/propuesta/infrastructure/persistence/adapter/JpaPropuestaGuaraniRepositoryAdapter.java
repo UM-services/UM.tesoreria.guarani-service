@@ -7,6 +7,7 @@ import um.tesoreria.guarani.hexagonal.guarani.propuesta.domain.ports.out.Propues
 import um.tesoreria.guarani.hexagonal.guarani.propuesta.infrastructure.persistence.mapper.PropuestaGuaraniMapper;
 import um.tesoreria.guarani.hexagonal.guarani.propuesta.infrastructure.persistence.repository.JpaPropuestaGuaraniRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -20,5 +21,12 @@ public class JpaPropuestaGuaraniRepositoryAdapter implements PropuestaGuaraniRep
     public Optional<PropuestaGuarani> findByPropuestaId(Integer propuestaId) {
         return jpaPropuestaGuaraniRepository.findById(propuestaId)
                 .map(mapper::toDomain);
+    }
+
+    @Override
+    public List<PropuestaGuarani> findAll() {
+        return jpaPropuestaGuaraniRepository.findAll().stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 }

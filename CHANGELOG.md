@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.4.0] - 2026-06-20
+
+### Added
+- **New hexagonal module `PersonaContactoGuarani`:**
+  - Domain model, use case, service, JPA adapter, REST controller (`GET /api/tesoreria/guarani/personaContacto/{personaContacto}`)
+  - Custom exception `PersonaContactoGuaraniException`
+- **New hexagonal module `PersonaDocumentoGuarani`:**
+  - Domain model, use case, service, JPA adapter, REST controller (`GET /api/tesoreria/guarani/personaDocumento/{documento}`)
+  - Custom exception `PersonaDocumentoGuaraniException`
+- **New hexagonal module `PropuestaTipoGuarani`:**
+  - Domain model, dual use cases (getAll + getById), service, JPA adapter, REST controller (`GET /api/tesoreria/guarani/propuestaTipo/`, `GET /api/tesoreria/guarani/propuestaTipo/{propuestaTipo}`)
+  - Custom exception `PropuestaTipoGuaraniException`
+- **New hexagonal module `TipoDocumentoGuarani`:**
+  - Domain model, dual use cases (getAll + getById), service, JPA adapter, REST controller (`GET /api/tesoreria/guarani/tipoDocumento/`, `GET /api/tesoreria/guarani/tipoDocumento/{tipoDocumento}`)
+  - Custom exception `TipoDocumentoGuaraniException`
+- **AlumnoGuarani**: new endpoint `GET /api/tesoreria/guarani/alumno/propuestaTipo/{propuestaTipo}` to query alumnos by propuesta tipo, with `GetAlumnosByPropuestaTipoUseCase`
+- **AlumnoGuaraniEntity**: added JPA `@OneToOne` relationships to `PersonaGuaraniEntity`, `PropuestaGuaraniEntity`, `UbicacionGuaraniEntity`
+- **AlumnoGuarani domain model**: added `personaRel`, `propuestaRel`, `ubicacionRel` fields
+- **PersonaGuarani domain model**: extended with `personaContactos`, `personaDocumentos` collections
+- **PropuestaGuarani**: new collection endpoint `GET /api/tesoreria/guarani/propuesta/` with `GetAllPropuestasUseCase`
+- **UbicacionGuarani**: new collection endpoint `GET /api/tesoreria/guarani/ubicacion/` with `GetAllUbicacionesUseCase`
+- New documentation diagram `hexagonal-collection-endpoint.mmd` describing the collection endpoint flow
+
+### Changed
+- Version bumped from `0.3.0` to `0.4.0`
+- Documentation pipeline (`generate-docs.yml`): added injection for the new collection sequence diagram
+- Updated `project-structure.mmd`, `container.mmd`, and endpoint notes in sequence diagrams to reflect new modules
+
 ## [0.3.0] - 2026-06-18
 
 ### Added

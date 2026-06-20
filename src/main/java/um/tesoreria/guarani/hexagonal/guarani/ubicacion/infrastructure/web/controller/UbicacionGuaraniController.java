@@ -13,6 +13,8 @@ import um.tesoreria.guarani.hexagonal.guarani.ubicacion.application.service.Ubic
 import um.tesoreria.guarani.hexagonal.guarani.ubicacion.infrastructure.web.dto.UbicacionGuaraniResponse;
 import um.tesoreria.guarani.hexagonal.guarani.ubicacion.infrastructure.web.mapper.UbicacionGuaraniDtoMapper;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/tesoreria/guarani/ubicacion")
 @RequiredArgsConstructor
@@ -20,6 +22,13 @@ public class UbicacionGuaraniController {
 
     private final UbicacionGuaraniService service;
     private final UbicacionGuaraniDtoMapper mapper;
+
+    @GetMapping("/")
+    public ResponseEntity<List<UbicacionGuaraniResponse>> getAllUbicaciones() {
+        return ResponseEntity.ok(service.getAllUbicaciones().stream()
+                .map(mapper::toResponse)
+                .toList());
+    }
 
     @GetMapping("/{ubicacion}")
     public ResponseEntity<UbicacionGuaraniResponse> getUbicacionGuarani(@PathVariable Integer ubicacion) {

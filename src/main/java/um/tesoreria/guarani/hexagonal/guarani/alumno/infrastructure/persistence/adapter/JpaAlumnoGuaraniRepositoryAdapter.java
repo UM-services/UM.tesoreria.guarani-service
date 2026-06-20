@@ -7,6 +7,7 @@ import um.tesoreria.guarani.hexagonal.guarani.alumno.domain.ports.out.AlumnoGuar
 import um.tesoreria.guarani.hexagonal.guarani.alumno.infrastructure.persistence.mapper.AlumnoGuaraniMapper;
 import um.tesoreria.guarani.hexagonal.guarani.alumno.infrastructure.persistence.repository.JpaAlumnoGuaraniRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -20,5 +21,12 @@ public class JpaAlumnoGuaraniRepositoryAdapter implements AlumnoGuaraniRepositor
     public Optional<AlumnoGuarani> findByAlumnoId(Integer alumnoId) {
         return jpaAlumnoGuaraniRepository.findById(alumnoId)
                 .map(mapper::toDomain);
+    }
+
+    @Override
+    public List<AlumnoGuarani> findAllByPropuestaTipo(Integer propuestaTipo) {
+        return jpaAlumnoGuaraniRepository.findAllByPropuestaTipo(propuestaTipo).stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 }
