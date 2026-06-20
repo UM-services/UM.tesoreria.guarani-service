@@ -1,8 +1,12 @@
 package um.tesoreria.guarani.hexagonal.guarani.persona.domain.model;
 
 import lombok.*;
+import um.tesoreria.guarani.hexagonal.guarani.personaContacto.domain.model.PersonaContactoGuarani;
+import um.tesoreria.guarani.hexagonal.guarani.personaDocumento.domain.model.PersonaDocumentoGuarani;
+
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -25,6 +29,8 @@ public class PersonaGuarani {
     private LocalDate fechaIngresoPais;
     private Integer paisOrigen;
     private Integer documentoPrincipal;
+    private PersonaDocumentoGuarani documentoPrincipalRel;
+    private List<PersonaContactoGuarani> contactos;
     private String usuario;
     private String clave;
     private LocalDate fechaVencimientoClave;

@@ -1,0 +1,21 @@
+sequenceDiagram
+    participant User as Usuario
+    participant REST as REST Controller
+    participant Service as Application Service
+    participant UseCase as Use Case
+    participant JPA as JPA Repository Adapter
+    participant DB as PostgreSQL
+
+    User->>REST: GET /api/tesoreria/guarani/{recurso}/
+    REST->>Service: getAll{Recursos}()
+    Service->>UseCase: getAll{Recursos}()
+    UseCase->>JPA: findAll()
+    JPA->>DB: SELECT * FROM table
+    DB-->>JPA: List&lt;Entity&gt;
+    JPA->>JPA: stream().map(mapper::toDomain)
+    JPA-->>UseCase: List&lt;Domain&gt;
+    UseCase-->>Service: List&lt;Domain&gt;
+    Service-->>REST: List&lt;Domain&gt;
+    REST->>REST: stream().map(mapper::toResponse)
+    REST-->>User: 200 OK List&lt;DTO&gt;
+    Note over REST,DB: Actualmente implementado en propuesta, propuestaTipo, tipoDocumento y ubicacion

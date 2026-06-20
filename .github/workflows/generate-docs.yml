@@ -83,7 +83,7 @@ jobs:
                   <h2>🏗️ Arquitectura General</h2>
                   <div class="mermaid">
           EOF
-          sed '1d;$d' docs/diagrams/architecture.mmd >> docs/index.html
+          cat docs/diagrams/architecture.mmd >> docs/index.html
           cat >> docs/index.html << 'EOF'
                   </div>
               </div>
@@ -95,7 +95,7 @@ jobs:
                   <h2>📦 Diagrama de Contenedores</h2>
                   <div class="mermaid">
           EOF
-          sed '1d;$d' docs/diagrams/container.mmd >> docs/index.html
+          cat docs/diagrams/container.mmd >> docs/index.html
           cat >> docs/index.html << 'EOF'
                   </div>
               </div>
@@ -107,19 +107,30 @@ jobs:
                   <h2>🔄 Diagrama de Secuencia: Endpoint Hello</h2>
                   <div class="mermaid">
           EOF
-          sed '1d;$d' docs/diagrams/hello-endpoint.mmd >> docs/index.html
+          cat docs/diagrams/hello-endpoint.mmd >> docs/index.html
           cat >> docs/index.html << 'EOF'
                   </div>
               </div>
           EOF
 
-          # --- Inject project structure diagram ---
+          # --- Inject hexagonal endpoint diagram ---
           cat >> docs/index.html << 'EOF'
               <div id="hexagonal-endpoint" class="section">
                   <h2>🔄 Diagrama de Secuencia: Endpoints Hexagonales</h2>
                   <div class="mermaid">
           EOF
-          sed '1d;$d' docs/diagrams/hexagonal-endpoint.mmd >> docs/index.html
+          cat docs/diagrams/hexagonal-endpoint.mmd >> docs/index.html
+          cat >> docs/index.html << 'EOF'
+                  </div>
+              </div>
+          EOF
+          # --- Inject hexagonal collection endpoint diagram ---
+          cat >> docs/index.html << 'EOF'
+              <div id="hexagonal-collection-endpoint" class="section">
+                  <h2>🔄 Diagrama de Secuencia: Endpoints Hexagonales (Colección)</h2>
+                  <div class="mermaid">
+          EOF
+          cat docs/diagrams/hexagonal-collection-endpoint.mmd >> docs/index.html
           cat >> docs/index.html << 'EOF'
                   </div>
               </div>
@@ -130,7 +141,7 @@ jobs:
                   <h2>🏗️ Estructura del Proyecto</h2>
                   <div class="mermaid">
           EOF
-          sed '1d;$d' docs/diagrams/project-structure.mmd >> docs/index.html
+          cat docs/diagrams/project-structure.mmd >> docs/index.html
           cat >> docs/index.html << 'EOF'
                   </div>
               </div>

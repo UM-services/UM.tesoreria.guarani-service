@@ -2,6 +2,7 @@ package um.tesoreria.guarani.hexagonal.guarani.propuesta.infrastructure.persiste
 
 import jakarta.persistence.*;
 import lombok.*;
+import um.tesoreria.guarani.hexagonal.guarani.propuestaTipo.infrastructure.persistence.entity.PropuestaTipoGuaraniEntity;
 
 import java.time.LocalDate;
 
@@ -21,6 +22,10 @@ public class PropuestaGuaraniEntity {
     private String nombreAbreviado;
     private String codigo;
     private Integer propuestaTipo;
+
+    @OneToOne(optional = true)
+    @JoinColumn(name = "propuestaTipo", referencedColumnName = "propuestaTipo", insertable = false, updatable = false)
+    private PropuestaTipoGuaraniEntity propuestaTipoRel;
 
     @Column(columnDefinition = "bpchar")
     private String publica;

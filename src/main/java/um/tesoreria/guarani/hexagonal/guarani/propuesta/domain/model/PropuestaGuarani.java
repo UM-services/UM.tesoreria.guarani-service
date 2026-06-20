@@ -1,6 +1,8 @@
 package um.tesoreria.guarani.hexagonal.guarani.propuesta.domain.model;
 
 import lombok.*;
+import um.tesoreria.guarani.hexagonal.guarani.propuestaTipo.domain.model.PropuestaTipoGuarani;
+
 import java.time.LocalDate;
 
 @Getter
@@ -14,6 +16,7 @@ public class PropuestaGuarani {
     private String nombreAbreviado;
     private String codigo;
     private Integer propuestaTipo;
+    private PropuestaTipoGuarani propuestaTipoRel;
     private String publica;
     private Integer documentoAlta;
     private LocalDate fechaAlta;

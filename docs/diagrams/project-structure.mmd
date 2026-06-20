@@ -16,6 +16,7 @@ classDiagram
     class AlumnoGuaraniController {
         <<RestController>>
         +getAlumnoGuarani(alumno) ResponseEntity
+        +getAlumnosByPropuestaTipo(propuestaTipo) ResponseEntity
     }
 
     class PersonaGuaraniController {
@@ -23,14 +24,38 @@ classDiagram
         +getPersonaGuarani(persona) ResponseEntity
     }
 
+    class PersonaContactoGuaraniController {
+        <<RestController>>
+        +getPersonaContactoGuarani(personaContacto) ResponseEntity
+    }
+
+    class PersonaDocumentoGuaraniController {
+        <<RestController>>
+        +getPersonaDocumentoGuarani(documento) ResponseEntity
+    }
+
     class PropuestaGuaraniController {
         <<RestController>>
         +getPropuestaGuarani(propuesta) ResponseEntity
+        +getAllPropuestas() ResponseEntity
+    }
+
+    class PropuestaTipoGuaraniController {
+        <<RestController>>
+        +getPropuestaTipoGuarani(propuestaTipo) ResponseEntity
+        +getAllPropuestaTipos() ResponseEntity
+    }
+
+    class TipoDocumentoGuaraniController {
+        <<RestController>>
+        +getTipoDocumentoGuarani(tipoDocumento) ResponseEntity
+        +getAllTipoDocumentos() ResponseEntity
     }
 
     class UbicacionGuaraniController {
         <<RestController>>
         +getUbicacionGuarani(ubicacion) ResponseEntity
+        +getAllUbicaciones() ResponseEntity
     }
 
     class AlumnoGuaraniService {
@@ -41,7 +66,23 @@ classDiagram
         <<Service>>
     }
 
+    class PersonaContactoGuaraniService {
+        <<Service>>
+    }
+
+    class PersonaDocumentoGuaraniService {
+        <<Service>>
+    }
+
     class PropuestaGuaraniService {
+        <<Service>>
+    }
+
+    class PropuestaTipoGuaraniService {
+        <<Service>>
+    }
+
+    class TipoDocumentoGuaraniService {
         <<Service>>
     }
 
@@ -57,5 +98,9 @@ classDiagram
     GuaraniApplication --> GuaraniConfiguration : uses
     AlumnoGuaraniController --> AlumnoGuaraniService : uses
     PersonaGuaraniController --> PersonaGuaraniService : uses
+    PersonaContactoGuaraniController --> PersonaContactoGuaraniService : uses
+    PersonaDocumentoGuaraniController --> PersonaDocumentoGuaraniService : uses
     PropuestaGuaraniController --> PropuestaGuaraniService : uses
+    PropuestaTipoGuaraniController --> PropuestaTipoGuaraniService : uses
+    TipoDocumentoGuaraniController --> TipoDocumentoGuaraniService : uses
     UbicacionGuaraniController --> UbicacionGuaraniService : uses

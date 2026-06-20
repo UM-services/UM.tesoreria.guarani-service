@@ -17,4 +17,5 @@ public class GetUbicacionGuaraniUseCaseImpl implements GetUbicacionGuaraniUseCas
     public UbicacionGuarani getByUbicacionId(Integer ubicacionId) {
         return repository.findByUbicacionId(ubicacionId).orElseThrow(() -> new UbicacionGuaraniException(ubicacionId));
     }
+
 }

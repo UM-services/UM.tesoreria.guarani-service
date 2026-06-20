@@ -2,9 +2,12 @@ package um.tesoreria.guarani.hexagonal.guarani.persona.infrastructure.persistenc
 
 import jakarta.persistence.*;
 import lombok.*;
+import um.tesoreria.guarani.hexagonal.guarani.personaContacto.infrastructure.persistence.entity.PersonaContactoGuaraniEntity;
+import um.tesoreria.guarani.hexagonal.guarani.personaDocumento.infrastructure.persistence.entity.PersonaDocumentoGuaraniEntity;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -35,6 +38,15 @@ public class PersonaGuaraniEntity {
     private LocalDate fechaIngresoPais;
     private Integer paisOrigen;
     private Integer documentoPrincipal;
+
+    @OneToOne(optional = true)
+    @JoinColumn(name = "documentoPrincipal", referencedColumnName = "documento", insertable = false, updatable = false)
+    private PersonaDocumentoGuaraniEntity documentoPrincipalRel;
+
+    @OneToMany
+    @JoinColumn(name = "persona", referencedColumnName = "persona")
+    private List<PersonaContactoGuaraniEntity> contactos;
+
     private String usuario;
     private String clave;
     private LocalDate fechaVencimientoClave;

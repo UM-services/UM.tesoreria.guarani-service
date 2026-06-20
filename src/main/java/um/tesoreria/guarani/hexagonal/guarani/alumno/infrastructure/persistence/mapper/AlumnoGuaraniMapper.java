@@ -3,9 +3,22 @@ package um.tesoreria.guarani.hexagonal.guarani.alumno.infrastructure.persistence
 import org.springframework.stereotype.Component;
 import um.tesoreria.guarani.hexagonal.guarani.alumno.domain.model.AlumnoGuarani;
 import um.tesoreria.guarani.hexagonal.guarani.alumno.infrastructure.persistence.entity.AlumnoGuaraniEntity;
+import um.tesoreria.guarani.hexagonal.guarani.persona.infrastructure.persistence.mapper.PersonaGuaraniMapper;
+import um.tesoreria.guarani.hexagonal.guarani.propuesta.infrastructure.persistence.mapper.PropuestaGuaraniMapper;
+import um.tesoreria.guarani.hexagonal.guarani.ubicacion.infrastructure.persistence.mapper.UbicacionGuaraniMapper;
 
 @Component
 public class AlumnoGuaraniMapper {
+
+    private final PersonaGuaraniMapper personaMapper;
+    private final PropuestaGuaraniMapper propuestaMapper;
+    private final UbicacionGuaraniMapper ubicacionMapper;
+
+    public AlumnoGuaraniMapper(PersonaGuaraniMapper personaMapper, PropuestaGuaraniMapper propuestaMapper, UbicacionGuaraniMapper ubicacionMapper) {
+        this.personaMapper = personaMapper;
+        this.propuestaMapper = propuestaMapper;
+        this.ubicacionMapper = ubicacionMapper;
+    }
 
     public AlumnoGuaraniEntity toEntity(AlumnoGuarani domain) {
         if (domain == null) return null;
@@ -23,6 +36,9 @@ public class AlumnoGuaraniMapper {
                 .regular(domain.getRegular())
                 .calidad(domain.getCalidad())
                 .coeficiente(domain.getCoeficiente())
+                .personaRel(personaMapper.toEntity(domain.getPersonaRel()))
+                .propuestaRel(propuestaMapper.toEntity(domain.getPropuestaRel()))
+                .ubicacionRel(ubicacionMapper.toEntity(domain.getUbicacionRel()))
                 .build();
     }
 
@@ -42,6 +58,9 @@ public class AlumnoGuaraniMapper {
                 .regular(entity.getRegular())
                 .calidad(entity.getCalidad())
                 .coeficiente(entity.getCoeficiente())
+                .personaRel(personaMapper.toDomain(entity.getPersonaRel()))
+                .propuestaRel(propuestaMapper.toDomain(entity.getPropuestaRel()))
+                .ubicacionRel(ubicacionMapper.toDomain(entity.getUbicacionRel()))
                 .build();
     }
 }

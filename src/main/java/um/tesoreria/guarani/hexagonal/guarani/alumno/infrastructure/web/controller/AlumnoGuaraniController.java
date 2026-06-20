@@ -13,6 +13,8 @@ import um.tesoreria.guarani.hexagonal.guarani.alumno.application.service.AlumnoG
 import um.tesoreria.guarani.hexagonal.guarani.alumno.infrastructure.web.dto.AlumnoGuaraniResponse;
 import um.tesoreria.guarani.hexagonal.guarani.alumno.infrastructure.web.mapper.AlumnoGuaraniDtoMapper;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/tesoreria/guarani/alumno")
 @RequiredArgsConstructor
@@ -28,5 +30,12 @@ public class AlumnoGuaraniController {
         } catch (AlumnoGuaraniException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
+    }
+
+    @GetMapping("/propuestaTipo/{propuestaTipo}")
+    public ResponseEntity<List<AlumnoGuaraniResponse>> getAlumnosByPropuestaTipo(@PathVariable Integer propuestaTipo) {
+        return ResponseEntity.ok(service.getAllByPropuestaTipo(propuestaTipo).stream()
+                .map(mapper::toResponse)
+                .toList());
     }
 }
