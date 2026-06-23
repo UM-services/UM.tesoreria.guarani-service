@@ -1,0 +1,32 @@
+sequenceDiagram
+    participant Timer as Spring Scheduler
+    participant Scheduler as AlumnoGuaraniScheduler
+    participant Service as AlumnoGuaraniService
+    participant PreUC as ProcessNextPreuniversitario UseCase
+    participant GetUC as GetAlumnosByPropuestaTipo UseCase
+    participant JPA as JPA Repository Adapter
+    participant DB as PostgreSQL
+    participant CheckUC as CheckAllToUnmarkSended UseCase
+    participant Feign as AlumnoGuaraniClient
+    participant Core as Tesoreria Core Service
+
+    Timer->>Scheduler: @Scheduled(fixedRate=60000)
+    Scheduler->>Service: processNextInscripcion()
+    Service->>PreUC: processNextPreuniversitario()
+    PreUC->>GetUC: getByPropuestaTipo(204)
+    GetUC->>JPA: findAllByPropuestaTipo(204)
+    JPA->>DB: SELECT * FROM alumno WHERE propuesta_tipo=204
+    DB-->>JPA: List&lt;AlumnoGuaraniEntity&gt;
+    JPA->>JPA: map to domain
+    JPA-->>GetUC: List&lt;AlumnoGuarani&gt;
+    GetUC-->>PreUC: List&lt;AlumnoGuarani&gt;
+    PreUC->>PreUC: Build AlumnoDeteccionRequest list
+    PreUC->>CheckUC: checkAllAlumnosWithoutChequera(encontrados)
+    CheckUC->>Feign: desmarcarEnviados(encontrados)
+    Feign->>Core: POST /api/tesoreria/core/guarani/alumno/desmarcar/enviadas
+    Core-->>Feign: List&lt;AlumnoDeteccionRequest&gt; pendientes
+    Feign-->>CheckUC: List&lt;AlumnoDeteccionRequest&gt; pendientes
+    CheckUC-->>PreUC: List&lt;AlumnoDeteccionRequest&gt; pendientes
+    PreUC->>PreUC: Log pendientes &amp; process first alumno
+    PreUC-->>Service: void
+    Service-->>Scheduler: void

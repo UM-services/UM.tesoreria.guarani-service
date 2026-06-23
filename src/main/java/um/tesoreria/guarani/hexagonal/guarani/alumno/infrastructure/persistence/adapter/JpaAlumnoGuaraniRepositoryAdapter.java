@@ -2,6 +2,7 @@ package um.tesoreria.guarani.hexagonal.guarani.alumno.infrastructure.persistence
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import um.tesoreria.guarani.hexagonal.guarani.alumno.domain.model.AlumnoGuarani;
 import um.tesoreria.guarani.hexagonal.guarani.alumno.domain.ports.out.AlumnoGuaraniRepository;
 import um.tesoreria.guarani.hexagonal.guarani.alumno.infrastructure.persistence.mapper.AlumnoGuaraniMapper;
@@ -24,6 +25,7 @@ public class JpaAlumnoGuaraniRepositoryAdapter implements AlumnoGuaraniRepositor
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<AlumnoGuarani> findAllByPropuestaTipo(Integer propuestaTipo) {
         return jpaAlumnoGuaraniRepository.findAllByPropuestaTipo(propuestaTipo).stream()
                 .map(mapper::toDomain)

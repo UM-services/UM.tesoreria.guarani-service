@@ -6,6 +6,7 @@ classDiagram
     class GuaraniConfiguration {
         <<Configuration>>
         <<EnableFeignClients>>
+        <<EnableScheduling>>
     }
 
     class HelloTest {
@@ -90,12 +91,54 @@ classDiagram
         <<Service>>
     }
 
+    class AlumnoGuaraniScheduler {
+        <<Component>>
+        +generatePreuniversitarios() void
+    }
+
+    class AlumnoGuaraniClient {
+        <<FeignClient>>
+        +createPreuniversitario(AlumnoGuarani) AlumnoGuarani
+        +desmarcarEnviados(List~AlumnoDeteccionRequest~) List~AlumnoDeteccionRequest~
+    }
+
+    class AlumnoDeteccionRequest {
+        <<DTO>>
+        +Integer ubicacion
+        +Integer propuesta
+        +String nroDocumento
+        +Short tipoDocumento
+        +Boolean pendiente
+    }
+
+    class ProcessNextPreuniversitarioUseCase {
+        <<Interface>>
+        +processNextPreuniversitario() void
+    }
+
+    class CheckAllToUnmarkSendedUseCase {
+        <<Interface>>
+        +checkAllAlumnosWithoutChequera(List~AlumnoDeteccionRequest~) List~AlumnoDeteccionRequest~
+    }
+
+    class Jsonifier {
+        <<Utility>>
+        +builder(T) Builder~T~
+    }
+
     class GuaraniApplicationTests {
         <<SpringBootTest>>
         +contextLoads() void
     }
 
     GuaraniApplication --> GuaraniConfiguration : uses
+    AlumnoGuaraniScheduler --> AlumnoGuaraniService : schedules
+    AlumnoGuaraniService --> ProcessNextPreuniversitarioUseCase : uses
+    AlumnoGuaraniService --> CheckAllToUnmarkSendedUseCase : uses
+    ProcessNextPreuniversitarioUseCase --> AlumnoGuaraniClient : calls
+    ProcessNextPreuniversitarioUseCase --> GetAlumnosByPropuestaTipoUseCase : queries
+    ProcessNextPreuniversitarioUseCase --> CheckAllToUnmarkSendedUseCase : delegates
+    CheckAllToUnmarkSendedUseCase --> AlumnoGuaraniClient : calls
     AlumnoGuaraniController --> AlumnoGuaraniService : uses
     PersonaGuaraniController --> PersonaGuaraniService : uses
     PersonaContactoGuaraniController --> PersonaContactoGuaraniService : uses
