@@ -3,9 +3,9 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-brightgreen)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-25-orange)](https://openjdk.org/projects/jdk/25/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.4.0-blue)](pom.xml)
+[![Version](https://img.shields.io/badge/version-0.5.0-blue)](pom.xml)
 
-Microservicio de tesorería integrado con el sistema Guarani. Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, tipos de propuestas, tipos de documentos y ubicaciones, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, y documentación OpenAPI.
+Microservicio de tesorería integrado con el sistema Guarani. Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, tipos de propuestas, tipos de documentos y ubicaciones, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, procesamiento programado de preuniversitarios, y documentación OpenAPI.
 
 ## Arquitectura
 
@@ -22,11 +22,13 @@ C4Context
     System_Ext(consul, "HashiCorp Consul", "Service discovery y registro")
     System_Ext(feign_clients, "Servicios Internos", "Otros microservicios (Feign clients)")
     System_Ext(postgresql, "PostgreSQL", "Base de datos relacional (esquema negocio)")
+    System_Ext(core, "Tesoreria Core Service", "Procesamiento y gestión de chequeras")
 
     Rel(user, guarani, "Consulta endpoints REST", "HTTP/JSON")
     Rel(guarani, consul, "Registro y descubrimiento", "HTTP/8500")
     Rel(guarani, feign_clients, "Comunicación interna", "HTTP/OpenFeign")
     Rel(guarani, postgresql, "Persistencia JPA", "JDBC/5432")
+    Rel(guarani, core, "Procesamiento preuniversitario y chequeras", "HTTP/Feign")
 ```
 
 ### Diagrama de Contenedores
@@ -43,8 +45,9 @@ C4Container
         Container(service, "Services", "Java", "Lógica de negocio")
         Container(hexagonal, "Hexagonal Modules", "Java", "Alumno, Persona, PersonaContacto, PersonaDocumento, Propuesta, PropuestaTipo, TipoDocumento, Ubicacion")
         Container(jpa, "JPA Repositories", "Spring Data JPA", "Persistencia y mapeo ORM")
-        Container(client, "Feign Clients", "OpenFeign", "Clientes HTTP declarativos")
+        Container(client, "Feign Clients", "OpenFeign", "Clientes HTTP declarativos (tesoreria-core-service)")
         Container(cache, "Cache Layer", "Caffeine", "Caché en memoria")
+        Container(scheduler, "Scheduler", "Spring @Scheduled", "Procesamiento periódico de preuniversitarios (60s)")
         Container(openapi, "API Docs", "SpringDoc OpenAPI", "Documentación Swagger UI")
     }
 
@@ -59,6 +62,7 @@ C4Container
     Rel(hexagonal, jpa, "Persistencia")
     Rel(service, client, "Invocación")
     Rel(service, cache, "Cache consultas")
+    Rel(scheduler, service, "Ejecuta tareas programadas")
     Rel(client, internal_svc, "HTTP/Feign")
     Rel(jpa, postgresql, "JDBC", "5432")
     Rel(guarani, consul, "Registro", "HTTP")
@@ -129,6 +133,43 @@ sequenceDiagram
     Note over REST,DB: Actualmente implementado en propuesta, propuestaTipo, tipoDocumento y ubicacion
 ```
 
+### Diagrama de Secuencia — Scheduler Preuniversitario
+
+```mermaid
+sequenceDiagram
+    participant Timer as Spring Scheduler
+    participant Scheduler as AlumnoGuaraniScheduler
+    participant Service as AlumnoGuaraniService
+    participant PreUC as ProcessNextPreuniversitario UseCase
+    participant GetUC as GetAlumnosByPropuestaTipo UseCase
+    participant JPA as JPA Repository Adapter
+    participant DB as PostgreSQL
+    participant CheckUC as CheckAllToUnmarkSended UseCase
+    participant Feign as AlumnoGuaraniClient
+    participant Core as Tesoreria Core Service
+
+    Timer->>Scheduler: @Scheduled(fixedRate=60000)
+    Scheduler->>Service: processNextInscripcion()
+    Service->>PreUC: processNextPreuniversitario()
+    PreUC->>GetUC: getByPropuestaTipo(204)
+    GetUC->>JPA: findAllByPropuestaTipo(204)
+    JPA->>DB: SELECT * FROM alumno WHERE propuesta_tipo=204
+    DB-->>JPA: List&lt;AlumnoGuaraniEntity&gt;
+    JPA->>JPA: map to domain
+    JPA-->>GetUC: List&lt;AlumnoGuarani&gt;
+    GetUC-->>PreUC: List&lt;AlumnoGuarani&gt;
+    PreUC->>PreUC: Build AlumnoDeteccionRequest list
+    PreUC->>CheckUC: checkAllAlumnosWithoutChequera(encontrados)
+    CheckUC->>Feign: desmarcarEnviados(encontrados)
+    Feign->>Core: POST /api/tesoreria/core/guarani/alumno/desmarcar/enviadas
+    Core-->>Feign: List&lt;AlumnoDeteccionRequest&gt; pendientes
+    Feign-->>CheckUC: List&lt;AlumnoDeteccionRequest&gt; pendientes
+    CheckUC-->>PreUC: List&lt;AlumnoDeteccionRequest&gt; pendientes
+    PreUC->>PreUC: Log pendientes &amp; process first alumno
+    PreUC-->>Service: void
+    Service-->>Scheduler: void
+```
+
 ### Estructura del Proyecto
 
 ```mermaid
@@ -140,6 +181,7 @@ classDiagram
     class GuaraniConfiguration {
         <<Configuration>>
         <<EnableFeignClients>>
+        <<EnableScheduling>>
     }
 
     class HelloTest {
@@ -224,12 +266,54 @@ classDiagram
         <<Service>>
     }
 
+    class AlumnoGuaraniScheduler {
+        <<Component>>
+        +generatePreuniversitarios() void
+    }
+
+    class AlumnoGuaraniClient {
+        <<FeignClient>>
+        +createPreuniversitario(AlumnoGuarani) AlumnoGuarani
+        +desmarcarEnviados(List~AlumnoDeteccionRequest~) List~AlumnoDeteccionRequest~
+    }
+
+    class AlumnoDeteccionRequest {
+        <<DTO>>
+        +Integer ubicacion
+        +Integer propuesta
+        +String nroDocumento
+        +Short tipoDocumento
+        +Boolean pendiente
+    }
+
+    class ProcessNextPreuniversitarioUseCase {
+        <<Interface>>
+        +processNextPreuniversitario() void
+    }
+
+    class CheckAllToUnmarkSendedUseCase {
+        <<Interface>>
+        +checkAllAlumnosWithoutChequera(List~AlumnoDeteccionRequest~) List~AlumnoDeteccionRequest~
+    }
+
+    class Jsonifier {
+        <<Utility>>
+        +builder(T) Builder~T~
+    }
+
     class GuaraniApplicationTests {
         <<SpringBootTest>>
         +contextLoads() void
     }
 
     GuaraniApplication --> GuaraniConfiguration : uses
+    AlumnoGuaraniScheduler --> AlumnoGuaraniService : schedules
+    AlumnoGuaraniService --> ProcessNextPreuniversitarioUseCase : uses
+    AlumnoGuaraniService --> CheckAllToUnmarkSendedUseCase : uses
+    ProcessNextPreuniversitarioUseCase --> AlumnoGuaraniClient : calls
+    ProcessNextPreuniversitarioUseCase --> GetAlumnosByPropuestaTipoUseCase : queries
+    ProcessNextPreuniversitarioUseCase --> CheckAllToUnmarkSendedUseCase : delegates
+    CheckAllToUnmarkSendedUseCase --> AlumnoGuaraniClient : calls
     AlumnoGuaraniController --> AlumnoGuaraniService : uses
     PersonaGuaraniController --> PersonaGuaraniService : uses
     PersonaContactoGuaraniController --> PersonaContactoGuaraniService : uses
@@ -268,8 +352,26 @@ src/
 │   │   │   └── GuaraniConfiguration.java
 │   │   ├── test/
 │   │   │   └── HelloTest.java
+│   │   ├── util/
+│   │   │   └── Jsonifier.java
 │   │   └── hexagonal/guarani/
 │   │       ├── alumno/
+│   │       │   ├── application/
+│   │       │   │   ├── service/AlumnoGuaraniService.java
+│   │       │   │   └── usecases/
+│   │       │   │       ├── CheckAllToUnmarkSendedUseCaseImpl.java
+│   │       │   │       └── ProcessNextPreuniversitarioUseCaseImpl.java
+│   │       │   ├── domain/
+│   │       │   │   ├── model/AlumnoGuarani.java
+│   │       │   │   └── ports/in/
+│   │       │   │       ├── CheckAllToUnmarkSendedUseCase.java
+│   │       │   │       └── ProcessNextPreuniversitarioUseCase.java
+│   │       │   └── infrastructure/
+│   │       │       ├── client/
+│   │       │       │   ├── AlumnoGuaraniClient.java
+│   │       │       │   └── dto/AlumnoDeteccionRequest.java
+│   │       │       ├── persistence/
+│   │       │       └── scheduler/AlumnoGuaraniScheduler.java
 │   │       ├── persona/
 │   │       ├── personaContacto/
 │   │       ├── personaDocumento/

@@ -8,8 +8,10 @@ C4Context
     System_Ext(consul, "HashiCorp Consul", "Service discovery y registro")
     System_Ext(feign_clients, "Servicios Internos", "Otros microservicios (Feign clients)")
     System_Ext(postgresql, "PostgreSQL", "Base de datos relacional (esquema negocio)")
+    System_Ext(core, "Tesoreria Core Service", "Procesamiento y gestión de chequeras")
 
     Rel(user, guarani, "Consulta endpoints REST", "HTTP/JSON")
     Rel(guarani, consul, "Registro y descubrimiento", "HTTP/8500")
     Rel(guarani, feign_clients, "Comunicación interna", "HTTP/OpenFeign")
     Rel(guarani, postgresql, "Persistencia JPA", "JDBC/5432")
+    Rel(guarani, core, "Procesamiento preuniversitario y chequeras", "HTTP/Feign")

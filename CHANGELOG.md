@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.5.0] - 2026-06-23
+
+### Added
+- **Scheduled preuniversitario processing:**
+  - `@EnableScheduling` in `GuaraniConfiguration` to enable task scheduling
+  - New `AlumnoGuaraniScheduler` with `@Scheduled(fixedRate = 60000)` for periodic preuniversitario processing
+  - `ProcessNextPreuniversitarioUseCase` + implementation: queries alumnos by propuesta tipo 204, builds detection requests, filters already-processed ones, and processes first pending alumno
+  - `CheckAllToUnmarkSendedUseCase` + implementation: delegates to Feign client to unmark already-sent alumnos
+- **New Feign client `AlumnoGuaraniClient`** targeting `tesoreria-core-service` with endpoints:
+  - `POST /api/tesoreria/core/guarani/alumno/create/preuniversitario`
+  - `POST /api/tesoreria/core/guarani/alumno/desmarcar/enviadas`
+- **New DTO `AlumnoDeteccionRequest`** with fields: ubicacion, propuesta, nroDocumento, tipoDocumento, pendiente
+- **New utility class `Jsonifier`** for JSON serialization with pretty-print support and fluent builder API
+- **`AlumnoGuarani.jsonify()`** method using Jsonifier for domain model debugging
+- **`@Transactional(readOnly = true)`** on `JpaAlumnoGuaraniRepositoryAdapter.findAllByPropuestaTipo()`
+- New documentation diagram `scheduler-preuniversitario.mmd` describing the scheduler flow
+
+### Changed
+- Version bumped from `0.4.0` to `0.5.0`
+- Restored default Spring Boot logging (removed exclusion of `spring-boot-starter-logging`)
+- Updated architecture diagrams (context, container, project structure) to reflect new components (`tesoreria-core-service`, scheduler, Feign client)
+- Documentation pipeline (`generate-docs.yml`): added injection for the new scheduler sequence diagram
+- Updated `README.md` with new scheduler section, updated diagrams, and project structure tree
+
 ## [0.4.0] - 2026-06-20
 
 ### Added

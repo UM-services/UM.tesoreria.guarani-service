@@ -4,6 +4,7 @@ import lombok.*;
 import um.tesoreria.guarani.hexagonal.guarani.persona.domain.model.PersonaGuarani;
 import um.tesoreria.guarani.hexagonal.guarani.propuesta.domain.model.PropuestaGuarani;
 import um.tesoreria.guarani.hexagonal.guarani.ubicacion.domain.model.UbicacionGuarani;
+import um.tesoreria.guarani.util.Jsonifier;
 
 import java.math.BigDecimal;
 
@@ -30,4 +31,8 @@ public class AlumnoGuarani {
     private PersonaGuarani personaRel;
     private PropuestaGuarani propuestaRel;
     private UbicacionGuarani ubicacionRel;
+
+    public String jsonify() {
+        return Jsonifier.builder(this).build();
+    }
 }
