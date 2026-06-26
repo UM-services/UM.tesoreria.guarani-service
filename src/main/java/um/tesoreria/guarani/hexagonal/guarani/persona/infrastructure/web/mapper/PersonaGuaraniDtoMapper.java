@@ -22,7 +22,7 @@ public class PersonaGuaraniDtoMapper {
     public PersonaGuaraniResponse toResponse(PersonaGuarani domain) {
         if (domain == null) return null;
         return PersonaGuaraniResponse.builder()
-                .personaId(domain.getPersonaId())
+                .persona(domain.getPersona())
                 .apellido(domain.getApellido())
                 .nombres(domain.getNombres())
                 .apellidoElegido(domain.getApellidoElegido())

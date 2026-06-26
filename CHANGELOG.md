@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.6.0] - 2026-06-25
+
+### BREAKING
+- **Renamed fields in domain models, DTOs, and API responses:**
+  - `AlumnoGuarani.alumnoId` → `alumno` (affects JSON response key)
+  - `PersonaGuarani.personaId` → `persona`
+  - `PropuestaGuarani.propuestaId` → `propuesta`
+  - `PropuestaTipoGuarani.propuestaTipoId` → `propuestaTipo`
+  - `UbicacionGuarani.ubicacionId` → `ubicacion`
+  - All corresponding mappers, response DTOs, and entity converters updated
+- **Removed `CheckAllToUnmarkSendedUseCase` from `AlumnoGuaraniService`** — the use case is now used only internally by `ProcessNextPreuniversitarioUseCaseImpl`; removed `checkAllAlumnosWithoutChequera()` public method from the service layer
+
+### Added
+- **New test endpoint** `GET /api/tesoreria/guarani/alumno/generate/preuniversitario/test` in `AlumnoGuaraniController` for manual scheduler trigger
+- **Batch preuniversitario processing:** `ProcessNextPreuniversitarioUseCaseImpl` now processes up to 10 pending alumnos per cycle (previously only the first one), with per-alumno error handling via try-catch
+- **`alumno` field to `AlumnoDeteccionRequest`** for tracking the original alumno ID through the pipeline
+- **`@ConditionalOnProperty` on `AlumnoGuaraniScheduler`** controlled by `app.testing` property (default: enabled)
+- **`app.testing` property** in `bootstrap.yml` (env var `APP_TESTING`, default `false`) to disable scheduler during integration tests
+
+### Changed
+- Version bumped from `0.5.0` to `0.6.0`
+- **Scheduler interval reduced** from `60000ms` (1 min) to `600000ms` (10 min) to reduce load on `tesoreria-core-service`
+- **Preuniversitario processing flow:** now filters out already-processed alumnos after desmarcar call, then iterates over first 10 pending ones calling `createPreuniversitario` individually
+- `JpaAlumnoGuaraniRepositoryAdapter.findAllByPropuestaTipo()` returns mutable list (`Collectors.toList()` instead of `.toList()`)
+- Updated architecture and sequence diagrams in `docs/diagrams/` to reflect new field names, batch processing, and scheduler interval
+
 ## [0.5.0] - 2026-06-23
 
 ### Added

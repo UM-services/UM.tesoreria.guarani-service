@@ -13,6 +13,7 @@ import um.tesoreria.guarani.util.Jsonifier;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -33,6 +34,7 @@ public class ProcessNextPreuniversitarioUseCaseImpl implements ProcessNextPreuni
         List<AlumnoDeteccionRequest> encontrados = new ArrayList<>();
         for (var alumno : alumnos) {
             encontrados.add(AlumnoDeteccionRequest.builder()
+                    .alumno(alumno.getAlumno())
                     .ubicacion(alumno.getUbicacion())
                     .propuesta(alumno.getPropuesta())
                     .nroDocumento(alumno.getPersonaRel().getDocumentoPrincipalRel().getNroDocumento())
@@ -40,13 +42,20 @@ public class ProcessNextPreuniversitarioUseCaseImpl implements ProcessNextPreuni
                     .pendiente(true)
                     .build());
         }
-        log.debug("Encontrados -> {}", Jsonifier.builder(encontrados).build());
+//        log.debug("Encontrados -> {}", Jsonifier.builder(encontrados).build());
         List<AlumnoDeteccionRequest> pendientes = checkAllToUnmarkSendedUseCase.checkAllAlumnosWithoutChequera(encontrados);
-        log.debug("Pendientes -> {}", Jsonifier.builder(pendientes).build());
+//        log.debug("Pendientes -> {}", Jsonifier.builder(pendientes).build());
+        var alumnosPendientes = pendientes.stream().map(AlumnoDeteccionRequest::getAlumno).collect(Collectors.toSet());
+        alumnos.removeIf(alumno -> !alumnosPendientes.contains(alumno.getAlumno()));
         // Construir un proceso que genere las chequeras de los alumnos "nuevos"
-        var alumno = alumnos.getFirst();
-        log.debug("Alumno -> {}", alumno.jsonify());
-//        alumnoGuaraniClient.createPreuniversitario(alumno);
+        for (var alumno : alumnos.stream().limit(10).toList()) {
+            log.debug("\n\nProcessing Alumno -> {}\n\n", alumno.jsonify());
+            try {
+                alumnoGuaraniClient.createPreuniversitario(alumno);
+            } catch (Exception e) {
+                log.error(e.getMessage());
+            }
+        }
     }
 
 }

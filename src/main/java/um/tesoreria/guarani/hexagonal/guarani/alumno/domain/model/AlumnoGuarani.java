@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AlumnoGuarani {
-    private Integer alumnoId;
+    private Integer alumno;
     private String legajo;
     private Integer persona;
     private Integer propuesta;

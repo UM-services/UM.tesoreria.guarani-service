@@ -10,7 +10,7 @@ public class PropuestaTipoGuaraniDtoMapper {
     public PropuestaTipoGuaraniResponse toResponse(PropuestaTipoGuarani domain) {
         if (domain == null) return null;
         return PropuestaTipoGuaraniResponse.builder()
-                .propuestaTipoId(domain.getPropuestaTipoId())
+                .propuestaTipo(domain.getPropuestaTipo())
                 .descripcion(domain.getDescripcion())
                 .otorgaTitulo(domain.getOtorgaTitulo())
                 .reportaAraucano(domain.getReportaAraucano())

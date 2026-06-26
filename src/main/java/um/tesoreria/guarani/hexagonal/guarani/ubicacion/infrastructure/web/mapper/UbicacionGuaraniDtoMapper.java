@@ -10,7 +10,7 @@ public class UbicacionGuaraniDtoMapper {
     public UbicacionGuaraniResponse toResponse(UbicacionGuarani domain) {
         if (domain == null) return null;
         return UbicacionGuaraniResponse.builder()
-                .ubicacionId(domain.getUbicacionId())
+                .ubicacion(domain.getUbicacion())
                 .nombre(domain.getNombre())
                 .ubicacionTipo(domain.getUbicacionTipo())
                 .localidad(domain.getLocalidad())

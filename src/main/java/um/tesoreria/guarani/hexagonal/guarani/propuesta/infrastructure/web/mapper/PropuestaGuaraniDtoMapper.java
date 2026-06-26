@@ -17,7 +17,7 @@ public class PropuestaGuaraniDtoMapper {
     public PropuestaGuaraniResponse toResponse(PropuestaGuarani domain) {
         if (domain == null) return null;
         return PropuestaGuaraniResponse.builder()
-                .propuestaId(domain.getPropuestaId())
+                .propuesta(domain.getPropuesta())
                 .nombre(domain.getNombre())
                 .nombreAbreviado(domain.getNombreAbreviado())
                 .codigo(domain.getCodigo())

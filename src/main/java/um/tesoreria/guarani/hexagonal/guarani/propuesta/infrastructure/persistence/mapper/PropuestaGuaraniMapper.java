@@ -17,7 +17,7 @@ public class PropuestaGuaraniMapper {
     public PropuestaGuaraniEntity toEntity(PropuestaGuarani domain) {
         if (domain == null) return null;
         return PropuestaGuaraniEntity.builder()
-                .propuesta(domain.getPropuestaId())
+                .propuesta(domain.getPropuesta())
                 .nombre(domain.getNombre())
                 .nombreAbreviado(domain.getNombreAbreviado())
                 .codigo(domain.getCodigo())
@@ -39,7 +39,7 @@ public class PropuestaGuaraniMapper {
     public PropuestaGuarani toDomain(PropuestaGuaraniEntity entity) {
         if (entity == null) return null;
         return PropuestaGuarani.builder()
-                .propuestaId(entity.getPropuesta())
+                .propuesta(entity.getPropuesta())
                 .nombre(entity.getNombre())
                 .nombreAbreviado(entity.getNombreAbreviado())
                 .codigo(entity.getCodigo())

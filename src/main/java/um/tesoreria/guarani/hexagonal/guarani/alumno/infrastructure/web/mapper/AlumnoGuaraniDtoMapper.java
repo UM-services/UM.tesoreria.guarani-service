@@ -23,7 +23,7 @@ public class AlumnoGuaraniDtoMapper {
     public AlumnoGuaraniResponse toResponse(AlumnoGuarani domain) {
         if (domain == null) return null;
         return AlumnoGuaraniResponse.builder()
-                .alumnoId(domain.getAlumnoId())
+                .alumno(domain.getAlumno())
                 .legajo(domain.getLegajo())
                 .persona(domain.getPersona())
                 .propuesta(domain.getPropuesta())

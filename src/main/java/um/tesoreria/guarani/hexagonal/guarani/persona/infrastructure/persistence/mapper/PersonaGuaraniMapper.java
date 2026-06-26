@@ -22,7 +22,7 @@ public class PersonaGuaraniMapper {
     public PersonaGuaraniEntity toEntity(PersonaGuarani domain) {
         if (domain == null) return null;
         return PersonaGuaraniEntity.builder()
-                .persona(domain.getPersonaId())
+                .persona(domain.getPersona())
                 .apellido(domain.getApellido())
                 .nombres(domain.getNombres())
                 .apellidoElegido(domain.getApellidoElegido())
@@ -60,7 +60,7 @@ public class PersonaGuaraniMapper {
     public PersonaGuarani toDomain(PersonaGuaraniEntity entity) {
         if (entity == null) return null;
         return PersonaGuarani.builder()
-                .personaId(entity.getPersona())
+                .persona(entity.getPersona())
                 .apellido(entity.getApellido())
                 .nombres(entity.getNombres())
                 .apellidoElegido(entity.getApellidoElegido())

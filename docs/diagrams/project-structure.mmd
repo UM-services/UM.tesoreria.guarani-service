@@ -18,6 +18,7 @@ classDiagram
         <<RestController>>
         +getAlumnoGuarani(alumno) ResponseEntity
         +getAlumnosByPropuestaTipo(propuestaTipo) ResponseEntity
+        +generatePreuniversitarioTest() ResponseEntity
     }
 
     class PersonaGuaraniController {
@@ -104,6 +105,7 @@ classDiagram
 
     class AlumnoDeteccionRequest {
         <<DTO>>
+        +Integer alumno
         +Integer ubicacion
         +Integer propuesta
         +String nroDocumento
@@ -134,7 +136,6 @@ classDiagram
     GuaraniApplication --> GuaraniConfiguration : uses
     AlumnoGuaraniScheduler --> AlumnoGuaraniService : schedules
     AlumnoGuaraniService --> ProcessNextPreuniversitarioUseCase : uses
-    AlumnoGuaraniService --> CheckAllToUnmarkSendedUseCase : uses
     ProcessNextPreuniversitarioUseCase --> AlumnoGuaraniClient : calls
     ProcessNextPreuniversitarioUseCase --> GetAlumnosByPropuestaTipoUseCase : queries
     ProcessNextPreuniversitarioUseCase --> CheckAllToUnmarkSendedUseCase : delegates

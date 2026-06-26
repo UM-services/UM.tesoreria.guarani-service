@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PropuestaGuarani {
-    private Integer propuestaId;
+    private Integer propuesta;
     private String nombre;
     private String nombreAbreviado;
     private String codigo;
