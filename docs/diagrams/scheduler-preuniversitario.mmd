@@ -10,7 +10,7 @@ sequenceDiagram
     participant Feign as AlumnoGuaraniClient
     participant Core as Tesoreria Core Service
 
-    Timer->>Scheduler: @Scheduled(fixedRate=60000)
+    Timer->>Scheduler: @Scheduled(fixedRate=600000)
     Scheduler->>Service: processNextInscripcion()
     Service->>PreUC: processNextPreuniversitario()
     PreUC->>GetUC: getByPropuestaTipo(204)
@@ -20,13 +20,20 @@ sequenceDiagram
     JPA->>JPA: map to domain
     JPA-->>GetUC: List&lt;AlumnoGuarani&gt;
     GetUC-->>PreUC: List&lt;AlumnoGuarani&gt;
-    PreUC->>PreUC: Build AlumnoDeteccionRequest list
+    PreUC->>PreUC: Build AlumnoDeteccionRequest list (incl. alumno field)
     PreUC->>CheckUC: checkAllAlumnosWithoutChequera(encontrados)
     CheckUC->>Feign: desmarcarEnviados(encontrados)
     Feign->>Core: POST /api/tesoreria/core/guarani/alumno/desmarcar/enviadas
     Core-->>Feign: List&lt;AlumnoDeteccionRequest&gt; pendientes
     Feign-->>CheckUC: List&lt;AlumnoDeteccionRequest&gt; pendientes
     CheckUC-->>PreUC: List&lt;AlumnoDeteccionRequest&gt; pendientes
-    PreUC->>PreUC: Log pendientes &amp; process first alumno
+    PreUC->>PreUC: Filter: keep only alumnos in pendientes set
+    loop For each of first 10 alumnos
+        PreUC->>Feign: createPreuniversitario(alumno)
+        Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/preuniversitario
+        Core-->>Feign: 200 OK
+        Feign-->>PreUC: response
+        Note over PreUC: Catch &amp; log error per alumno
+    end
     PreUC-->>Service: void
     Service-->>Scheduler: void

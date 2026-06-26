@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UbicacionGuaraniResponse {
-    private Integer ubicacionId;
+    private Integer ubicacion;
     private String nombre;
     private Integer ubicacionTipo;
     private Integer localidad;

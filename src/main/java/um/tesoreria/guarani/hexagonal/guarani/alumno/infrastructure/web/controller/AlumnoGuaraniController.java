@@ -1,6 +1,7 @@
 package um.tesoreria.guarani.hexagonal.guarani.alumno.infrastructure.web.controller;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/tesoreria/guarani/alumno")
 @RequiredArgsConstructor
+@Slf4j
 public class AlumnoGuaraniController {
 
     private final AlumnoGuaraniService service;
@@ -37,5 +39,12 @@ public class AlumnoGuaraniController {
         return ResponseEntity.ok(service.getAllByPropuestaTipo(propuestaTipo).stream()
                 .map(mapper::toResponse)
                 .toList());
+    }
+
+    @GetMapping("/generate/preuniversitario/test")
+    public ResponseEntity<Void> generatePreuniversitarioTest() {
+        log.debug("\n\nProcessing AlumnoGuaraniController.generatePreuniversitarioTest\n\n");
+        service.processNextInscripcion();
+        return ResponseEntity.noContent().build();
     }
 }

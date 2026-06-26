@@ -10,7 +10,7 @@ public class UbicacionGuaraniMapper {
     public UbicacionGuaraniEntity toEntity(UbicacionGuarani domain) {
         if (domain == null) return null;
         return UbicacionGuaraniEntity.builder()
-                .ubicacion(domain.getUbicacionId())
+                .ubicacion(domain.getUbicacion())
                 .nombre(domain.getNombre())
                 .ubicacionTipo(domain.getUbicacionTipo())
                 .localidad(domain.getLocalidad())
@@ -29,7 +29,7 @@ public class UbicacionGuaraniMapper {
     public UbicacionGuarani toDomain(UbicacionGuaraniEntity entity) {
         if (entity == null) return null;
         return UbicacionGuarani.builder()
-                .ubicacionId(entity.getUbicacion())
+                .ubicacion(entity.getUbicacion())
                 .nombre(entity.getNombre())
                 .ubicacionTipo(entity.getUbicacionTipo())
                 .localidad(entity.getLocalidad())

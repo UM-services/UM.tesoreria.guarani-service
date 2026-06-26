@@ -23,7 +23,7 @@ public class AlumnoGuaraniMapper {
     public AlumnoGuaraniEntity toEntity(AlumnoGuarani domain) {
         if (domain == null) return null;
         return AlumnoGuaraniEntity.builder()
-                .alumno(domain.getAlumnoId())
+                .alumno(domain.getAlumno())
                 .legajo(domain.getLegajo())
                 .persona(domain.getPersona())
                 .propuesta(domain.getPropuesta())
@@ -45,7 +45,7 @@ public class AlumnoGuaraniMapper {
     public AlumnoGuarani toDomain(AlumnoGuaraniEntity entity) {
         if (entity == null) return null;
         return AlumnoGuarani.builder()
-                .alumnoId(entity.getAlumno())
+                .alumno(entity.getAlumno())
                 .legajo(entity.getLegajo())
                 .persona(entity.getPersona())
                 .propuesta(entity.getPropuesta())

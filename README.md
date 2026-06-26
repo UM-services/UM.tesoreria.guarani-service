@@ -3,7 +3,7 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-brightgreen)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-25-orange)](https://openjdk.org/projects/jdk/25/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.5.0-blue)](pom.xml)
+[![Version](https://img.shields.io/badge/version-0.6.0-blue)](pom.xml)
 
 Microservicio de tesorería integrado con el sistema Guarani. Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, tipos de propuestas, tipos de documentos y ubicaciones, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, procesamiento programado de preuniversitarios, y documentación OpenAPI.
 
@@ -47,7 +47,7 @@ C4Container
         Container(jpa, "JPA Repositories", "Spring Data JPA", "Persistencia y mapeo ORM")
         Container(client, "Feign Clients", "OpenFeign", "Clientes HTTP declarativos (tesoreria-core-service)")
         Container(cache, "Cache Layer", "Caffeine", "Caché en memoria")
-        Container(scheduler, "Scheduler", "Spring @Scheduled", "Procesamiento periódico de preuniversitarios (60s)")
+        Container(scheduler, "Scheduler", "Spring @Scheduled", "Procesamiento periódico de preuniversitarios (10min)")
         Container(openapi, "API Docs", "SpringDoc OpenAPI", "Documentación Swagger UI")
     }
 
@@ -148,7 +148,7 @@ sequenceDiagram
     participant Feign as AlumnoGuaraniClient
     participant Core as Tesoreria Core Service
 
-    Timer->>Scheduler: @Scheduled(fixedRate=60000)
+    Timer->>Scheduler: @Scheduled(fixedRate=600000)
     Scheduler->>Service: processNextInscripcion()
     Service->>PreUC: processNextPreuniversitario()
     PreUC->>GetUC: getByPropuestaTipo(204)
@@ -158,14 +158,21 @@ sequenceDiagram
     JPA->>JPA: map to domain
     JPA-->>GetUC: List&lt;AlumnoGuarani&gt;
     GetUC-->>PreUC: List&lt;AlumnoGuarani&gt;
-    PreUC->>PreUC: Build AlumnoDeteccionRequest list
+    PreUC->>PreUC: Build AlumnoDeteccionRequest list (incl. alumno field)
     PreUC->>CheckUC: checkAllAlumnosWithoutChequera(encontrados)
     CheckUC->>Feign: desmarcarEnviados(encontrados)
     Feign->>Core: POST /api/tesoreria/core/guarani/alumno/desmarcar/enviadas
     Core-->>Feign: List&lt;AlumnoDeteccionRequest&gt; pendientes
     Feign-->>CheckUC: List&lt;AlumnoDeteccionRequest&gt; pendientes
     CheckUC-->>PreUC: List&lt;AlumnoDeteccionRequest&gt; pendientes
-    PreUC->>PreUC: Log pendientes &amp; process first alumno
+    PreUC->>PreUC: Filter: keep only alumnos in pendientes set
+    loop For each of first 10 alumnos
+        PreUC->>Feign: createPreuniversitario(alumno)
+        Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/preuniversitario
+        Core-->>Feign: 200 OK
+        Feign-->>PreUC: response
+        Note over PreUC: Catch &amp; log error per alumno
+    end
     PreUC-->>Service: void
     Service-->>Scheduler: void
 ```
@@ -193,6 +200,7 @@ classDiagram
         <<RestController>>
         +getAlumnoGuarani(alumno) ResponseEntity
         +getAlumnosByPropuestaTipo(propuestaTipo) ResponseEntity
+        +generatePreuniversitarioTest() ResponseEntity
     }
 
     class PersonaGuaraniController {
@@ -279,6 +287,7 @@ classDiagram
 
     class AlumnoDeteccionRequest {
         <<DTO>>
+        +Integer alumno
         +Integer ubicacion
         +Integer propuesta
         +String nroDocumento
@@ -309,7 +318,6 @@ classDiagram
     GuaraniApplication --> GuaraniConfiguration : uses
     AlumnoGuaraniScheduler --> AlumnoGuaraniService : schedules
     AlumnoGuaraniService --> ProcessNextPreuniversitarioUseCase : uses
-    AlumnoGuaraniService --> CheckAllToUnmarkSendedUseCase : uses
     ProcessNextPreuniversitarioUseCase --> AlumnoGuaraniClient : calls
     ProcessNextPreuniversitarioUseCase --> GetAlumnosByPropuestaTipoUseCase : queries
     ProcessNextPreuniversitarioUseCase --> CheckAllToUnmarkSendedUseCase : delegates
@@ -331,6 +339,7 @@ classDiagram
 | GET | `/api/tesoreria/guarani/hello/test` | Health check del servicio |
 | GET | `/api/tesoreria/guarani/alumno/{id}` | Obtiene un alumno por ID |
 | GET | `/api/tesoreria/guarani/alumno/propuestaTipo/{propuestaTipo}` | Obtiene alumnos por tipo de propuesta |
+| GET | `/api/tesoreria/guarani/alumno/generate/preuniversitario/test` | Disparador manual del scheduler preuniversitario |
 | GET | `/api/tesoreria/guarani/persona/{id}` | Obtiene una persona por ID |
 | GET | `/api/tesoreria/guarani/personaContacto/{id}` | Obtiene un contacto de persona por ID |
 | GET | `/api/tesoreria/guarani/personaDocumento/{id}` | Obtiene un documento de persona por ID |
@@ -444,6 +453,7 @@ Las propiedades se definen en `bootstrap.yml` y pueden sobrescribirse por variab
 | `APP_DATABASE` | `database` | Nombre de la base de datos |
 | `APP_USERNAME` | `username` | Usuario de PostgreSQL |
 | `APP_PASSWORD` | `password` | Contraseña de PostgreSQL |
+| `APP_TESTING` | `false` | Desactiva el scheduler programado para entornos de prueba |
 
 El servicio se registra en Consul con:
 - **Nombre:** `tesoreria-guarani-service`

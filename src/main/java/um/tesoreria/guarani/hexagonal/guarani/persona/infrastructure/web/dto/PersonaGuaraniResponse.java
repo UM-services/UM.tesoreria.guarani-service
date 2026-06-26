@@ -15,7 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PersonaGuaraniResponse {
-    private Integer personaId;
+    private Integer persona;
     private String apellido;
     private String nombres;
     private String apellidoElegido;

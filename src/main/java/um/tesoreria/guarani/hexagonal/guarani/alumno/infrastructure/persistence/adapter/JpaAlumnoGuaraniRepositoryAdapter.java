@@ -10,6 +10,7 @@ import um.tesoreria.guarani.hexagonal.guarani.alumno.infrastructure.persistence.
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -29,6 +30,6 @@ public class JpaAlumnoGuaraniRepositoryAdapter implements AlumnoGuaraniRepositor
     public List<AlumnoGuarani> findAllByPropuestaTipo(Integer propuestaTipo) {
         return jpaAlumnoGuaraniRepository.findAllByPropuestaTipo(propuestaTipo).stream()
                 .map(mapper::toDomain)
-                .toList();
+                .collect(Collectors.toList());
     }
 }

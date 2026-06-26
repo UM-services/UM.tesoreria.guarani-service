@@ -5,6 +5,7 @@ app:
   database: ${APP_DATABASE:database}
   username: ${APP_USERNAME:username}
   password: ${APP_PASSWORD:password}
+  testing: ${APP_TESTING:false}
   consul:
     host: consul-service
     port: 8500

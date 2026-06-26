@@ -8,7 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PropuestaTipoGuaraniResponse {
-    private Integer propuestaTipoId;
+    private Integer propuestaTipo;
     private String descripcion;
     private String otorgaTitulo;
     private String reportaAraucano;
