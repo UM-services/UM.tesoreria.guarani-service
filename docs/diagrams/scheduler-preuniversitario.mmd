@@ -28,7 +28,9 @@ sequenceDiagram
     Feign-->>CheckUC: List&lt;AlumnoDeteccionRequest&gt; pendientes
     CheckUC-->>PreUC: List&lt;AlumnoDeteccionRequest&gt; pendientes
     PreUC->>PreUC: Filter: keep only alumnos in pendientes set
-    PreUC->>PreUC: Filter: remove if personaRel.requisitosPresentados has requisitoRel.id == 1024
+    PreUC->>PreUC: Filter: separate alumnos with requisitoRel.id == 1024
+    PreUC->>PreUC: Log filtered alumnos via Jsonifier
+    PreUC->>PreUC: Remove alumnos with requisitoRel.id == 1024
     loop For each of first 50 alumnos
         PreUC->>Feign: createPreuniversitario(alumno)
         Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/preuniversitario
