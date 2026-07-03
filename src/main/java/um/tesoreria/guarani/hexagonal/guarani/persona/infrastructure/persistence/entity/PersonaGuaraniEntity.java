@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import um.tesoreria.guarani.hexagonal.guarani.personaContacto.infrastructure.persistence.entity.PersonaContactoGuaraniEntity;
 import um.tesoreria.guarani.hexagonal.guarani.personaDocumento.infrastructure.persistence.entity.PersonaDocumentoGuaraniEntity;
+import um.tesoreria.guarani.hexagonal.guarani.requisitoPresentado.infrastructure.persistence.entity.RequisitoPresentadoGuaraniEntity;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -46,6 +47,10 @@ public class PersonaGuaraniEntity {
     @OneToMany
     @JoinColumn(name = "persona", referencedColumnName = "persona")
     private List<PersonaContactoGuaraniEntity> contactos;
+
+    @OneToMany
+    @JoinColumn(name = "persona", referencedColumnName = "persona")
+    private List<RequisitoPresentadoGuaraniEntity> requisitosPresentados;
 
     private String usuario;
     private String clave;

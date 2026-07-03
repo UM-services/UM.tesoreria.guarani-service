@@ -47,8 +47,13 @@ public class ProcessNextPreuniversitarioUseCaseImpl implements ProcessNextPreuni
 //        log.debug("Pendientes -> {}", Jsonifier.builder(pendientes).build());
         var alumnosPendientes = pendientes.stream().map(AlumnoDeteccionRequest::getAlumno).collect(Collectors.toSet());
         alumnos.removeIf(alumno -> !alumnosPendientes.contains(alumno.getAlumno()));
+        // elimina los que tienen promedio >= 8 en la secundaria
+        alumnos.removeIf(alumno -> alumno.getPersonaRel() != null
+                && alumno.getPersonaRel().getRequisitosPresentados() != null
+                && alumno.getPersonaRel().getRequisitosPresentados().stream()
+                .anyMatch(rp -> rp.getRequisitoRel() != null && rp.getRequisitoRel().getRequisito() == 1024));
         // Construir un proceso que genere las chequeras de los alumnos "nuevos"
-        for (var alumno : alumnos.stream().limit(10).toList()) {
+        for (var alumno : alumnos.stream().limit(50).toList()) {
             log.debug("\n\nProcessing Alumno -> {}\n\n", alumno.jsonify());
             try {
                 alumnoGuaraniClient.createPreuniversitario(alumno);

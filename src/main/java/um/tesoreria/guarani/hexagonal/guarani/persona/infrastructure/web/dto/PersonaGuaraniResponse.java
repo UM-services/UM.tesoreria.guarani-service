@@ -3,6 +3,7 @@ package um.tesoreria.guarani.hexagonal.guarani.persona.infrastructure.web.dto;
 import lombok.*;
 import um.tesoreria.guarani.hexagonal.guarani.personaContacto.infrastructure.web.dto.PersonaContactoGuaraniResponse;
 import um.tesoreria.guarani.hexagonal.guarani.personaDocumento.infrastructure.web.dto.PersonaDocumentoGuaraniResponse;
+import um.tesoreria.guarani.hexagonal.guarani.requisitoPresentado.infrastructure.web.dto.RequisitoPresentadoGuaraniResponse;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -31,6 +32,7 @@ public class PersonaGuaraniResponse {
     private Integer documentoPrincipal;
     private PersonaDocumentoGuaraniResponse documentoPrincipalRel;
     private List<PersonaContactoGuaraniResponse> contactos;
+    private List<RequisitoPresentadoGuaraniResponse> requisitosPresentados;
     private String usuario;
     private String clave;
     private LocalDate fechaVencimientoClave;
