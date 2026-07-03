@@ -42,11 +42,11 @@ public class ProcessNextPreuniversitarioUseCaseImpl implements ProcessNextPreuni
                     .pendiente(true)
                     .build());
         }
-//        log.debug("Encontrados -> {}", Jsonifier.builder(encontrados).build());
         List<AlumnoDeteccionRequest> pendientes = checkAllToUnmarkSendedUseCase.checkAllAlumnosWithoutChequera(encontrados);
-//        log.debug("Pendientes -> {}", Jsonifier.builder(pendientes).build());
         var alumnosPendientes = pendientes.stream().map(AlumnoDeteccionRequest::getAlumno).collect(Collectors.toSet());
+        log.debug("\n\nProcessNextPreuniversitarioUseCaseImpl.processNextPreuniversitario.alumnosPendientes -> {}\n\n", Jsonifier.builder(alumnosPendientes).build());
         alumnos.removeIf(alumno -> !alumnosPendientes.contains(alumno.getAlumno()));
+        log.debug("\n\nLuego de eliminar los que tienen chequera -> {}\n\n",  Jsonifier.builder(alumnos).build());
         // Separa los que tienen requisito 1024
         var alumnosConRequisito1024 = alumnos.stream()
                 .filter(alumno -> alumno.getPersonaRel() != null
