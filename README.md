@@ -3,9 +3,9 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-brightgreen)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-25-orange)](https://openjdk.org/projects/jdk/25/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.6.0-blue)](pom.xml)
+[![Version](https://img.shields.io/badge/version-0.7.0-blue)](pom.xml)
 
-Microservicio de tesorería integrado con el sistema Guarani. Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, tipos de propuestas, tipos de documentos y ubicaciones, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, procesamiento programado de preuniversitarios, y documentación OpenAPI.
+Microservicio de tesorería integrado con el sistema Guarani. Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, tipos de propuestas, tipos de documentos, ubicaciones, requisitos y requisitos presentados, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, procesamiento programado de preuniversitarios, y documentación OpenAPI.
 
 ## Arquitectura
 
@@ -104,7 +104,7 @@ sequenceDiagram
     Service-->>REST: Domain model
     REST->>REST: mapper::toResponse(domain)
     REST-->>User: 200 OK DTO
-    Note over REST,DB: Aplica a alumno, persona, personaContacto, personaDocumento, propuesta, propuestaTipo, tipoDocumento, ubicacion
+    Note over REST,DB: Aplica a alumno, persona, personaContacto, personaDocumento, propuesta, propuestaTipo, tipoDocumento, ubicacion, requisito, requisitoPresentado
 ```
 
 ### Diagrama de Secuencia — Endpoints Hexagonales (Colección)
@@ -130,7 +130,7 @@ sequenceDiagram
     Service-->>REST: List&lt;Domain&gt;
     REST->>REST: stream().map(mapper::toResponse)
     REST-->>User: 200 OK List&lt;DTO&gt;
-    Note over REST,DB: Actualmente implementado en propuesta, propuestaTipo, tipoDocumento y ubicacion
+    Note over REST,DB: Actualmente implementado en propuesta, propuestaTipo, tipoDocumento, ubicacion, requisito y requisitoPresentado
 ```
 
 ### Diagrama de Secuencia — Scheduler Preuniversitario
@@ -166,7 +166,8 @@ sequenceDiagram
     Feign-->>CheckUC: List&lt;AlumnoDeteccionRequest&gt; pendientes
     CheckUC-->>PreUC: List&lt;AlumnoDeteccionRequest&gt; pendientes
     PreUC->>PreUC: Filter: keep only alumnos in pendientes set
-    loop For each of first 10 alumnos
+    PreUC->>PreUC: Filter: remove if personaRel.requisitosPresentados has requisitoRel.id == 1024
+    loop For each of first 50 alumnos
         PreUC->>Feign: createPreuniversitario(alumno)
         Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/preuniversitario
         Core-->>Feign: 200 OK
@@ -242,6 +243,18 @@ classDiagram
         +getAllUbicaciones() ResponseEntity
     }
 
+    class RequisitoGuaraniController {
+        <<RestController>>
+        +getRequisitoGuarani(requisito) ResponseEntity
+        +getAllRequisitos() ResponseEntity
+    }
+
+    class RequisitoPresentadoGuaraniController {
+        <<RestController>>
+        +getRequisitoPresentadoGuarani(requisitoPresentado) ResponseEntity
+        +getAllRequisitosPresentados() ResponseEntity
+    }
+
     class AlumnoGuaraniService {
         <<Service>>
     }
@@ -271,6 +284,14 @@ classDiagram
     }
 
     class UbicacionGuaraniService {
+        <<Service>>
+    }
+
+    class RequisitoGuaraniService {
+        <<Service>>
+    }
+
+    class RequisitoPresentadoGuaraniService {
         <<Service>>
     }
 
@@ -330,6 +351,8 @@ classDiagram
     PropuestaTipoGuaraniController --> PropuestaTipoGuaraniService : uses
     TipoDocumentoGuaraniController --> TipoDocumentoGuaraniService : uses
     UbicacionGuaraniController --> UbicacionGuaraniService : uses
+    RequisitoGuaraniController --> RequisitoGuaraniService : uses
+    RequisitoPresentadoGuaraniController --> RequisitoPresentadoGuaraniService : uses
 ```
 
 ### Endpoints de la API
@@ -351,6 +374,10 @@ classDiagram
 | GET | `/api/tesoreria/guarani/tipoDocumento/{id}` | Obtiene un tipo de documento por ID |
 | GET | `/api/tesoreria/guarani/ubicacion/` | Obtiene todas las ubicaciones |
 | GET | `/api/tesoreria/guarani/ubicacion/{id}` | Obtiene una ubicación por ID |
+| GET | `/api/tesoreria/guarani/requisito/` | Obtiene todos los requisitos |
+| GET | `/api/tesoreria/guarani/requisito/{id}` | Obtiene un requisito por ID |
+| GET | `/api/tesoreria/guarani/requisitoPresentado/` | Obtiene todos los requisitos presentados |
+| GET | `/api/tesoreria/guarani/requisitoPresentado/{id}` | Obtiene un requisito presentado por ID |
 
 ```
 src/
@@ -387,7 +414,9 @@ src/
 │   │       ├── propuesta/
 │   │       ├── propuestaTipo/
 │   │       ├── tipoDocumento/
-│   │       └── ubicacion/
+│   │       ├── ubicacion/
+│   │       ├── requisito/
+│   │       └── requisitoPresentado/
 │   └── resources/
 │       ├── bootstrap.yml
 │       └── banner.txt

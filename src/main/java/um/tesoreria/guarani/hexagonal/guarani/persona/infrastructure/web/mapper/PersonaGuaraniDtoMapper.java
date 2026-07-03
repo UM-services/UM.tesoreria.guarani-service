@@ -5,6 +5,7 @@ import um.tesoreria.guarani.hexagonal.guarani.persona.domain.model.PersonaGuaran
 import um.tesoreria.guarani.hexagonal.guarani.persona.infrastructure.web.dto.PersonaGuaraniResponse;
 import um.tesoreria.guarani.hexagonal.guarani.personaContacto.infrastructure.web.mapper.PersonaContactoGuaraniDtoMapper;
 import um.tesoreria.guarani.hexagonal.guarani.personaDocumento.infrastructure.web.mapper.PersonaDocumentoGuaraniDtoMapper;
+import um.tesoreria.guarani.hexagonal.guarani.requisitoPresentado.infrastructure.web.mapper.RequisitoPresentadoGuaraniDtoMapper;
 
 import java.util.stream.Collectors;
 
@@ -13,10 +14,12 @@ public class PersonaGuaraniDtoMapper {
 
     private final PersonaDocumentoGuaraniDtoMapper personaDocumentoDtoMapper;
     private final PersonaContactoGuaraniDtoMapper personaContactoDtoMapper;
+    private final RequisitoPresentadoGuaraniDtoMapper requisitoPresentadoDtoMapper;
 
-    public PersonaGuaraniDtoMapper(PersonaDocumentoGuaraniDtoMapper personaDocumentoDtoMapper, PersonaContactoGuaraniDtoMapper personaContactoDtoMapper) {
+    public PersonaGuaraniDtoMapper(PersonaDocumentoGuaraniDtoMapper personaDocumentoDtoMapper, PersonaContactoGuaraniDtoMapper personaContactoDtoMapper, RequisitoPresentadoGuaraniDtoMapper requisitoPresentadoDtoMapper) {
         this.personaDocumentoDtoMapper = personaDocumentoDtoMapper;
         this.personaContactoDtoMapper = personaContactoDtoMapper;
+        this.requisitoPresentadoDtoMapper = requisitoPresentadoDtoMapper;
     }
 
     public PersonaGuaraniResponse toResponse(PersonaGuarani domain) {
@@ -38,6 +41,7 @@ public class PersonaGuaraniDtoMapper {
                 .documentoPrincipal(domain.getDocumentoPrincipal())
                 .documentoPrincipalRel(personaDocumentoDtoMapper.toResponse(domain.getDocumentoPrincipalRel()))
                 .contactos(domain.getContactos() == null ? null : domain.getContactos().stream().map(personaContactoDtoMapper::toResponse).collect(Collectors.toList()))
+                .requisitosPresentados(domain.getRequisitosPresentados() == null ? null : domain.getRequisitosPresentados().stream().map(requisitoPresentadoDtoMapper::toResponse).collect(Collectors.toList()))
                 .usuario(domain.getUsuario())
                 .clave(domain.getClave())
                 .fechaVencimientoClave(domain.getFechaVencimientoClave())

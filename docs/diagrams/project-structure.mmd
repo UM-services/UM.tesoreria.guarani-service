@@ -60,6 +60,18 @@ classDiagram
         +getAllUbicaciones() ResponseEntity
     }
 
+    class RequisitoGuaraniController {
+        <<RestController>>
+        +getRequisitoGuarani(requisito) ResponseEntity
+        +getAllRequisitos() ResponseEntity
+    }
+
+    class RequisitoPresentadoGuaraniController {
+        <<RestController>>
+        +getRequisitoPresentadoGuarani(requisitoPresentado) ResponseEntity
+        +getAllRequisitosPresentados() ResponseEntity
+    }
+
     class AlumnoGuaraniService {
         <<Service>>
     }
@@ -89,6 +101,14 @@ classDiagram
     }
 
     class UbicacionGuaraniService {
+        <<Service>>
+    }
+
+    class RequisitoGuaraniService {
+        <<Service>>
+    }
+
+    class RequisitoPresentadoGuaraniService {
         <<Service>>
     }
 
@@ -148,3 +168,5 @@ classDiagram
     PropuestaTipoGuaraniController --> PropuestaTipoGuaraniService : uses
     TipoDocumentoGuaraniController --> TipoDocumentoGuaraniService : uses
     UbicacionGuaraniController --> UbicacionGuaraniService : uses
+    RequisitoGuaraniController --> RequisitoGuaraniService : uses
+    RequisitoPresentadoGuaraniController --> RequisitoPresentadoGuaraniService : uses

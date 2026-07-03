@@ -5,6 +5,7 @@ import um.tesoreria.guarani.hexagonal.guarani.persona.domain.model.PersonaGuaran
 import um.tesoreria.guarani.hexagonal.guarani.persona.infrastructure.persistence.entity.PersonaGuaraniEntity;
 import um.tesoreria.guarani.hexagonal.guarani.personaContacto.infrastructure.persistence.mapper.PersonaContactoGuaraniMapper;
 import um.tesoreria.guarani.hexagonal.guarani.personaDocumento.infrastructure.persistence.mapper.PersonaDocumentoGuaraniMapper;
+import um.tesoreria.guarani.hexagonal.guarani.requisitoPresentado.infrastructure.persistence.mapper.RequisitoPresentadoMapper;
 
 import java.util.stream.Collectors;
 
@@ -13,10 +14,12 @@ public class PersonaGuaraniMapper {
 
     private final PersonaDocumentoGuaraniMapper personaDocumentoMapper;
     private final PersonaContactoGuaraniMapper personaContactoMapper;
+    private final RequisitoPresentadoMapper requisitoPresentadoMapper;
 
-    public PersonaGuaraniMapper(PersonaDocumentoGuaraniMapper personaDocumentoMapper, PersonaContactoGuaraniMapper personaContactoMapper) {
+    public PersonaGuaraniMapper(PersonaDocumentoGuaraniMapper personaDocumentoMapper, PersonaContactoGuaraniMapper personaContactoMapper, RequisitoPresentadoMapper requisitoPresentadoMapper) {
         this.personaDocumentoMapper = personaDocumentoMapper;
         this.personaContactoMapper = personaContactoMapper;
+        this.requisitoPresentadoMapper = requisitoPresentadoMapper;
     }
 
     public PersonaGuaraniEntity toEntity(PersonaGuarani domain) {
@@ -38,6 +41,7 @@ public class PersonaGuaraniMapper {
                 .documentoPrincipal(domain.getDocumentoPrincipal())
                 .documentoPrincipalRel(personaDocumentoMapper.toEntity(domain.getDocumentoPrincipalRel()))
                 .contactos(domain.getContactos() == null ? null : domain.getContactos().stream().map(personaContactoMapper::toEntity).collect(Collectors.toList()))
+                .requisitosPresentados(domain.getRequisitosPresentados() == null ? null : domain.getRequisitosPresentados().stream().map(requisitoPresentadoMapper::toEntity).collect(Collectors.toList()))
                 .usuario(domain.getUsuario())
                 .clave(domain.getClave())
                 .fechaVencimientoClave(domain.getFechaVencimientoClave())
@@ -76,6 +80,7 @@ public class PersonaGuaraniMapper {
                 .documentoPrincipal(entity.getDocumentoPrincipal())
                 .documentoPrincipalRel(personaDocumentoMapper.toDomain(entity.getDocumentoPrincipalRel()))
                 .contactos(entity.getContactos() == null ? null : entity.getContactos().stream().map(personaContactoMapper::toDomain).collect(Collectors.toList()))
+                .requisitosPresentados(entity.getRequisitosPresentados() == null ? null : entity.getRequisitosPresentados().stream().map(requisitoPresentadoMapper::toDomain).collect(Collectors.toList()))
                 .usuario(entity.getUsuario())
                 .clave(entity.getClave())
                 .fechaVencimientoClave(entity.getFechaVencimientoClave())

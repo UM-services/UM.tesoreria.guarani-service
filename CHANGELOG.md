@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.7.0] - 2026-07-02
+
+### Added
+- **New hexagonal module `RequisitoGuarani`:**
+  - Domain model, dual use cases (getAll + getById), service, JPA adapter, REST controller (`GET /api/tesoreria/guarani/requisito/`, `GET /api/tesoreria/guarani/requisito/{requisito}`)
+  - Custom exception `RequisitoGuaraniException`
+- **New hexagonal module `RequisitoPresentadoGuarani`:**
+  - Domain model with `@OneToOne` relationship to `RequisitoGuarani`, dual use cases (getAll + getById), service, JPA adapter, REST controller (`GET /api/tesoreria/guarani/requisitoPresentado/`, `GET /api/tesoreria/guarani/requisitoPresentado/{requisitoPresentado}`)
+  - Custom exception `RequisitoPresentadoGuaraniException`
+- **Extended `PersonaGuarani`** with `requisitosPresentados` relationship: domain model, entity (`@OneToMany`), mappers, and response DTO now include `requisitosPresentados` collection
+
+### Changed
+- **Batch preuniversitario processing increased** from 10 to 50 alumnos per cycle in `ProcessNextPreuniversitarioUseCaseImpl`
+- **New requisito filter in preuniversitario pipeline:** alumnos whose `personaRel.requisitosPresentados` contain a `RequisitoGuarani` with id `1024` (promedio >= 8 en secundaria) are now excluded from processing
+
 ## [0.6.0] - 2026-06-25
 
 ### BREAKING
