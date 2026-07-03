@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1] - 2026-07-03
+
+### Changed
+- **Preuniversitario processing now logs alumnos with requisito 1024** before filtering: `ProcessNextPreuniversitarioUseCaseImpl` separates alumnos whose `personaRel.requisitosPresentados` contain `RequisitoGuarani` id `1024`, logs them via `Jsonifier`, then removes them from the processing queue (replaced `removeIf` with `filter` + `removeAll`)
+- Version bumped from `0.7.0` to `0.7.1`
+- Updated scheduler preuniversitario diagram (`scheduler-preuniversitario.mmd`) to reflect the new logging step
+
 ## [0.7.0] - 2026-07-02
 
 ### Added

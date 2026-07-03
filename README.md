@@ -3,9 +3,9 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-brightgreen)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-25-orange)](https://openjdk.org/projects/jdk/25/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.7.0-blue)](pom.xml)
+[![Version](https://img.shields.io/badge/version-0.7.1-blue)](pom.xml)
 
-Microservicio de tesorería integrado con el sistema Guarani. Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, tipos de propuestas, tipos de documentos, ubicaciones, requisitos y requisitos presentados, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, procesamiento programado de preuniversitarios, y documentación OpenAPI.
+Microservicio de tesorería integrado con el sistema Guarani (v0.7.1). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, tipos de propuestas, tipos de documentos, ubicaciones, requisitos y requisitos presentados, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, procesamiento programado de preuniversitarios, y documentación OpenAPI.
 
 ## Arquitectura
 
@@ -166,7 +166,9 @@ sequenceDiagram
     Feign-->>CheckUC: List&lt;AlumnoDeteccionRequest&gt; pendientes
     CheckUC-->>PreUC: List&lt;AlumnoDeteccionRequest&gt; pendientes
     PreUC->>PreUC: Filter: keep only alumnos in pendientes set
-    PreUC->>PreUC: Filter: remove if personaRel.requisitosPresentados has requisitoRel.id == 1024
+    PreUC->>PreUC: Filter: separate alumnos with requisitoRel.id == 1024
+    PreUC->>PreUC: Log filtered alumnos via Jsonifier
+    PreUC->>PreUC: Remove alumnos with requisitoRel.id == 1024
     loop For each of first 50 alumnos
         PreUC->>Feign: createPreuniversitario(alumno)
         Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/preuniversitario
