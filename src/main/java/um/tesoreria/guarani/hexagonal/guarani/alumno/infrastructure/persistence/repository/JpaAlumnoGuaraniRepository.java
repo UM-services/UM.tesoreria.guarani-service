@@ -14,4 +14,7 @@ public interface JpaAlumnoGuaraniRepository extends JpaRepository<AlumnoGuaraniE
     @Query("SELECT a FROM AlumnoGuaraniEntity a JOIN a.propuestaRel p WHERE p.propuestaTipo = :propuestaTipo")
     List<AlumnoGuaraniEntity> findAllByPropuestaTipo(@Param("propuestaTipo") Integer propuestaTipo);
 
+    @Query("SELECT a FROM AlumnoGuaraniEntity a JOIN a.personaRel p JOIN p.documentoPrincipalRel d WHERE d.nroDocumento = :nroDocumento")
+    List<AlumnoGuaraniEntity> findAllByNroDocumento(@Param("nroDocumento") String nroDocumento);
+
 }

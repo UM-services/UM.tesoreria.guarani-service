@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.8.0] - 2026-07-03
+
+### Added
+- **New endpoint `GET /api/tesoreria/guarani/alumno/documento/{nroDocumento}`** to query alumnos by document number:
+  - New `GetAlumnosByNroDocumentoUseCase` interface + implementation
+  - New repository method `findAllByNroDocumento` with JPA query joining `personaRel.documentoPrincipalRel`
+  - New `JpaAlumnoGuaraniRepositoryAdapter.findAllByNroDocumento()`
+  - Wired through `AlumnoGuaraniService.getAllByNroDocumento()` and controller method
+  - Returns `List<AlumnoGuaraniResponse>` via `AlumnoGuaraniDtoMapper`
+- Added `GetAlumnosByNroDocumentoUseCase` dependency to `AlumnoGuaraniService`
+
+### Changed
+- Version bumped from `0.7.1` to `0.8.0`
+- Updated project structure diagram to include the new controller method
+
 ## [0.7.1] - 2026-07-03
 
 ### Changed

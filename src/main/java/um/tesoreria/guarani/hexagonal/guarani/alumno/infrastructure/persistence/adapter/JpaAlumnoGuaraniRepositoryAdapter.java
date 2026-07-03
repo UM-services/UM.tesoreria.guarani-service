@@ -32,4 +32,12 @@ public class JpaAlumnoGuaraniRepositoryAdapter implements AlumnoGuaraniRepositor
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AlumnoGuarani> findAllByNroDocumento(String nroDocumento) {
+        return jpaAlumnoGuaraniRepository.findAllByNroDocumento(nroDocumento).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
 }
