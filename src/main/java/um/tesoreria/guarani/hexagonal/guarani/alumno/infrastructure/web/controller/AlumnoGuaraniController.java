@@ -41,6 +41,13 @@ public class AlumnoGuaraniController {
                 .toList());
     }
 
+    @GetMapping("/documento/{nroDocumento}")
+    public ResponseEntity<List<AlumnoGuaraniResponse>> getAlumnosByNroDocumento(@PathVariable String nroDocumento) {
+        return ResponseEntity.ok(service.getAllByNroDocumento(nroDocumento).stream()
+                .map(mapper::toResponse)
+                .toList());
+    }
+
     @GetMapping("/generate/preuniversitario/test")
     public ResponseEntity<Void> generatePreuniversitarioTest() {
         log.debug("\n\nProcessing AlumnoGuaraniController.generatePreuniversitarioTest\n\n");

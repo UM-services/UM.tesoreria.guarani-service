@@ -7,4 +7,5 @@ import java.util.Optional;
 public interface AlumnoGuaraniRepository {
     Optional<AlumnoGuarani> findByAlumnoId(Integer alumnoId);
     List<AlumnoGuarani> findAllByPropuestaTipo(Integer propuestaTipo);
+    List<AlumnoGuarani> findAllByNroDocumento(String nroDocumento);
 }
