@@ -20,6 +20,7 @@ classDiagram
         +getAlumnosByPropuestaTipo(propuestaTipo) ResponseEntity
         +getAlumnosByNroDocumento(nroDocumento) ResponseEntity
         +generatePreuniversitarioTest() ResponseEntity
+        +createPreuniversitarioByNroDocumento(nroDocumento) ResponseEntity
     }
 
     class PersonaGuaraniController {
@@ -73,6 +74,12 @@ classDiagram
         +getAllRequisitosPresentados() ResponseEntity
     }
 
+    class PropuestaAspiraGuaraniController {
+        <<RestController>>
+        +getPropuestaAspiraGuarani(propuestaAspira) ResponseEntity
+        +getAllPropuestaAspiras() ResponseEntity
+    }
+
     class AlumnoGuaraniService {
         <<Service>>
     }
@@ -113,6 +120,10 @@ classDiagram
         <<Service>>
     }
 
+    class PropuestaAspiraGuaraniService {
+        <<Service>>
+    }
+
     class AlumnoGuaraniScheduler {
         <<Component>>
         +generatePreuniversitarios() void
@@ -144,6 +155,16 @@ classDiagram
         +checkAllAlumnosWithoutChequera(List~AlumnoDeteccionRequest~) List~AlumnoDeteccionRequest~
     }
 
+    class CreatePreuniversitarioUseCase {
+        <<Interface>>
+        +createPreuniversitario(List~AlumnoGuarani~) List~AlumnoGuarani~
+    }
+
+    class CreatePreuniversitarioByNroDocumentoUseCase {
+        <<Interface>>
+        +createPreuniversitarioByNroDocumento(String) List~AlumnoGuarani~
+    }
+
     class Jsonifier {
         <<Utility>>
         +builder(T) Builder~T~
@@ -157,9 +178,13 @@ classDiagram
     GuaraniApplication --> GuaraniConfiguration : uses
     AlumnoGuaraniScheduler --> AlumnoGuaraniService : schedules
     AlumnoGuaraniService --> ProcessNextPreuniversitarioUseCase : uses
-    ProcessNextPreuniversitarioUseCase --> AlumnoGuaraniClient : calls
+    AlumnoGuaraniService --> CreatePreuniversitarioByNroDocumentoUseCase : uses
     ProcessNextPreuniversitarioUseCase --> GetAlumnosByPropuestaTipoUseCase : queries
-    ProcessNextPreuniversitarioUseCase --> CheckAllToUnmarkSendedUseCase : delegates
+    ProcessNextPreuniversitarioUseCase --> CreatePreuniversitarioUseCase : delegates
+    CreatePreuniversitarioUseCase --> AlumnoGuaraniClient : calls
+    CreatePreuniversitarioUseCase --> CheckAllToUnmarkSendedUseCase : delegates
+    CreatePreuniversitarioByNroDocumentoUseCase --> GetAlumnosByNroDocumentoUseCase : queries
+    CreatePreuniversitarioByNroDocumentoUseCase --> CreatePreuniversitarioUseCase : delegates
     CheckAllToUnmarkSendedUseCase --> AlumnoGuaraniClient : calls
     AlumnoGuaraniController --> AlumnoGuaraniService : uses
     PersonaGuaraniController --> PersonaGuaraniService : uses
@@ -167,6 +192,7 @@ classDiagram
     PersonaDocumentoGuaraniController --> PersonaDocumentoGuaraniService : uses
     PropuestaGuaraniController --> PropuestaGuaraniService : uses
     PropuestaTipoGuaraniController --> PropuestaTipoGuaraniService : uses
+    PropuestaAspiraGuaraniController --> PropuestaAspiraGuaraniService : uses
     TipoDocumentoGuaraniController --> TipoDocumentoGuaraniService : uses
     UbicacionGuaraniController --> UbicacionGuaraniService : uses
     RequisitoGuaraniController --> RequisitoGuaraniService : uses

@@ -1,0 +1,44 @@
+sequenceDiagram
+    participant User as Usuario
+    participant REST as AlumnoGuaraniController
+    participant Service as AlumnoGuaraniService
+    participant CBNUC as CreatePreuniversitarioByNroDocumento UseCase
+    participant GetUC as GetAlumnosByNroDocumento UseCase
+    participant JPA as JPA Repository Adapter
+    participant DB as PostgreSQL
+    participant CreateUC as CreatePreuniversitario UseCase
+    participant CheckUC as CheckAllToUnmarkSended UseCase
+    participant Feign as AlumnoGuaraniClient
+    participant Core as Tesoreria Core Service
+
+    User->>REST: POST /api/tesoreria/guarani/alumno/generate/preuniversitario/documento/{nroDocumento}
+    REST->>Service: createPreuniversitarioByNroDocumento(nroDocumento)
+    Service->>CBNUC: createPreuniversitarioByNroDocumento(nroDocumento)
+    CBNUC->>GetUC: getByNroDocumento(nroDocumento)
+    GetUC->>JPA: findAllByNroDocumento(nroDocumento)
+    JPA->>DB: SELECT * FROM alumno WHERE nro_documento=?
+    DB-->>JPA: List&lt;AlumnoGuaraniEntity&gt;
+    JPA->>JPA: map to domain
+    JPA-->>GetUC: List&lt;AlumnoGuarani&gt;
+    GetUC-->>CBNUC: List&lt;AlumnoGuarani&gt;
+    CBNUC->>CBNUC: Filter by propuestaTipo == 204
+    CBNUC->>CreateUC: createPreuniversitario(preuniversitarioAlumnos)
+    CreateUC->>CreateUC: Build AlumnoDeteccionRequest list
+    CreateUC->>CheckUC: checkAllAlumnosWithoutChequera(encontrados)
+    CheckUC->>Feign: desmarcarEnviados(encontrados)
+    Feign->>Core: POST /api/tesoreria/core/guarani/alumno/desmarcar/enviadas
+    Core-->>Feign: List&lt;AlumnoDeteccionRequest&gt; pendientes
+    Feign-->>CheckUC: pendientes
+    CheckUC-->>CreateUC: pendientes
+    CreateUC->>CreateUC: Filter &amp; process first 50 alumnos
+    loop For each pending alumno
+        CreateUC->>Feign: createPreuniversitario(alumno)
+        Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/preuniversitario
+        Core-->>Feign: 200 OK
+        Feign-->>CreateUC: AlumnoGuarani response
+    end
+    CreateUC-->>CBNUC: List&lt;AlumnoGuarani&gt; creados
+    CBNUC-->>Service: List&lt;AlumnoGuarani&gt;
+    Service-->>REST: List&lt;AlumnoGuarani&gt;
+    REST->>REST: stream().map(mapper::toResponse)
+    REST-->>User: 200 OK List&lt;AlumnoGuaraniResponse&gt;

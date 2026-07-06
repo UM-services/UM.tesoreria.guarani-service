@@ -4,16 +4,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import um.tesoreria.guarani.hexagonal.guarani.alumno.domain.model.AlumnoGuarani;
-import um.tesoreria.guarani.hexagonal.guarani.alumno.domain.ports.in.CheckAllToUnmarkSendedUseCase;
+import um.tesoreria.guarani.hexagonal.guarani.alumno.domain.ports.in.CreatePreuniversitarioUseCase;
 import um.tesoreria.guarani.hexagonal.guarani.alumno.domain.ports.in.GetAlumnosByPropuestaTipoUseCase;
 import um.tesoreria.guarani.hexagonal.guarani.alumno.domain.ports.in.ProcessNextPreuniversitarioUseCase;
-import um.tesoreria.guarani.hexagonal.guarani.alumno.infrastructure.client.AlumnoGuaraniClient;
-import um.tesoreria.guarani.hexagonal.guarani.alumno.infrastructure.client.dto.AlumnoDeteccionRequest;
-import um.tesoreria.guarani.util.Jsonifier;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -23,48 +18,13 @@ public class ProcessNextPreuniversitarioUseCaseImpl implements ProcessNextPreuni
     private static final int PROPUESTA_TIPO_PREUNIVERSITARIO = 204;
 
     private final GetAlumnosByPropuestaTipoUseCase getAlumnosByPropuestaTipoUseCase;
-    private final AlumnoGuaraniClient alumnoGuaraniClient;
-    private final CheckAllToUnmarkSendedUseCase checkAllToUnmarkSendedUseCase;
+    private final CreatePreuniversitarioUseCase createPreuniversitarioUseCase;
 
     @Override
     public void processNextPreuniversitario() {
         log.debug("\n\nProcessing ProcessNextPreuniversitarioUseCaseImpl.processNextPreuniversitario\n\n");
         List<AlumnoGuarani> alumnos = getAlumnosByPropuestaTipoUseCase.getByPropuestaTipo(PROPUESTA_TIPO_PREUNIVERSITARIO);
-        // Filtrar los alumnos que ya tengan chequera del pre
-        List<AlumnoDeteccionRequest> encontrados = new ArrayList<>();
-        for (var alumno : alumnos) {
-            encontrados.add(AlumnoDeteccionRequest.builder()
-                    .alumno(alumno.getAlumno())
-                    .ubicacion(alumno.getUbicacion())
-                    .propuesta(alumno.getPropuesta())
-                    .nroDocumento(alumno.getPersonaRel().getDocumentoPrincipalRel().getNroDocumento())
-                    .tipoDocumento(alumno.getPersonaRel().getDocumentoPrincipalRel().getTipoDocumentoRel().getTipoDocumento())
-                    .pendiente(true)
-                    .build());
-        }
-        List<AlumnoDeteccionRequest> pendientes = checkAllToUnmarkSendedUseCase.checkAllAlumnosWithoutChequera(encontrados);
-        var alumnosPendientes = pendientes.stream().map(AlumnoDeteccionRequest::getAlumno).collect(Collectors.toSet());
-        log.debug("\n\nProcessNextPreuniversitarioUseCaseImpl.processNextPreuniversitario.alumnosPendientes -> {}\n\n", Jsonifier.builder(alumnosPendientes).build());
-        alumnos.removeIf(alumno -> !alumnosPendientes.contains(alumno.getAlumno()));
-        log.debug("\n\nLuego de eliminar los que tienen chequera -> {}\n\n",  Jsonifier.builder(alumnos).build());
-        // Separa los que tienen requisito 1024
-        var alumnosConRequisito1024 = alumnos.stream()
-                .filter(alumno -> alumno.getPersonaRel() != null
-                        && alumno.getPersonaRel().getRequisitosPresentados() != null
-                        && alumno.getPersonaRel().getRequisitosPresentados().stream()
-                        .anyMatch(rp -> rp.getRequisitoRel() != null && rp.getRequisitoRel().getRequisito() == 1024))
-                .toList();
-        log.info("\n\nAlumnos 1024 -> {}\n\n", Jsonifier.builder(alumnosConRequisito1024).build());
-        alumnos.removeAll(alumnosConRequisito1024);
-        // Construir un proceso que genere las chequeras de los alumnos "nuevos"
-        for (var alumno : alumnos.stream().limit(50).toList()) {
-            log.debug("\n\nProcessing Alumno -> {}\n\n", alumno.jsonify());
-            try {
-                alumnoGuaraniClient.createPreuniversitario(alumno);
-            } catch (Exception e) {
-                log.error(e.getMessage());
-            }
-        }
+        createPreuniversitarioUseCase.createPreuniversitario(alumnos);
     }
 
 }

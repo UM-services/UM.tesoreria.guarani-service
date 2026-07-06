@@ -3,6 +3,7 @@ package um.tesoreria.guarani.hexagonal.guarani.alumno.domain.model;
 import lombok.*;
 import um.tesoreria.guarani.hexagonal.guarani.persona.domain.model.PersonaGuarani;
 import um.tesoreria.guarani.hexagonal.guarani.propuesta.domain.model.PropuestaGuarani;
+import um.tesoreria.guarani.hexagonal.guarani.propuestaAspira.domain.model.PropuestaAspiraGuarani;
 import um.tesoreria.guarani.hexagonal.guarani.ubicacion.domain.model.UbicacionGuarani;
 import um.tesoreria.guarani.util.Jsonifier;
 
@@ -31,6 +32,7 @@ public class AlumnoGuarani {
     private PersonaGuarani personaRel;
     private PropuestaGuarani propuestaRel;
     private UbicacionGuarani ubicacionRel;
+    private PropuestaAspiraGuarani propuestaAspiraRel;
 
     public String jsonify() {
         return Jsonifier.builder(this).build();

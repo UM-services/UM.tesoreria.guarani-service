@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.9.0] - 2026-07-06
+
+### Added
+- **New hexagonal module `PropuestaAspiraGuarani`:**
+  - Domain model, dual use cases (getById + getAll), service, JPA repository adapter, REST controller
+  - New endpoints: `GET /api/tesoreria/guarani/propuestaAspira/` and `GET /api/tesoreria/guarani/propuestaAspira/{propuestaAspira}`
+  - Custom exception `PropuestaAspiraGuaraniException`
+  - Entity mapped to `negocio.sga_propuestas_aspira`
+- **New endpoint `POST /api/tesoreria/guarani/alumno/generate/preuniversitario/documento/{nroDocumento}`** to create preuniversitarios by document number:
+  - New `CreatePreuniversitarioByNroDocumentoUseCase` interface + implementation filters alumnos by propuesta tipo 204 and delegates creation
+- **New `CreatePreuniversitarioUseCase`** extracted preuniversitario creation logic from `ProcessNextPreuniversitarioUseCaseImpl` for reuse
+- **Added `propuestaAspiraRel` field** to `AlumnoGuarani` domain model and `AlumnoGuaraniEntity` (`@OneToOne` to `PropuestaAspiraGuaraniEntity`)
+- New documentation diagram `create-preuniversitario-documento.mmd` describing the preuniversitario-by-document flow
+
+### Changed
+- **Refactored `ProcessNextPreuniversitarioUseCaseImpl`** to delegate to `CreatePreuniversitarioUseCase` instead of inlining the creation logic
+- Removed redundant debug log from `JpaAlumnoGuaraniRepositoryAdapter.findAllByPropuestaTipo()`
+- Updated architecture diagrams, project structure, and endpoint tables to reflect new module
+
 ## [0.8.0] - 2026-07-03
 
 ### Added

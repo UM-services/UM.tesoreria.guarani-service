@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -53,5 +54,13 @@ public class AlumnoGuaraniController {
         log.debug("\n\nProcessing AlumnoGuaraniController.generatePreuniversitarioTest\n\n");
         service.processNextInscripcion();
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/generate/preuniversitario/documento/{nroDocumento}")
+    public ResponseEntity<List<AlumnoGuaraniResponse>> createPreuniversitarioByNroDocumento(@PathVariable String nroDocumento) {
+        log.debug("POST AlumnoGuaraniController.createPreuniversitarioByNroDocumento for {}", nroDocumento);
+        return ResponseEntity.ok(service.createPreuniversitarioByNroDocumento(nroDocumento).stream()
+                .map(mapper::toResponse)
+                .toList());
     }
 }
