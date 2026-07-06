@@ -33,7 +33,6 @@ public class JpaAlumnoGuaraniRepositoryAdapter implements AlumnoGuaraniRepositor
     public List<AlumnoGuarani> findAllByPropuestaTipo(Integer propuestaTipo) {
         log.debug("\n\nProcessing JpaAlumnoGuaraniRepositoryAdapter.findAllByPropuestaTipo\n\n");
         var alumnos = jpaAlumnoGuaraniRepository.findAllByPropuestaTipo(propuestaTipo);
-        log.debug("Alumnos found: {}", Jsonifier.builder(alumnos).build());
         return alumnos.stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());

@@ -3,9 +3,9 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-brightgreen)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-25-orange)](https://openjdk.org/projects/jdk/25/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.8.0-blue)](pom.xml)
+[![Version](https://img.shields.io/badge/version-0.9.0-blue)](pom.xml)
 
-Microservicio de tesorería integrado con el sistema Guarani (v0.8.0). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, tipos de propuestas, tipos de documentos, ubicaciones, requisitos y requisitos presentados, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, procesamiento programado de preuniversitarios, y documentación OpenAPI.
+Microservicio de tesorería integrado con el sistema Guarani (v0.9.0). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, tipos de propuestas, propuestas aspiras, tipos de documentos, ubicaciones, requisitos y requisitos presentados, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, procesamiento programado de preuniversitarios, y documentación OpenAPI.
 
 ## Arquitectura
 
@@ -43,7 +43,7 @@ C4Container
         Container(api, "API REST", "Spring Boot, Tomcat", "Expone endpoints REST en puerto 8080")
         Container(controller, "Controllers", "Spring MVC", "Maneja solicitudes HTTP")
         Container(service, "Services", "Java", "Lógica de negocio")
-        Container(hexagonal, "Hexagonal Modules", "Java", "Alumno, Persona, PersonaContacto, PersonaDocumento, Propuesta, PropuestaTipo, TipoDocumento, Ubicacion")
+        Container(hexagonal, "Hexagonal Modules", "Java", "Alumno, Persona, PersonaContacto, PersonaDocumento, Propuesta, PropuestaTipo, PropuestaAspira, TipoDocumento, Ubicacion, Requisito, RequisitoPresentado")
         Container(jpa, "JPA Repositories", "Spring Data JPA", "Persistencia y mapeo ORM")
         Container(client, "Feign Clients", "OpenFeign", "Clientes HTTP declarativos (tesoreria-core-service)")
         Container(cache, "Cache Layer", "Caffeine", "Caché en memoria")
@@ -104,7 +104,7 @@ sequenceDiagram
     Service-->>REST: Domain model
     REST->>REST: mapper::toResponse(domain)
     REST-->>User: 200 OK DTO
-    Note over REST,DB: Aplica a alumno, persona, personaContacto, personaDocumento, propuesta, propuestaTipo, tipoDocumento, ubicacion, requisito, requisitoPresentado
+    Note over REST,DB: Aplica a alumno, persona, personaContacto, personaDocumento, propuesta, propuestaTipo, propuestaAspira, tipoDocumento, ubicacion, requisito, requisitoPresentado
 ```
 
 ### Diagrama de Secuencia — Endpoints Hexagonales (Colección)
@@ -130,7 +130,7 @@ sequenceDiagram
     Service-->>REST: List&lt;Domain&gt;
     REST->>REST: stream().map(mapper::toResponse)
     REST-->>User: 200 OK List&lt;DTO&gt;
-    Note over REST,DB: Actualmente implementado en propuesta, propuestaTipo, tipoDocumento, ubicacion, requisito y requisitoPresentado
+    Note over REST,DB: Actualmente implementado en propuesta, propuestaTipo, propuestaAspira, tipoDocumento, ubicacion, requisito y requisitoPresentado
 ```
 
 ### Diagrama de Secuencia — Scheduler Preuniversitario
@@ -144,6 +144,7 @@ sequenceDiagram
     participant GetUC as GetAlumnosByPropuestaTipo UseCase
     participant JPA as JPA Repository Adapter
     participant DB as PostgreSQL
+    participant CreateUC as CreatePreuniversitario UseCase
     participant CheckUC as CheckAllToUnmarkSended UseCase
     participant Feign as AlumnoGuaraniClient
     participant Core as Tesoreria Core Service
@@ -158,26 +159,77 @@ sequenceDiagram
     JPA->>JPA: map to domain
     JPA-->>GetUC: List&lt;AlumnoGuarani&gt;
     GetUC-->>PreUC: List&lt;AlumnoGuarani&gt;
-    PreUC->>PreUC: Build AlumnoDeteccionRequest list (incl. alumno field)
-    PreUC->>CheckUC: checkAllAlumnosWithoutChequera(encontrados)
+    PreUC->>CreateUC: createPreuniversitario(alumnos)
+    CreateUC->>CreateUC: Build AlumnoDeteccionRequest list (incl. alumno field)
+    CreateUC->>CheckUC: checkAllAlumnosWithoutChequera(encontrados)
     CheckUC->>Feign: desmarcarEnviados(encontrados)
     Feign->>Core: POST /api/tesoreria/core/guarani/alumno/desmarcar/enviadas
     Core-->>Feign: List&lt;AlumnoDeteccionRequest&gt; pendientes
     Feign-->>CheckUC: List&lt;AlumnoDeteccionRequest&gt; pendientes
-    CheckUC-->>PreUC: List&lt;AlumnoDeteccionRequest&gt; pendientes
-    PreUC->>PreUC: Filter: keep only alumnos in pendientes set
-    PreUC->>PreUC: Filter: separate alumnos with requisitoRel.id == 1024
-    PreUC->>PreUC: Log filtered alumnos via Jsonifier
-    PreUC->>PreUC: Remove alumnos with requisitoRel.id == 1024
+    CheckUC-->>CreateUC: List&lt;AlumnoDeteccionRequest&gt; pendientes
+    CreateUC->>CreateUC: Filter: keep only alumnos in pendientes set
+    CreateUC->>CreateUC: Filter: separate alumnos with requisitoRel.id == 1024
+    CreateUC->>CreateUC: Log filtered alumnos via Jsonifier
+    CreateUC->>CreateUC: Remove alumnos with requisitoRel.id == 1024
     loop For each of first 50 alumnos
-        PreUC->>Feign: createPreuniversitario(alumno)
+        CreateUC->>Feign: createPreuniversitario(alumno)
         Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/preuniversitario
         Core-->>Feign: 200 OK
-        Feign-->>PreUC: response
-        Note over PreUC: Catch &amp; log error per alumno
+        Feign-->>CreateUC: response
+        Note over CreateUC: Catch &amp; log error per alumno
     end
+    CreateUC-->>PreUC: List&lt;AlumnoGuarani&gt; creados
     PreUC-->>Service: void
     Service-->>Scheduler: void
+```
+
+### Diagrama de Secuencia — Crear Preuniversitario por Documento
+
+```mermaid
+sequenceDiagram
+    participant User as Usuario
+    participant REST as AlumnoGuaraniController
+    participant Service as AlumnoGuaraniService
+    participant CBNUC as CreatePreuniversitarioByNroDocumento UseCase
+    participant GetUC as GetAlumnosByNroDocumento UseCase
+    participant JPA as JPA Repository Adapter
+    participant DB as PostgreSQL
+    participant CreateUC as CreatePreuniversitario UseCase
+    participant CheckUC as CheckAllToUnmarkSended UseCase
+    participant Feign as AlumnoGuaraniClient
+    participant Core as Tesoreria Core Service
+
+    User->>REST: POST /api/tesoreria/guarani/alumno/generate/preuniversitario/documento/{nroDocumento}
+    REST->>Service: createPreuniversitarioByNroDocumento(nroDocumento)
+    Service->>CBNUC: createPreuniversitarioByNroDocumento(nroDocumento)
+    CBNUC->>GetUC: getByNroDocumento(nroDocumento)
+    GetUC->>JPA: findAllByNroDocumento(nroDocumento)
+    JPA->>DB: SELECT * FROM alumno WHERE nro_documento=?
+    DB-->>JPA: List&lt;AlumnoGuaraniEntity&gt;
+    JPA->>JPA: map to domain
+    JPA-->>GetUC: List&lt;AlumnoGuarani&gt;
+    GetUC-->>CBNUC: List&lt;AlumnoGuarani&gt;
+    CBNUC->>CBNUC: Filter by propuestaTipo == 204
+    CBNUC->>CreateUC: createPreuniversitario(preuniversitarioAlumnos)
+    CreateUC->>CreateUC: Build AlumnoDeteccionRequest list
+    CreateUC->>CheckUC: checkAllAlumnosWithoutChequera(encontrados)
+    CheckUC->>Feign: desmarcarEnviados(encontrados)
+    Feign->>Core: POST /api/tesoreria/core/guarani/alumno/desmarcar/enviadas
+    Core-->>Feign: List&lt;AlumnoDeteccionRequest&gt; pendientes
+    Feign-->>CheckUC: pendientes
+    CheckUC-->>CreateUC: pendientes
+    CreateUC->>CreateUC: Filter &amp; process first 50 alumnos
+    loop For each pending alumno
+        CreateUC->>Feign: createPreuniversitario(alumno)
+        Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/preuniversitario
+        Core-->>Feign: 200 OK
+        Feign-->>CreateUC: AlumnoGuarani response
+    end
+    CreateUC-->>CBNUC: List&lt;AlumnoGuarani&gt; creados
+    CBNUC-->>Service: List&lt;AlumnoGuarani&gt;
+    Service-->>REST: List&lt;AlumnoGuarani&gt;
+    REST->>REST: stream().map(mapper::toResponse)
+    REST-->>User: 200 OK List&lt;AlumnoGuaraniResponse&gt;
 ```
 
 ### Estructura del Proyecto
@@ -205,6 +257,7 @@ classDiagram
         +getAlumnosByPropuestaTipo(propuestaTipo) ResponseEntity
         +getAlumnosByNroDocumento(nroDocumento) ResponseEntity
         +generatePreuniversitarioTest() ResponseEntity
+        +createPreuniversitarioByNroDocumento(nroDocumento) ResponseEntity
     }
 
     class PersonaGuaraniController {
@@ -258,6 +311,12 @@ classDiagram
         +getAllRequisitosPresentados() ResponseEntity
     }
 
+    class PropuestaAspiraGuaraniController {
+        <<RestController>>
+        +getPropuestaAspiraGuarani(propuestaAspira) ResponseEntity
+        +getAllPropuestaAspiras() ResponseEntity
+    }
+
     class AlumnoGuaraniService {
         <<Service>>
     }
@@ -298,6 +357,10 @@ classDiagram
         <<Service>>
     }
 
+    class PropuestaAspiraGuaraniService {
+        <<Service>>
+    }
+
     class AlumnoGuaraniScheduler {
         <<Component>>
         +generatePreuniversitarios() void
@@ -329,6 +392,16 @@ classDiagram
         +checkAllAlumnosWithoutChequera(List~AlumnoDeteccionRequest~) List~AlumnoDeteccionRequest~
     }
 
+    class CreatePreuniversitarioUseCase {
+        <<Interface>>
+        +createPreuniversitario(List~AlumnoGuarani~) List~AlumnoGuarani~
+    }
+
+    class CreatePreuniversitarioByNroDocumentoUseCase {
+        <<Interface>>
+        +createPreuniversitarioByNroDocumento(String) List~AlumnoGuarani~
+    }
+
     class Jsonifier {
         <<Utility>>
         +builder(T) Builder~T~
@@ -342,9 +415,13 @@ classDiagram
     GuaraniApplication --> GuaraniConfiguration : uses
     AlumnoGuaraniScheduler --> AlumnoGuaraniService : schedules
     AlumnoGuaraniService --> ProcessNextPreuniversitarioUseCase : uses
-    ProcessNextPreuniversitarioUseCase --> AlumnoGuaraniClient : calls
+    AlumnoGuaraniService --> CreatePreuniversitarioByNroDocumentoUseCase : uses
     ProcessNextPreuniversitarioUseCase --> GetAlumnosByPropuestaTipoUseCase : queries
-    ProcessNextPreuniversitarioUseCase --> CheckAllToUnmarkSendedUseCase : delegates
+    ProcessNextPreuniversitarioUseCase --> CreatePreuniversitarioUseCase : delegates
+    CreatePreuniversitarioUseCase --> AlumnoGuaraniClient : calls
+    CreatePreuniversitarioUseCase --> CheckAllToUnmarkSendedUseCase : delegates
+    CreatePreuniversitarioByNroDocumentoUseCase --> GetAlumnosByNroDocumentoUseCase : queries
+    CreatePreuniversitarioByNroDocumentoUseCase --> CreatePreuniversitarioUseCase : delegates
     CheckAllToUnmarkSendedUseCase --> AlumnoGuaraniClient : calls
     AlumnoGuaraniController --> AlumnoGuaraniService : uses
     PersonaGuaraniController --> PersonaGuaraniService : uses
@@ -352,6 +429,7 @@ classDiagram
     PersonaDocumentoGuaraniController --> PersonaDocumentoGuaraniService : uses
     PropuestaGuaraniController --> PropuestaGuaraniService : uses
     PropuestaTipoGuaraniController --> PropuestaTipoGuaraniService : uses
+    PropuestaAspiraGuaraniController --> PropuestaAspiraGuaraniService : uses
     TipoDocumentoGuaraniController --> TipoDocumentoGuaraniService : uses
     UbicacionGuaraniController --> UbicacionGuaraniService : uses
     RequisitoGuaraniController --> RequisitoGuaraniService : uses
@@ -382,6 +460,9 @@ classDiagram
 | GET | `/api/tesoreria/guarani/requisito/{id}` | Obtiene un requisito por ID |
 | GET | `/api/tesoreria/guarani/requisitoPresentado/` | Obtiene todos los requisitos presentados |
 | GET | `/api/tesoreria/guarani/requisitoPresentado/{id}` | Obtiene un requisito presentado por ID |
+| GET | `/api/tesoreria/guarani/propuestaAspira/` | Obtiene todas las propuestas aspiras |
+| GET | `/api/tesoreria/guarani/propuestaAspira/{id}` | Obtiene una propuesta aspira por ID |
+| POST | `/api/tesoreria/guarani/alumno/generate/preuniversitario/documento/{nroDocumento}` | Crea preuniversitarios por número de documento |
 
 ```
 src/
@@ -419,6 +500,7 @@ src/
 │   │       ├── propuestaTipo/
 │   │       ├── tipoDocumento/
 │   │       ├── ubicacion/
+│   │       ├── propuestaAspira/
 │   │       ├── requisito/
 │   │       └── requisitoPresentado/
 │   └── resources/

@@ -6,6 +6,7 @@ sequenceDiagram
     participant GetUC as GetAlumnosByPropuestaTipo UseCase
     participant JPA as JPA Repository Adapter
     participant DB as PostgreSQL
+    participant CreateUC as CreatePreuniversitario UseCase
     participant CheckUC as CheckAllToUnmarkSended UseCase
     participant Feign as AlumnoGuaraniClient
     participant Core as Tesoreria Core Service
@@ -20,23 +21,25 @@ sequenceDiagram
     JPA->>JPA: map to domain
     JPA-->>GetUC: List&lt;AlumnoGuarani&gt;
     GetUC-->>PreUC: List&lt;AlumnoGuarani&gt;
-    PreUC->>PreUC: Build AlumnoDeteccionRequest list (incl. alumno field)
-    PreUC->>CheckUC: checkAllAlumnosWithoutChequera(encontrados)
+    PreUC->>CreateUC: createPreuniversitario(alumnos)
+    CreateUC->>CreateUC: Build AlumnoDeteccionRequest list (incl. alumno field)
+    CreateUC->>CheckUC: checkAllAlumnosWithoutChequera(encontrados)
     CheckUC->>Feign: desmarcarEnviados(encontrados)
     Feign->>Core: POST /api/tesoreria/core/guarani/alumno/desmarcar/enviadas
     Core-->>Feign: List&lt;AlumnoDeteccionRequest&gt; pendientes
     Feign-->>CheckUC: List&lt;AlumnoDeteccionRequest&gt; pendientes
-    CheckUC-->>PreUC: List&lt;AlumnoDeteccionRequest&gt; pendientes
-    PreUC->>PreUC: Filter: keep only alumnos in pendientes set
-    PreUC->>PreUC: Filter: separate alumnos with requisitoRel.id == 1024
-    PreUC->>PreUC: Log filtered alumnos via Jsonifier
-    PreUC->>PreUC: Remove alumnos with requisitoRel.id == 1024
+    CheckUC-->>CreateUC: List&lt;AlumnoDeteccionRequest&gt; pendientes
+    CreateUC->>CreateUC: Filter: keep only alumnos in pendientes set
+    CreateUC->>CreateUC: Filter: separate alumnos with requisitoRel.id == 1024
+    CreateUC->>CreateUC: Log filtered alumnos via Jsonifier
+    CreateUC->>CreateUC: Remove alumnos with requisitoRel.id == 1024
     loop For each of first 50 alumnos
-        PreUC->>Feign: createPreuniversitario(alumno)
+        CreateUC->>Feign: createPreuniversitario(alumno)
         Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/preuniversitario
         Core-->>Feign: 200 OK
-        Feign-->>PreUC: response
-        Note over PreUC: Catch &amp; log error per alumno
+        Feign-->>CreateUC: response
+        Note over CreateUC: Catch &amp; log error per alumno
     end
+    CreateUC-->>PreUC: List&lt;AlumnoGuarani&gt; creados
     PreUC-->>Service: void
     Service-->>Scheduler: void
