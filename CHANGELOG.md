@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.0.0] - 2026-07-26
+
+### BREAKING
+- **Major package restructuring of all hexagonal modules** into grouped namespaces:
+  - `alumno/` → `alumnos/alumno/`
+  - `persona/` → `alumnos/persona/`
+  - `personaContacto/` → `alumnos/personaContacto/`
+  - `personaDocumento/` → `alumnos/personaDocumento/`
+  - `propuesta/` → `propuestas/propuesta/`
+  - `propuestaTipo/` → `propuestas/propuestaTipo/`
+  - `propuestaAspira/` → `propuestas/propuestaAspira/`
+  - `requisito/` → `requisitos/requisito/`
+  - `requisitoPresentado/` → `requisitos/requisitoPresentado/`
+  - `ubicacion/` remains at `ubicacion/`
+
+### Added
+- **New hexagonal module `RequisitoTipoGuarani`:**
+  - Domain model (`RequisitoTipoGuarani`), dual use cases (getAll + getById), service, JPA repository adapter, REST controller (`GET /api/tesoreria/guarani/requisitoTipo/`, `GET /api/tesoreria/guarani/requisitoTipo/{requisitoTipo}`)
+  - Custom exception `RequisitoTipoGuaraniException`
+  - Entity mapped to `negocio.sga_requisitos_tipos` with fields: `requisitoTipo`, `nombre`, `descripcion`, `regla`, `publico`, `icono`
+- **New use case `GetAlumnosByPropuestaTipoAndFechaInscripcionUseCase`:**
+  - Queries alumnos by propuesta tipo and fecha inscripcion after a given date
+  - New repository `JpaAlumnoGuaraniByFechaRepository` with derived query `findByPropuestaRel_PropuestaTipoAndPropuestaAspiraRel_FechaInscripcionAfter`
+- **New endpoint `GET /api/tesoreria/guarani/alumno/propuestaTipo/{propuestaTipo}/fechaLimite/{fechaLimite}`** to query alumnos by propuesta tipo and inscription date limit
+- **Added `requisitoTipoRel` field** to `RequisitoGuarani` domain model and `RequisitoGuaraniEntity` (`@OneToOne` to `RequisitoTipoGuaraniEntity`)
+- Enhanced `RequisitoGuaraniDtoMapper` and `RequisitoGuaraniResponse` with `requisitoTipoRel` mapping
+
+### Changed
+- **Preuniversitario scheduler now filters by fecha limite**: `ProcessNextPreuniversitarioUseCaseImpl` queries alumnos using `GetAlumnosByPropuestaTipoAndFechaInscripcionUseCase` with a 15-day limit (`LocalDate.now().minusDays(15)`)
+- **PersonaGuaraniDtoMapper filters `requisitosPresentados`** to only include requisitos where `requisitoRel.requisitoTipo == 4`
+- All package declarations and imports updated across 219 files to reflect new namespace structure
+
 ## [0.9.0] - 2026-07-06
 
 ### Added
