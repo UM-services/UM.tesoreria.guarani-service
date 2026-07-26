@@ -3,9 +3,9 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-brightgreen)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-25-orange)](https://openjdk.org/projects/jdk/25/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.9.0-blue)](pom.xml)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue)](pom.xml)
 
-Microservicio de tesorería integrado con el sistema Guarani (v0.9.0). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, tipos de propuestas, propuestas aspiras, tipos de documentos, ubicaciones, requisitos y requisitos presentados, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, procesamiento programado de preuniversitarios, y documentación OpenAPI.
+Microservicio de tesorería integrado con el sistema Guarani (v1.0.0). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, tipos de propuestas, propuestas aspiras, tipos de documentos, ubicaciones, requisitos, requisitos presentados y tipos de requisitos, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, procesamiento programado de preuniversitarios, y documentación OpenAPI.
 
 ## Arquitectura
 
@@ -43,7 +43,7 @@ C4Container
         Container(api, "API REST", "Spring Boot, Tomcat", "Expone endpoints REST en puerto 8080")
         Container(controller, "Controllers", "Spring MVC", "Maneja solicitudes HTTP")
         Container(service, "Services", "Java", "Lógica de negocio")
-        Container(hexagonal, "Hexagonal Modules", "Java", "Alumno, Persona, PersonaContacto, PersonaDocumento, Propuesta, PropuestaTipo, PropuestaAspira, TipoDocumento, Ubicacion, Requisito, RequisitoPresentado")
+        Container(hexagonal, "Hexagonal Modules", "Java", "Alumno, Persona, PersonaContacto, PersonaDocumento, Propuesta, PropuestaTipo, PropuestaAspira, TipoDocumento, Ubicacion, Requisito, RequisitoPresentado, RequisitoTipo")
         Container(jpa, "JPA Repositories", "Spring Data JPA", "Persistencia y mapeo ORM")
         Container(client, "Feign Clients", "OpenFeign", "Clientes HTTP declarativos (tesoreria-core-service)")
         Container(cache, "Cache Layer", "Caffeine", "Caché en memoria")
@@ -104,7 +104,7 @@ sequenceDiagram
     Service-->>REST: Domain model
     REST->>REST: mapper::toResponse(domain)
     REST-->>User: 200 OK DTO
-    Note over REST,DB: Aplica a alumno, persona, personaContacto, personaDocumento, propuesta, propuestaTipo, propuestaAspira, tipoDocumento, ubicacion, requisito, requisitoPresentado
+    Note over REST,DB: Aplica a alumno, persona, personaContacto, personaDocumento, propuesta, propuestaTipo, propuestaAspira, tipoDocumento, ubicacion, requisito, requisitoPresentado, requisitoTipo
 ```
 
 ### Diagrama de Secuencia — Endpoints Hexagonales (Colección)
@@ -130,7 +130,7 @@ sequenceDiagram
     Service-->>REST: List&lt;Domain&gt;
     REST->>REST: stream().map(mapper::toResponse)
     REST-->>User: 200 OK List&lt;DTO&gt;
-    Note over REST,DB: Actualmente implementado en propuesta, propuestaTipo, propuestaAspira, tipoDocumento, ubicacion, requisito y requisitoPresentado
+    Note over REST,DB: Actualmente implementado en propuesta, propuestaTipo, propuestaAspira, tipoDocumento, ubicacion, requisito, requisitoPresentado y requisitoTipo
 ```
 
 ### Diagrama de Secuencia — Scheduler Preuniversitario
@@ -141,7 +141,7 @@ sequenceDiagram
     participant Scheduler as AlumnoGuaraniScheduler
     participant Service as AlumnoGuaraniService
     participant PreUC as ProcessNextPreuniversitario UseCase
-    participant GetUC as GetAlumnosByPropuestaTipo UseCase
+    participant GetUC as GetAlumnosByPropuestaTipoAndFechaInscripcion UseCase
     participant JPA as JPA Repository Adapter
     participant DB as PostgreSQL
     participant CreateUC as CreatePreuniversitario UseCase
@@ -152,9 +152,10 @@ sequenceDiagram
     Timer->>Scheduler: @Scheduled(fixedRate=600000)
     Scheduler->>Service: processNextInscripcion()
     Service->>PreUC: processNextPreuniversitario()
-    PreUC->>GetUC: getByPropuestaTipo(204)
-    GetUC->>JPA: findAllByPropuestaTipo(204)
-    JPA->>DB: SELECT * FROM alumno WHERE propuesta_tipo=204
+    PreUC->>PreUC: Calculate fechaLimite = now() - 15 days
+    PreUC->>GetUC: getByPropuestaTipoAndFechaInscripcionAfter(204, fechaLimite)
+    GetUC->>JPA: findByPropuestaRel_PropuestaTipoAndPropuestaAspiraRel_FechaInscripcionAfter(204, fechaLimite)
+    JPA->>DB: SELECT * FROM alumno WHERE propuesta_tipo=204 AND fecha_inscripcion > ?
     DB-->>JPA: List&lt;AlumnoGuaraniEntity&gt;
     JPA->>JPA: map to domain
     JPA-->>GetUC: List&lt;AlumnoGuarani&gt;
@@ -255,6 +256,7 @@ classDiagram
         <<RestController>>
         +getAlumnoGuarani(alumno) ResponseEntity
         +getAlumnosByPropuestaTipo(propuestaTipo) ResponseEntity
+        +getAlumnosByPropuestaTipoAndFechaLimite(propuestaTipo, fechaLimite) ResponseEntity
         +getAlumnosByNroDocumento(nroDocumento) ResponseEntity
         +generatePreuniversitarioTest() ResponseEntity
         +createPreuniversitarioByNroDocumento(nroDocumento) ResponseEntity
@@ -311,6 +313,12 @@ classDiagram
         +getAllRequisitosPresentados() ResponseEntity
     }
 
+    class RequisitoTipoGuaraniController {
+        <<RestController>>
+        +getRequisitoTipoGuarani(requisitoTipo) ResponseEntity
+        +getAllRequisitoTipos() ResponseEntity
+    }
+
     class PropuestaAspiraGuaraniController {
         <<RestController>>
         +getPropuestaAspiraGuarani(propuestaAspira) ResponseEntity
@@ -354,6 +362,10 @@ classDiagram
     }
 
     class RequisitoPresentadoGuaraniService {
+        <<Service>>
+    }
+
+    class RequisitoTipoGuaraniService {
         <<Service>>
     }
 
@@ -402,6 +414,11 @@ classDiagram
         +createPreuniversitarioByNroDocumento(String) List~AlumnoGuarani~
     }
 
+    class GetAlumnosByPropuestaTipoAndFechaInscripcionUseCase {
+        <<Interface>>
+        +getByPropuestaTipoAndFechaInscripcionAfter(Integer, LocalDate) List~AlumnoGuarani~
+    }
+
     class Jsonifier {
         <<Utility>>
         +builder(T) Builder~T~
@@ -415,8 +432,9 @@ classDiagram
     GuaraniApplication --> GuaraniConfiguration : uses
     AlumnoGuaraniScheduler --> AlumnoGuaraniService : schedules
     AlumnoGuaraniService --> ProcessNextPreuniversitarioUseCase : uses
+    AlumnoGuaraniService --> GetAlumnosByPropuestaTipoAndFechaInscripcionUseCase : uses
     AlumnoGuaraniService --> CreatePreuniversitarioByNroDocumentoUseCase : uses
-    ProcessNextPreuniversitarioUseCase --> GetAlumnosByPropuestaTipoUseCase : queries
+    ProcessNextPreuniversitarioUseCase --> GetAlumnosByPropuestaTipoAndFechaInscripcionUseCase : queries
     ProcessNextPreuniversitarioUseCase --> CreatePreuniversitarioUseCase : delegates
     CreatePreuniversitarioUseCase --> AlumnoGuaraniClient : calls
     CreatePreuniversitarioUseCase --> CheckAllToUnmarkSendedUseCase : delegates
@@ -434,6 +452,7 @@ classDiagram
     UbicacionGuaraniController --> UbicacionGuaraniService : uses
     RequisitoGuaraniController --> RequisitoGuaraniService : uses
     RequisitoPresentadoGuaraniController --> RequisitoPresentadoGuaraniService : uses
+    RequisitoTipoGuaraniController --> RequisitoTipoGuaraniService : uses
 ```
 
 ### Endpoints de la API
@@ -443,6 +462,7 @@ classDiagram
 | GET | `/api/tesoreria/guarani/hello/test` | Health check del servicio |
 | GET | `/api/tesoreria/guarani/alumno/{id}` | Obtiene un alumno por ID |
 | GET | `/api/tesoreria/guarani/alumno/propuestaTipo/{propuestaTipo}` | Obtiene alumnos por tipo de propuesta |
+| GET | `/api/tesoreria/guarani/alumno/propuestaTipo/{propuestaTipo}/fechaLimite/{fechaLimite}` | Obtiene alumnos por tipo de propuesta y fecha límite de inscripción |
 | GET | `/api/tesoreria/guarani/alumno/documento/{nroDocumento}` | Obtiene alumnos por número de documento |
 | GET | `/api/tesoreria/guarani/alumno/generate/preuniversitario/test` | Disparador manual del scheduler preuniversitario |
 | GET | `/api/tesoreria/guarani/persona/{id}` | Obtiene una persona por ID |
@@ -460,6 +480,8 @@ classDiagram
 | GET | `/api/tesoreria/guarani/requisito/{id}` | Obtiene un requisito por ID |
 | GET | `/api/tesoreria/guarani/requisitoPresentado/` | Obtiene todos los requisitos presentados |
 | GET | `/api/tesoreria/guarani/requisitoPresentado/{id}` | Obtiene un requisito presentado por ID |
+| GET | `/api/tesoreria/guarani/requisitoTipo/` | Obtiene todos los tipos de requisito |
+| GET | `/api/tesoreria/guarani/requisitoTipo/{id}` | Obtiene un tipo de requisito por ID |
 | GET | `/api/tesoreria/guarani/propuestaAspira/` | Obtiene todas las propuestas aspiras |
 | GET | `/api/tesoreria/guarani/propuestaAspira/{id}` | Obtiene una propuesta aspira por ID |
 | POST | `/api/tesoreria/guarani/alumno/generate/preuniversitario/documento/{nroDocumento}` | Crea preuniversitarios por número de documento |
@@ -476,33 +498,60 @@ src/
 │   │   ├── util/
 │   │   │   └── Jsonifier.java
 │   │   └── hexagonal/guarani/
-│   │       ├── alumno/
-│   │       │   ├── application/
-│   │       │   │   ├── service/AlumnoGuaraniService.java
-│   │       │   │   └── usecases/
-│   │       │   │       ├── CheckAllToUnmarkSendedUseCaseImpl.java
-│   │       │   │       └── ProcessNextPreuniversitarioUseCaseImpl.java
-│   │       │   ├── domain/
-│   │       │   │   ├── model/AlumnoGuarani.java
-│   │       │   │   └── ports/in/
-│   │       │   │       ├── CheckAllToUnmarkSendedUseCase.java
-│   │       │   │       └── ProcessNextPreuniversitarioUseCase.java
-│   │       │   └── infrastructure/
-│   │       │       ├── client/
-│   │       │       │   ├── AlumnoGuaraniClient.java
-│   │       │       │   └── dto/AlumnoDeteccionRequest.java
-│   │       │       ├── persistence/
-│   │       │       └── scheduler/AlumnoGuaraniScheduler.java
-│   │       ├── persona/
-│   │       ├── personaContacto/
-│   │       ├── personaDocumento/
-│   │       ├── propuesta/
-│   │       ├── propuestaTipo/
-│   │       ├── tipoDocumento/
-│   │       ├── ubicacion/
-│   │       ├── propuestaAspira/
-│   │       ├── requisito/
-│   │       └── requisitoPresentado/
+│   │       ├── alumnos/
+│   │       │   ├── alumno/
+│   │       │   │   ├── application/
+│   │       │   │   │   ├── service/AlumnoGuaraniService.java
+│   │       │   │   │   └── usecases/
+│   │       │   │   │       ├── CheckAllToUnmarkSendedUseCaseImpl.java
+│   │       │   │   │       ├── CreatePreuniversitarioByNroDocumentoUseCaseImpl.java
+│   │       │   │   │       ├── CreatePreuniversitarioUseCaseImpl.java
+│   │       │   │   │       ├── GetAlumnoGuaraniUseCaseImpl.java
+│   │       │   │   │       ├── GetAlumnosByNroDocumentoUseCaseImpl.java
+│   │       │   │   │       ├── GetAlumnosByPropuestaTipoAndFechaInscripcionUseCaseImpl.java
+│   │       │   │   │       ├── GetAlumnosByPropuestaTipoUseCaseImpl.java
+│   │       │   │   │       └── ProcessNextPreuniversitarioUseCaseImpl.java
+│   │       │   │   ├── domain/
+│   │       │   │   │   ├── model/AlumnoGuarani.java
+│   │       │   │   │   └── ports/
+│   │       │   │   │       ├── in/
+│   │       │   │   │       │   ├── CheckAllToUnmarkSendedUseCase.java
+│   │       │   │   │       │   ├── CreatePreuniversitarioByNroDocumentoUseCase.java
+│   │       │   │   │       │   ├── CreatePreuniversitarioUseCase.java
+│   │       │   │   │       │   ├── GetAlumnoGuaraniUseCase.java
+│   │       │   │   │       │   ├── GetAlumnosByNroDocumentoUseCase.java
+│   │       │   │   │       │   ├── GetAlumnosByPropuestaTipoAndFechaInscripcionUseCase.java
+│   │       │   │   │       │   ├── GetAlumnosByPropuestaTipoUseCase.java
+│   │       │   │   │       │   └── ProcessNextPreuniversitarioUseCase.java
+│   │       │   │   │       └── out/AlumnoGuaraniRepository.java
+│   │       │   │   └── infrastructure/
+│   │       │   │       ├── client/
+│   │       │   │       │   ├── AlumnoGuaraniClient.java
+│   │       │   │       │   └── dto/AlumnoDeteccionRequest.java
+│   │       │   │       ├── persistence/
+│   │       │   │       │   ├── adapter/JpaAlumnoGuaraniRepositoryAdapter.java
+│   │       │   │       │   ├── entity/AlumnoGuaraniEntity.java
+│   │       │   │       │   ├── mapper/AlumnoGuaraniMapper.java
+│   │       │   │       │   └── repository/
+│   │       │   │       │       ├── JpaAlumnoGuaraniByFechaRepository.java
+│   │       │   │       │       └── JpaAlumnoGuaraniRepository.java
+│   │       │   │       ├── scheduler/AlumnoGuaraniScheduler.java
+│   │       │   │       └── web/
+│   │       │   │           ├── controller/AlumnoGuaraniController.java
+│   │       │   │           ├── dto/AlumnoGuaraniResponse.java
+│   │       │   │           └── mapper/AlumnoGuaraniDtoMapper.java
+│   │       │   ├── persona/
+│   │       │   ├── personaContacto/
+│   │       │   └── personaDocumento/
+│   │       ├── propuestas/
+│   │       │   ├── propuesta/
+│   │       │   ├── propuestaTipo/
+│   │       │   └── propuestaAspira/
+│   │       ├── requisitos/
+│   │       │   ├── requisito/
+│   │       │   ├── requisitoPresentado/
+│   │       │   └── requisitoTipo/
+│   │       └── ubicacion/
 │   └── resources/
 │       ├── bootstrap.yml
 │       └── banner.txt
