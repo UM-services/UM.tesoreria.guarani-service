@@ -3,9 +3,9 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-brightgreen)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-25-orange)](https://openjdk.org/projects/jdk/25/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue)](pom.xml)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue)](pom.xml)
 
-Microservicio de tesorería integrado con el sistema Guarani (v1.0.0). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, tipos de propuestas, propuestas aspiras, tipos de documentos, ubicaciones, requisitos, requisitos presentados y tipos de requisitos, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, procesamiento programado de preuniversitarios, y documentación OpenAPI.
+Microservicio de tesorería integrado con el sistema Guarani (v1.1.0). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, tipos de propuestas, propuestas aspiras, tipos de documentos, ubicaciones, requisitos, requisitos presentados y tipos de requisitos, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, procesamiento programado de preuniversitarios, y documentación OpenAPI.
 
 ## Arquitectura
 
@@ -47,7 +47,7 @@ C4Container
         Container(jpa, "JPA Repositories", "Spring Data JPA", "Persistencia y mapeo ORM")
         Container(client, "Feign Clients", "OpenFeign", "Clientes HTTP declarativos (tesoreria-core-service)")
         Container(cache, "Cache Layer", "Caffeine", "Caché en memoria")
-        Container(scheduler, "Scheduler", "Spring @Scheduled", "Procesamiento periódico de preuniversitarios (10min)")
+        Container(scheduler, "Scheduler", "Spring @Scheduled", "Procesamiento periódico de preuniversitarios (cada 10min, 21:00-07:59 hora Mendoza)")
         Container(openapi, "API Docs", "SpringDoc OpenAPI", "Documentación Swagger UI")
     }
 
@@ -149,7 +149,7 @@ sequenceDiagram
     participant Feign as AlumnoGuaraniClient
     participant Core as Tesoreria Core Service
 
-    Timer->>Scheduler: @Scheduled(fixedRate=600000)
+    Timer->>Scheduler: @Scheduled(cron = "0 0/10 21-23,0-7 * * *")
     Scheduler->>Service: processNextInscripcion()
     Service->>PreUC: processNextPreuniversitario()
     PreUC->>PreUC: Calculate fechaLimite = now() - 15 days
@@ -169,9 +169,9 @@ sequenceDiagram
     Feign-->>CheckUC: List&lt;AlumnoDeteccionRequest&gt; pendientes
     CheckUC-->>CreateUC: List&lt;AlumnoDeteccionRequest&gt; pendientes
     CreateUC->>CreateUC: Filter: keep only alumnos in pendientes set
-    CreateUC->>CreateUC: Filter: separate alumnos with requisitoRel.id == 1024
+    CreateUC->>CreateUC: Filter: separate alumnos with requisitoRel.id between 1024 and 1028
     CreateUC->>CreateUC: Log filtered alumnos via Jsonifier
-    CreateUC->>CreateUC: Remove alumnos with requisitoRel.id == 1024
+    CreateUC->>CreateUC: Remove alumnos with requisitoRel.id between 1024 and 1028
     loop For each of first 50 alumnos
         CreateUC->>Feign: createPreuniversitario(alumno)
         Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/preuniversitario
@@ -305,6 +305,7 @@ classDiagram
         <<RestController>>
         +getRequisitoGuarani(requisito) ResponseEntity
         +getAllRequisitos() ResponseEntity
+        +getRequisitosByTipo(requisitoTipo) ResponseEntity
     }
 
     class RequisitoPresentadoGuaraniController {
@@ -478,6 +479,7 @@ classDiagram
 | GET | `/api/tesoreria/guarani/ubicacion/{id}` | Obtiene una ubicación por ID |
 | GET | `/api/tesoreria/guarani/requisito/` | Obtiene todos los requisitos |
 | GET | `/api/tesoreria/guarani/requisito/{id}` | Obtiene un requisito por ID |
+| GET | `/api/tesoreria/guarani/requisito/tipo/{requisitoTipo}` | Obtiene requisitos por tipo |
 | GET | `/api/tesoreria/guarani/requisitoPresentado/` | Obtiene todos los requisitos presentados |
 | GET | `/api/tesoreria/guarani/requisitoPresentado/{id}` | Obtiene un requisito presentado por ID |
 | GET | `/api/tesoreria/guarani/requisitoTipo/` | Obtiene todos los tipos de requisito |

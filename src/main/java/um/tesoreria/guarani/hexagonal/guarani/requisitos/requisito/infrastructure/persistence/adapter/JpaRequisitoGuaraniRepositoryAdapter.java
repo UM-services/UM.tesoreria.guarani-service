@@ -29,4 +29,11 @@ public class JpaRequisitoGuaraniRepositoryAdapter implements RequisitoGuaraniRep
                 .map(mapper::toDomain)
                 .toList();
     }
+
+    @Override
+    public List<RequisitoGuarani> findByRequisitoTipo(Integer requisitoTipo) {
+        return jpaRequisitoGuaraniRepository.findByRequisitoTipo(requisitoTipo).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
 }

@@ -54,7 +54,7 @@ public class CreatePreuniversitarioUseCaseImpl implements CreatePreuniversitario
                 .filter(alumno -> alumno.getPersonaRel() != null
                         && alumno.getPersonaRel().getRequisitosPresentados() != null
                         && alumno.getPersonaRel().getRequisitosPresentados().stream()
-                        .anyMatch(rp -> rp.getRequisitoRel() != null && rp.getRequisitoRel().getRequisito() == 1024))
+                        .anyMatch(rp -> rp.getRequisitoRel() != null && rp.getRequisitoRel().getRequisito() >= 1024 && rp.getRequisitoRel().getRequisito() <= 1028))
                 .toList();
         alumnosConRequisito1024.forEach(alumno -> log.debug("Alumno con promedio -> {}", Jsonifier.builder(alumno.getPersonaRel()).build()));
         filteredAlumnos.removeAll(alumnosConRequisito1024);

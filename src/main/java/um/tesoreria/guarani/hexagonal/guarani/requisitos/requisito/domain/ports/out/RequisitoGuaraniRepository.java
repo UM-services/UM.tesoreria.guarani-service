@@ -8,4 +8,5 @@ import java.util.Optional;
 public interface RequisitoGuaraniRepository {
     Optional<RequisitoGuarani> findByRequisitoId(Integer requisitoId);
     List<RequisitoGuarani> findAll();
+    List<RequisitoGuarani> findByRequisitoTipo(Integer requisitoTipo);
 }

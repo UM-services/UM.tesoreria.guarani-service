@@ -11,7 +11,7 @@ sequenceDiagram
     participant Feign as AlumnoGuaraniClient
     participant Core as Tesoreria Core Service
 
-    Timer->>Scheduler: @Scheduled(fixedRate=600000)
+    Timer->>Scheduler: @Scheduled(cron = "0 0/10 21-23,0-7 * * *")
     Scheduler->>Service: processNextInscripcion()
     Service->>PreUC: processNextPreuniversitario()
     PreUC->>PreUC: Calculate fechaLimite = now() - 15 days
@@ -31,9 +31,9 @@ sequenceDiagram
     Feign-->>CheckUC: List~AlumnoDeteccionRequest~ pendientes
     CheckUC-->>CreateUC: List~AlumnoDeteccionRequest~ pendientes
     CreateUC->>CreateUC: Filter: keep only alumnos in pendientes set
-    CreateUC->>CreateUC: Filter: separate alumnos with requisitoRel.id == 1024
+    CreateUC->>CreateUC: Filter: separate alumnos with requisitoRel.id between 1024 and 1028
     CreateUC->>CreateUC: Log filtered alumnos via Jsonifier
-    CreateUC->>CreateUC: Remove alumnos with requisitoRel.id == 1024
+    CreateUC->>CreateUC: Remove alumnos with requisitoRel.id between 1024 and 1028
     loop For each of first 50 alumnos
         CreateUC->>Feign: createPreuniversitario(alumno)
         Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/preuniversitario
