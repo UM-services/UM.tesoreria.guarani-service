@@ -15,7 +15,7 @@ public class AlumnoGuaraniScheduler {
 
     private final AlumnoGuaraniService service;
 
-    @Scheduled(fixedRate = 600000)
+    @Scheduled(cron = "0 0/10 21-23,0-7 * * *", zone = "America/Argentina/Mendoza")
     public void generatePreuniversitarios() {
         log.debug("\n\nProcessing AlumnoGuaraniScheduler.generatePreuniversitarios\n\n");
         service.processNextInscripcion();

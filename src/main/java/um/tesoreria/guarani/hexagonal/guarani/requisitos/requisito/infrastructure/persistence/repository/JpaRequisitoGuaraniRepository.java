@@ -4,6 +4,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import um.tesoreria.guarani.hexagonal.guarani.requisitos.requisito.infrastructure.persistence.entity.RequisitoGuaraniEntity;
 
+import java.util.List;
+
 @Repository
 public interface JpaRequisitoGuaraniRepository extends JpaRepository<RequisitoGuaraniEntity, Integer> {
+    List<RequisitoGuaraniEntity> findByRequisitoTipo(Integer requisitoTipo);
 }

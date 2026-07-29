@@ -38,4 +38,11 @@ public class RequisitoGuaraniController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
     }
+
+    @GetMapping("/tipo/{requisitoTipo}")
+    public ResponseEntity<List<RequisitoGuaraniResponse>> getRequisitosByTipo(@PathVariable Integer requisitoTipo) {
+        return ResponseEntity.ok(service.getByRequisitoTipo(requisitoTipo).stream()
+                .map(mapper::toResponse)
+                .toList());
+    }
 }

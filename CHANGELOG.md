@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0] - 2026-07-28
+
+### Added
+- **New endpoint `GET /api/tesoreria/guarani/requisito/tipo/{requisitoTipo}`** to query requisitos by tipo:
+  - New `GetRequisitosByTipoUseCase` interface + implementation
+  - New repository method `findByRequisitoTipo` in `RequisitoGuaraniRepository` and adapter
+  - Wired through `RequisitoGuaraniService.getByRequisitoTipo()` and controller method
+- **Expanded preuniversitario filter range**: requisito filter expanded from single value `1024` to range `>= 1024 && <= 1028` in `CreatePreuniversitarioUseCaseImpl`
+
+### Changed
+- **Preuniversitario scheduler now time-restricted**: changed from `@Scheduled(fixedRate = 600000)` to `@Scheduled(cron = "0 0/10 21-23,0-7 * * *", zone = "America/Argentina/Mendoza")` — runs every 10 minutes only during nighttime hours (21:00-07:59 Mendoza time) to reduce load during peak hours
+
 ## [1.0.0] - 2026-07-26
 
 ### BREAKING
