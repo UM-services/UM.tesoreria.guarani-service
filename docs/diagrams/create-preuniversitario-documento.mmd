@@ -17,28 +17,28 @@ sequenceDiagram
     CBNUC->>GetUC: getByNroDocumento(nroDocumento)
     GetUC->>JPA: findAllByNroDocumento(nroDocumento)
     JPA->>DB: SELECT * FROM alumno WHERE nro_documento=?
-    DB-->>JPA: List&lt;AlumnoGuaraniEntity&gt;
+    DB-->>JPA: List~AlumnoGuaraniEntity~
     JPA->>JPA: map to domain
-    JPA-->>GetUC: List&lt;AlumnoGuarani&gt;
-    GetUC-->>CBNUC: List&lt;AlumnoGuarani&gt;
+    JPA-->>GetUC: List~AlumnoGuarani~
+    GetUC-->>CBNUC: List~AlumnoGuarani~
     CBNUC->>CBNUC: Filter by propuestaTipo == 204
     CBNUC->>CreateUC: createPreuniversitario(preuniversitarioAlumnos)
     CreateUC->>CreateUC: Build AlumnoDeteccionRequest list
     CreateUC->>CheckUC: checkAllAlumnosWithoutChequera(encontrados)
     CheckUC->>Feign: desmarcarEnviados(encontrados)
     Feign->>Core: POST /api/tesoreria/core/guarani/alumno/desmarcar/enviadas
-    Core-->>Feign: List&lt;AlumnoDeteccionRequest&gt; pendientes
+    Core-->>Feign: List~AlumnoDeteccionRequest~ pendientes
     Feign-->>CheckUC: pendientes
     CheckUC-->>CreateUC: pendientes
-    CreateUC->>CreateUC: Filter &amp; process first 50 alumnos
+    CreateUC->>CreateUC: Filter and process first 50 alumnos
     loop For each pending alumno
         CreateUC->>Feign: createPreuniversitario(alumno)
         Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/preuniversitario
         Core-->>Feign: 200 OK
         Feign-->>CreateUC: AlumnoGuarani response
     end
-    CreateUC-->>CBNUC: List&lt;AlumnoGuarani&gt; creados
-    CBNUC-->>Service: List&lt;AlumnoGuarani&gt;
-    Service-->>REST: List&lt;AlumnoGuarani&gt;
+    CreateUC-->>CBNUC: List~AlumnoGuarani~ creados
+    CBNUC-->>Service: List~AlumnoGuarani~
+    Service-->>REST: List~AlumnoGuarani~
     REST->>REST: stream().map(mapper::toResponse)
-    REST-->>User: 200 OK List&lt;AlumnoGuaraniResponse&gt;
+    REST-->>User: 200 OK List~AlumnoGuaraniResponse~

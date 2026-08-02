@@ -11,11 +11,11 @@ sequenceDiagram
     Service->>UseCase: getAll{Recursos}()
     UseCase->>JPA: findAll()
     JPA->>DB: SELECT * FROM table
-    DB-->>JPA: List&lt;Entity&gt;
+    DB-->>JPA: List~Entity~
     JPA->>JPA: stream().map(mapper::toDomain)
-    JPA-->>UseCase: List&lt;Domain&gt;
-    UseCase-->>Service: List&lt;Domain&gt;
-    Service-->>REST: List&lt;Domain&gt;
+    JPA-->>UseCase: List~Domain~
+    UseCase-->>Service: List~Domain~
+    Service-->>REST: List~Domain~
     REST->>REST: stream().map(mapper::toResponse)
-    REST-->>User: 200 OK List&lt;DTO&gt;
+    REST-->>User: 200 OK List~DTO~
     Note over REST,DB: Actualmente implementado en propuesta, propuestaTipo, propuestaAspira, tipoDocumento, ubicacion, requisito, requisitoPresentado y requisitoTipo
