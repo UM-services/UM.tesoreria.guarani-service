@@ -3,9 +3,10 @@ package um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.applic
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.domain.model.PropuestaAspiraGuarani;
-import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.domain.ports.in.GetAllPropuestaAspirasUseCase;
+import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.domain.ports.in.GetPropuestaAspirasByPropuestaUbicacionAndFechaInscripcionUseCase;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.domain.ports.in.GetPropuestaAspiraGuaraniUseCase;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -13,13 +14,15 @@ import java.util.List;
 public class PropuestaAspiraGuaraniService {
 
     private final GetPropuestaAspiraGuaraniUseCase getPropuestaAspiraGuaraniUseCase;
-    private final GetAllPropuestaAspirasUseCase getAllPropuestaAspirasUseCase;
+    private final GetPropuestaAspirasByPropuestaUbicacionAndFechaInscripcionUseCase getPropuestaAspirasByPropuestaUbicacionAndFechaInscripcionUseCase;
 
     public PropuestaAspiraGuarani getByPropuestaAspiraId(Integer propuestaAspiraId) {
         return getPropuestaAspiraGuaraniUseCase.getByPropuestaAspiraId(propuestaAspiraId);
     }
 
-    public List<PropuestaAspiraGuarani> getAllPropuestaAspiras() {
-        return getAllPropuestaAspirasUseCase.getAll();
+    public List<PropuestaAspiraGuarani> getByPropuestaUbicacionAndFechaInscripcion(
+            Integer propuesta, Integer ubicacion, LocalDate fechaDesde) {
+        return getPropuestaAspirasByPropuestaUbicacionAndFechaInscripcionUseCase
+                .getByPropuestaUbicacionAndFechaInscripcion(propuesta, ubicacion, fechaDesde);
     }
 }

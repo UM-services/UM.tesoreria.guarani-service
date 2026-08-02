@@ -1,10 +1,7 @@
 package um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.model;
 
 import lombok.*;
-import um.tesoreria.guarani.hexagonal.guarani.alumnos.persona.domain.model.PersonaGuarani;
-import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuesta.domain.model.PropuestaGuarani;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.domain.model.PropuestaAspiraGuarani;
-import um.tesoreria.guarani.hexagonal.guarani.ubicacion.domain.model.UbicacionGuarani;
 import um.tesoreria.guarani.util.Jsonifier;
 
 import java.math.BigDecimal;
@@ -15,6 +12,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AlumnoGuarani {
+
     private Integer alumno;
     private String legajo;
     private Integer persona;
@@ -29,12 +27,4 @@ public class AlumnoGuarani {
     private String calidad;
     private BigDecimal coeficiente;
 
-    private PersonaGuarani personaRel;
-    private PropuestaGuarani propuestaRel;
-    private UbicacionGuarani ubicacionRel;
-    private PropuestaAspiraGuarani propuestaAspiraRel;
-
-    public String jsonify() {
-        return Jsonifier.builder(this).build();
-    }
 }

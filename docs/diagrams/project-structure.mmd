@@ -85,7 +85,23 @@ classDiagram
     class PropuestaAspiraGuaraniController {
         <<RestController>>
         +getPropuestaAspiraGuarani(propuestaAspira) ResponseEntity
-        +getAllPropuestaAspiras() ResponseEntity
+        +getByPropuestaUbicacionAndFechaInscripcion(propuesta, ubicacion, fechaDesde) ResponseEntity
+    }
+
+    class ResponsableAcademicaGuaraniController {
+        <<RestController>>
+        +getAllResponsablesAcademicas() ResponseEntity
+    }
+
+    class UbicacionTipoGuaraniController {
+        <<RestController>>
+        +getAllUbicacionTipos() ResponseEntity
+    }
+
+    class PropuestaResponsableAcademicaGuaraniController {
+        <<RestController>>
+        +getByResponsableAcademica(responsableAcademica) ResponseEntity
+        +getByResponsableAcademicaAndPropuestaTipo(responsableAcademica) ResponseEntity
     }
 
     class AlumnoGuaraniService {
@@ -136,6 +152,18 @@ classDiagram
         <<Service>>
     }
 
+    class ResponsableAcademicaGuaraniService {
+        <<Service>>
+    }
+
+    class UbicacionTipoGuaraniService {
+        <<Service>>
+    }
+
+    class PropuestaResponsableAcademicaGuaraniService {
+        <<Service>>
+    }
+
     class AlumnoGuaraniScheduler {
         <<Component>>
         +generatePreuniversitarios() void
@@ -182,6 +210,16 @@ classDiagram
         +getByPropuestaTipoAndFechaInscripcionAfter(Integer, LocalDate) List~AlumnoGuarani~
     }
 
+    class GetAlumnosByNroDocumentoUseCase {
+        <<Interface>>
+        +getByNroDocumento(nroDocumento) List~AlumnoGuarani~
+    }
+
+    class GetUbicacionesByUbicacionTipoUseCase {
+        <<Interface>>
+        +getByUbicacionTipo(ubicacionTipo) List~UbicacionGuarani~
+    }
+
     class Jsonifier {
         <<Utility>>
         +builder(T) Builder~T~
@@ -211,8 +249,12 @@ classDiagram
     PropuestaGuaraniController --> PropuestaGuaraniService : uses
     PropuestaTipoGuaraniController --> PropuestaTipoGuaraniService : uses
     PropuestaAspiraGuaraniController --> PropuestaAspiraGuaraniService : uses
+    ResponsableAcademicaGuaraniController --> ResponsableAcademicaGuaraniService : uses
+    UbicacionTipoGuaraniController --> UbicacionTipoGuaraniService : uses
+    PropuestaResponsableAcademicaGuaraniController --> PropuestaResponsableAcademicaGuaraniService : uses
     TipoDocumentoGuaraniController --> TipoDocumentoGuaraniService : uses
     UbicacionGuaraniController --> UbicacionGuaraniService : uses
     RequisitoGuaraniController --> RequisitoGuaraniService : uses
     RequisitoPresentadoGuaraniController --> RequisitoPresentadoGuaraniService : uses
     RequisitoTipoGuaraniController --> RequisitoTipoGuaraniService : uses
+    UbicacionGuaraniService --> GetUbicacionesByUbicacionTipoUseCase : uses

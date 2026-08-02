@@ -1,0 +1,29 @@
+sequenceDiagram
+    participant User as Usuario
+    participant REST as REST Controller
+    participant Service as Application Service
+    participant UseCase as Use Case
+    participant JPA as JPA Repository Adapter
+    participant DB as PostgreSQL
+
+    User->>REST: GET /api/tesoreria/guarani/ubicacion/tipo/{ubicacionTipo}
+    REST->>Service: getByUbicacionTipo(ubicacionTipo)
+    Service->>UseCase: getByUbicacionTipo(ubicacionTipo)
+    UseCase->>JPA: findAllByUbicacionTipo(ubicacionTipo)
+    JPA->>DB: SELECT locations by type
+    DB-->>JPA: List of location entities
+    JPA-->>UseCase: List of location domains
+    UseCase-->>Service: List of location domains
+    Service-->>REST: List of location domains
+    REST-->>User: 200 OK location responses
+
+    User->>REST: GET /api/tesoreria/guarani/propuestaResponsableAcademica/responsableAcademica/{responsableAcademica}
+    REST->>Service: getByResponsableAcademica(responsableAcademica)
+    Service->>UseCase: find proposals by academic responsible
+    UseCase->>JPA: findAllByResponsableAcademica(responsableAcademica)
+    JPA->>DB: SELECT proposal relationships
+    DB-->>JPA: Proposal relationship entities
+    JPA-->>UseCase: Proposal relationship domains
+    UseCase-->>Service: Proposal relationship domains
+    Service-->>REST: Proposal relationship domains
+    REST-->>User: 200 OK proposal relationship responses

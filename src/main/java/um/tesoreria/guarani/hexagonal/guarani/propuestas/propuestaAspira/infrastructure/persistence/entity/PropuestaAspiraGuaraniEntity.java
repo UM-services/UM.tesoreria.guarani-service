@@ -2,6 +2,7 @@ package um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.infras
 
 import jakarta.persistence.*;
 import lombok.*;
+import um.tesoreria.guarani.hexagonal.guarani.alumnos.persona.infrastructure.persistence.entity.PersonaGuaraniEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -20,6 +21,11 @@ public class PropuestaAspiraGuaraniEntity {
     private Integer propuestaAspira;
 
     private Integer persona;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "persona", referencedColumnName = "persona", insertable = false, updatable = false)
+    private PersonaGuaraniEntity personaRel;
+
     private Integer periodoInsc;
     private BigDecimal anioAcademico;
     private Integer propuesta;

@@ -26,11 +26,12 @@ public class CreatePreuniversitarioByNroDocumentoUseCaseImpl implements CreatePr
         List<AlumnoGuarani> alumnos = getAlumnosByNroDocumentoUseCase.getByNroDocumento(nroDocumento);
         
         // Filter only pre-university students (propuestaTipo == 204)
-        List<AlumnoGuarani> preuniversitarioAlumnos = alumnos.stream()
-                .filter(alumno -> alumno.getPropuestaRel() != null 
-                        && Integer.valueOf(PROPUESTA_TIPO_PREUNIVERSITARIO).equals(alumno.getPropuestaRel().getPropuestaTipo()))
-                .toList();
+//        List<AlumnoGuarani> preuniversitarioAlumnos = alumnos.stream()
+//                .filter(alumno -> alumno.getPropuestaRel() != null
+//                        && Integer.valueOf(PROPUESTA_TIPO_PREUNIVERSITARIO).equals(alumno.getPropuestaRel().getPropuestaTipo()))
+//                .toList();
 
-        return createPreuniversitarioUseCase.createPreuniversitario(preuniversitarioAlumnos);
+//        return createPreuniversitarioUseCase.createPreuniversitario(preuniversitarioAlumnos);
+        return null;
     }
 }

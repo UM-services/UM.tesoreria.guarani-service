@@ -37,8 +37,8 @@ public class CreatePreuniversitarioUseCaseImpl implements CreatePreuniversitario
                     .alumno(alumno.getAlumno())
                     .ubicacion(alumno.getUbicacion())
                     .propuesta(alumno.getPropuesta())
-                    .nroDocumento(alumno.getPersonaRel().getDocumentoPrincipalRel().getNroDocumento())
-                    .tipoDocumento(alumno.getPersonaRel().getDocumentoPrincipalRel().getTipoDocumentoRel().getTipoDocumento())
+//                    .nroDocumento(alumno.getPersonaRel().getDocumentoPrincipalRel().getNroDocumento())
+//                    .tipoDocumento(alumno.getPersonaRel().getDocumentoPrincipalRel().getTipoDocumentoRel().getTipoDocumento())
                     .pendiente(true)
                     .build());
         }
@@ -51,19 +51,19 @@ public class CreatePreuniversitarioUseCaseImpl implements CreatePreuniversitario
 
         // Separa los que tienen requisito 1024
         var alumnosConRequisito1024 = filteredAlumnos.stream()
-                .filter(alumno -> alumno.getPersonaRel() != null
-                        && alumno.getPersonaRel().getRequisitosPresentados() != null
-                        && alumno.getPersonaRel().getRequisitosPresentados().stream()
-                        .anyMatch(rp -> rp.getRequisitoRel() != null && rp.getRequisitoRel().getRequisito() >= 1024 && rp.getRequisitoRel().getRequisito() <= 1028))
+//                .filter(alumno -> alumno.getPersonaRel() != null
+//                        && alumno.getPersonaRel().getRequisitosPresentados() != null
+//                        && alumno.getPersonaRel().getRequisitosPresentados().stream()
+//                        .anyMatch(rp -> rp.getRequisitoRel() != null && rp.getRequisitoRel().getRequisito() >= 1024 && rp.getRequisitoRel().getRequisito() <= 1028))
                 .toList();
-        alumnosConRequisito1024.forEach(alumno -> log.debug("Alumno con promedio -> {}", Jsonifier.builder(alumno.getPersonaRel()).build()));
+//        alumnosConRequisito1024.forEach(alumno -> log.debug("Alumno con promedio -> {}", Jsonifier.builder(alumno.getPersonaRel()).build()));
         filteredAlumnos.removeAll(alumnosConRequisito1024);
 
         // Construir un proceso que genere las chequeras de los alumnos "nuevos" (limit 50 as default to avoid overload)
         List<AlumnoGuarani> creados = new ArrayList<>();
         for (var alumno : filteredAlumnos.stream().limit(50).toList()) {
             try {
-                log.debug("\n\nProcessing Alumno -> {}\n\n", Jsonifier.builder(alumno.getPersonaRel()).build());
+//                log.debug("\n\nProcessing Alumno -> {}\n\n", Jsonifier.builder(alumno.getPersonaRel()).build());
                 AlumnoGuarani creado = alumnoGuaraniClient.createPreuniversitario(alumno);
                 if (creado != null) {
                     creados.add(creado);

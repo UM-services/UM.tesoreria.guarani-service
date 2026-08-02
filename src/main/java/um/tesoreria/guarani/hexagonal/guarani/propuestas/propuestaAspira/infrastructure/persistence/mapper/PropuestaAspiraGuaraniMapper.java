@@ -1,17 +1,25 @@
 package um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.infrastructure.persistence.mapper;
 
 import org.springframework.stereotype.Component;
+import um.tesoreria.guarani.hexagonal.guarani.alumnos.persona.infrastructure.persistence.mapper.PersonaGuaraniMapper;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.domain.model.PropuestaAspiraGuarani;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.infrastructure.persistence.entity.PropuestaAspiraGuaraniEntity;
 
 @Component
 public class PropuestaAspiraGuaraniMapper {
 
+    private final PersonaGuaraniMapper personaMapper;
+
+    public PropuestaAspiraGuaraniMapper(PersonaGuaraniMapper personaMapper) {
+        this.personaMapper = personaMapper;
+    }
+
     public PropuestaAspiraGuaraniEntity toEntity(PropuestaAspiraGuarani domain) {
         if (domain == null) return null;
         return PropuestaAspiraGuaraniEntity.builder()
                 .propuestaAspira(domain.getPropuestaAspira())
                 .persona(domain.getPersona())
+                .personaRel(personaMapper.toEntity(domain.getPersonaRel()))
                 .periodoInsc(domain.getPeriodoInsc())
                 .anioAcademico(domain.getAnioAcademico())
                 .propuesta(domain.getPropuesta())
@@ -43,6 +51,7 @@ public class PropuestaAspiraGuaraniMapper {
         return PropuestaAspiraGuarani.builder()
                 .propuestaAspira(entity.getPropuestaAspira())
                 .persona(entity.getPersona())
+                .personaRel(personaMapper.toDomain(entity.getPersonaRel()))
                 .periodoInsc(entity.getPeriodoInsc())
                 .anioAcademico(entity.getAnioAcademico())
                 .propuesta(entity.getPropuesta())

@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.0.0] - 2026-08-02
+
+### BREAKING
+- **Removed** `GET /api/tesoreria/guarani/propuestaAspira/`, the unfiltered collection endpoint; filtered queries must use the proposal, location, and inscription-date endpoint.
+- **Moved** the `ubicacion` implementation under the `academicas` package and changed its repository contract to support filtering by location type.
+
+### Added
+- **New academic reference modules** for `ResponsableAcademica` and `UbicacionTipo`, including JPA persistence, domain mappings, and REST endpoints.
+- **New endpoint** `GET /api/tesoreria/guarani/ubicacion/tipo/{ubicacionTipo}` to query locations by type.
+- **New proposal/responsible-academic module** with:
+  - `GET /api/tesoreria/guarani/propuestaResponsableAcademica/responsableAcademica/{responsableAcademica}`
+  - `GET /api/tesoreria/guarani/propuestaResponsableAcademica/responsableAcademica/preuniversitario/{responsableAcademica}`
+- **New filtered proposal-aspira endpoint** `GET /api/tesoreria/guarani/propuestaAspira/propuesta/{propuesta}/ubicacion/{ubicacion}/fechaInscripcionDesde/{fechaDesde}`.
+- **Expanded response relationships** for alumno, propuesta, propuesta aspira, ubicación, and propuesta-responsable-académica data.
+
+### Changed
+- **Preuniversitario creation** now carries the alumno identifier in detection requests and removes redundant persistence fields from the alumno mapping path.
+- **Application packages** now group academic and proposal modules consistently under `academicas` and `propuestas`.
+
 ## [1.1.0] - 2026-07-28
 
 ### Added

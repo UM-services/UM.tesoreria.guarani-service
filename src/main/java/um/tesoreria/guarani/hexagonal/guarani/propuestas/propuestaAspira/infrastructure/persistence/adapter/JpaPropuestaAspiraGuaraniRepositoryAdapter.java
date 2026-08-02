@@ -7,6 +7,7 @@ import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.domain.
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.infrastructure.persistence.mapper.PropuestaAspiraGuaraniMapper;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.infrastructure.persistence.repository.JpaPropuestaAspiraGuaraniRepository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,9 +25,13 @@ public class JpaPropuestaAspiraGuaraniRepositoryAdapter implements PropuestaAspi
     }
 
     @Override
-    public List<PropuestaAspiraGuarani> findAll() {
-        return jpaPropuestaAspiraGuaraniRepository.findAll().stream()
+    public List<PropuestaAspiraGuarani> findAllByPropuestaAndUbicacionAndFechaInscripcionFrom(
+            Integer propuesta, Integer ubicacion, LocalDate fechaDesde) {
+        return jpaPropuestaAspiraGuaraniRepository
+                .findAllByPropuestaAndUbicacionAndFechaInscripcionGreaterThanEqual(propuesta, ubicacion, fechaDesde)
+                .stream()
                 .map(mapper::toDomain)
                 .toList();
     }
+
 }

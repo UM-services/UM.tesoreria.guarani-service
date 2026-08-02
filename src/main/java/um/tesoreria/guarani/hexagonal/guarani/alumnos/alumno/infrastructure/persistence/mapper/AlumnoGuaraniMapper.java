@@ -3,23 +3,14 @@ package um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.per
 import org.springframework.stereotype.Component;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.model.AlumnoGuarani;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.persistence.entity.AlumnoGuaraniEntity;
-import um.tesoreria.guarani.hexagonal.guarani.alumnos.persona.infrastructure.persistence.mapper.PersonaGuaraniMapper;
-import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuesta.infrastructure.persistence.mapper.PropuestaGuaraniMapper;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.infrastructure.persistence.mapper.PropuestaAspiraGuaraniMapper;
-import um.tesoreria.guarani.hexagonal.guarani.ubicacion.infrastructure.persistence.mapper.UbicacionGuaraniMapper;
 
 @Component
 public class AlumnoGuaraniMapper {
 
-    private final PersonaGuaraniMapper personaMapper;
-    private final PropuestaGuaraniMapper propuestaMapper;
-    private final UbicacionGuaraniMapper ubicacionMapper;
     private final PropuestaAspiraGuaraniMapper propuestaAspiraMapper;
 
-    public AlumnoGuaraniMapper(PersonaGuaraniMapper personaMapper, PropuestaGuaraniMapper propuestaMapper, UbicacionGuaraniMapper ubicacionMapper, PropuestaAspiraGuaraniMapper propuestaAspiraMapper) {
-        this.personaMapper = personaMapper;
-        this.propuestaMapper = propuestaMapper;
-        this.ubicacionMapper = ubicacionMapper;
+    public AlumnoGuaraniMapper(PropuestaAspiraGuaraniMapper propuestaAspiraMapper) {
         this.propuestaAspiraMapper = propuestaAspiraMapper;
     }
 
@@ -39,10 +30,6 @@ public class AlumnoGuaraniMapper {
                 .regular(domain.getRegular())
                 .calidad(domain.getCalidad())
                 .coeficiente(domain.getCoeficiente())
-                .personaRel(personaMapper.toEntity(domain.getPersonaRel()))
-                .propuestaRel(propuestaMapper.toEntity(domain.getPropuestaRel()))
-                .ubicacionRel(ubicacionMapper.toEntity(domain.getUbicacionRel()))
-                .propuestaAspiraRel(propuestaAspiraMapper.toEntity(domain.getPropuestaAspiraRel()))
                 .build();
     }
 
@@ -62,10 +49,6 @@ public class AlumnoGuaraniMapper {
                 .regular(entity.getRegular())
                 .calidad(entity.getCalidad())
                 .coeficiente(entity.getCoeficiente())
-                .personaRel(personaMapper.toDomain(entity.getPersonaRel()))
-                .propuestaRel(propuestaMapper.toDomain(entity.getPropuestaRel()))
-                .ubicacionRel(ubicacionMapper.toDomain(entity.getUbicacionRel()))
-                .propuestaAspiraRel(propuestaAspiraMapper.toDomain(entity.getPropuestaAspiraRel()))
                 .build();
     }
 }

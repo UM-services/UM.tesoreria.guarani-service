@@ -1,9 +1,6 @@
 package um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.web.dto;
 
 import lombok.*;
-import um.tesoreria.guarani.hexagonal.guarani.alumnos.persona.infrastructure.web.dto.PersonaGuaraniResponse;
-import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuesta.infrastructure.web.dto.PropuestaGuaraniResponse;
-import um.tesoreria.guarani.hexagonal.guarani.ubicacion.infrastructure.web.dto.UbicacionGuaraniResponse;
 
 import java.math.BigDecimal;
 
@@ -27,7 +24,4 @@ public class AlumnoGuaraniResponse {
     private String calidad;
     private BigDecimal coeficiente;
 
-    private PersonaGuaraniResponse personaRel;
-    private PropuestaGuaraniResponse propuestaRel;
-    private UbicacionGuaraniResponse ubicacionRel;
 }
