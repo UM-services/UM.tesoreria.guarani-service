@@ -13,6 +13,7 @@ import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.applica
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.infrastructure.web.dto.PropuestaAspiraGuaraniResponse;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.infrastructure.web.mapper.PropuestaAspiraGuaraniDtoMapper;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -23,13 +24,6 @@ public class PropuestaAspiraGuaraniController {
     private final PropuestaAspiraGuaraniService service;
     private final PropuestaAspiraGuaraniDtoMapper mapper;
 
-    @GetMapping("/")
-    public ResponseEntity<List<PropuestaAspiraGuaraniResponse>> getAllPropuestaAspiras() {
-        return ResponseEntity.ok(service.getAllPropuestaAspiras().stream()
-                .map(mapper::toResponse)
-                .toList());
-    }
-
     @GetMapping("/{propuestaAspira}")
     public ResponseEntity<PropuestaAspiraGuaraniResponse> getPropuestaAspiraGuarani(@PathVariable Integer propuestaAspira) {
         try {
@@ -37,5 +31,14 @@ public class PropuestaAspiraGuaraniController {
         } catch (PropuestaAspiraGuaraniException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
+    }
+
+    @GetMapping("/propuesta/{propuesta}/ubicacion/{ubicacion}/fechaInscripcionDesde/{fechaDesde}")
+    public ResponseEntity<List<PropuestaAspiraGuaraniResponse>> getByPropuestaUbicacionAndFechaInscripcion(
+            @PathVariable Integer propuesta, @PathVariable Integer ubicacion, @PathVariable LocalDate fechaDesde) {
+        return ResponseEntity.ok(service.getByPropuestaUbicacionAndFechaInscripcion(propuesta, ubicacion, fechaDesde)
+                .stream()
+                .map(mapper::toResponse)
+                .toList());
     }
 }

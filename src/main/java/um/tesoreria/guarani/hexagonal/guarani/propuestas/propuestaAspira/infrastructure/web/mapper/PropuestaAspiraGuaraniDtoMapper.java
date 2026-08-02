@@ -1,17 +1,25 @@
 package um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.infrastructure.web.mapper;
 
 import org.springframework.stereotype.Component;
+import um.tesoreria.guarani.hexagonal.guarani.alumnos.persona.infrastructure.web.mapper.PersonaGuaraniDtoMapper;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.domain.model.PropuestaAspiraGuarani;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.infrastructure.web.dto.PropuestaAspiraGuaraniResponse;
 
 @Component
 public class PropuestaAspiraGuaraniDtoMapper {
 
+    private final PersonaGuaraniDtoMapper personaMapper;
+
+    public PropuestaAspiraGuaraniDtoMapper(PersonaGuaraniDtoMapper personaMapper) {
+        this.personaMapper = personaMapper;
+    }
+
     public PropuestaAspiraGuaraniResponse toResponse(PropuestaAspiraGuarani domain) {
         if (domain == null) return null;
         return PropuestaAspiraGuaraniResponse.builder()
                 .propuestaAspira(domain.getPropuestaAspira())
                 .persona(domain.getPersona())
+                .personaRel(personaMapper.toResponse(domain.getPersonaRel()))
                 .periodoInsc(domain.getPeriodoInsc())
                 .anioAcademico(domain.getAnioAcademico())
                 .propuesta(domain.getPropuesta())

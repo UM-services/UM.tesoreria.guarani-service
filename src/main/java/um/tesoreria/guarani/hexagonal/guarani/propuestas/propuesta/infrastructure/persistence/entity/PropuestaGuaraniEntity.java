@@ -3,8 +3,10 @@ package um.tesoreria.guarani.hexagonal.guarani.propuestas.propuesta.infrastructu
 import jakarta.persistence.*;
 import lombok.*;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaTipo.infrastructure.persistence.entity.PropuestaTipoGuaraniEntity;
+import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaResponsableAcademica.infrastructure.persistence.entity.PropuestaResponsableAcademicaGuaraniEntity;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -41,5 +43,8 @@ public class PropuestaGuaraniEntity {
 
     @Column(columnDefinition = "bpchar")
     private String estado;
+
+    @OneToMany(mappedBy = "propuestaRel")
+    private List<PropuestaResponsableAcademicaGuaraniEntity> responsablesAcademicas;
 
 }

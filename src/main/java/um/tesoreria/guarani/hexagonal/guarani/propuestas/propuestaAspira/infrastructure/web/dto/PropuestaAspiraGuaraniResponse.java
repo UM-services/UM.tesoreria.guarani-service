@@ -1,6 +1,7 @@
 package um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.infrastructure.web.dto;
 
 import lombok.*;
+import um.tesoreria.guarani.hexagonal.guarani.alumnos.persona.infrastructure.web.dto.PersonaGuaraniResponse;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -14,6 +15,7 @@ import java.time.OffsetDateTime;
 public class PropuestaAspiraGuaraniResponse {
     private Integer propuestaAspira;
     private Integer persona;
+    private PersonaGuaraniResponse personaRel;
     private Integer periodoInsc;
     private BigDecimal anioAcademico;
     private Integer propuesta;
