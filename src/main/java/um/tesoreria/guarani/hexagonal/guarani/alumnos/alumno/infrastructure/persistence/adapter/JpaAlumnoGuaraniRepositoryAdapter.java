@@ -8,7 +8,6 @@ import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.model.Alumno
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.ports.out.AlumnoGuaraniRepository;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.persistence.mapper.AlumnoGuaraniMapper;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.persistence.repository.JpaAlumnoGuaraniRepository;
-import um.tesoreria.guarani.hexagonal.guarani.alumnos.persona.infrastructure.persistence.repository.JpaPersonaGuaraniRepository;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.personaDocumento.infrastructure.persistence.repository.JpaPersonaDocumentoGuaraniRepository;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuesta.infrastructure.persistence.repository.JpaPropuestaGuaraniRepository;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.infrastructure.persistence.repository.JpaPropuestaAspiraGuaraniRepository;
@@ -28,7 +27,6 @@ public class JpaAlumnoGuaraniRepositoryAdapter implements AlumnoGuaraniRepositor
     private final JpaPropuestaGuaraniRepository jpaPropuestaGuaraniRepository;
     private final JpaPropuestaAspiraGuaraniRepository jpaPropuestaAspiraGuaraniRepository;
     private final JpaPersonaDocumentoGuaraniRepository jpaPersonaDocumentoGuaraniRepository;
-    private final JpaPersonaGuaraniRepository jpaPersonaGuaraniRepository;
     private final AlumnoGuaraniMapper mapper;
 
     @Override
@@ -76,16 +74,10 @@ public class JpaAlumnoGuaraniRepositoryAdapter implements AlumnoGuaraniRepositor
     @Override
     @Transactional(readOnly = true)
     public List<AlumnoGuarani> findAllByNroDocumento(String nroDocumento) {
-        Set<Integer> personas = jpaPersonaDocumentoGuaraniRepository.findAll().stream()
-                .filter(documento -> nroDocumento.equals(documento.getNroDocumento()))
+        Set<Integer> personas = jpaPersonaDocumentoGuaraniRepository.findAllByNroDocumento(nroDocumento).stream()
                 .map(documento -> documento.getPersona())
                 .collect(Collectors.toSet());
-        Set<Integer> personasExistentes = jpaPersonaGuaraniRepository.findAll().stream()
-                .map(persona -> persona.getPersona())
-                .filter(personas::contains)
-                .collect(Collectors.toSet());
-        return jpaAlumnoGuaraniRepository.findAll().stream()
-                .filter(alumno -> personasExistentes.contains(alumno.getPersona()))
+        return jpaAlumnoGuaraniRepository.findAllByPersonaIn(personas).stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
     }

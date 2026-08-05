@@ -3,9 +3,9 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-brightgreen)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-25-orange)](https://openjdk.org/projects/jdk/25/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.0.0-blue)](pom.xml)
+[![Version](https://img.shields.io/badge/version-2.1.0-blue)](pom.xml)
 
-Microservicio de tesorería integrado con el sistema Guarani (v2.0.0). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, tipos de propuestas, propuestas aspiras, responsables académicas, ubicaciones y tipos de ubicación, requisitos, requisitos presentados y tipos de requisitos, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, procesamiento programado de preuniversitarios, y documentación OpenAPI.
+Microservicio de tesorería integrado con el sistema Guarani (v2.1.0). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, ofertas de propuestas, tipos de propuestas, propuestas aspiras, responsables académicas, ubicaciones y tipos de ubicación, requisitos, requisitos presentados y tipos de requisitos, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, procesamiento programado de preuniversitarios, y documentación OpenAPI.
 
 ## Arquitectura
 
@@ -130,7 +130,7 @@ sequenceDiagram
     Service-->>REST: List~Domain~
     REST->>REST: stream().map(mapper::toResponse)
     REST-->>User: 200 OK List~DTO~
-    Note over REST,DB: Actualmente implementado en propuesta, propuestaTipo, tipoDocumento, ubicacion, ubicacionTipo, responsableAcademica, requisito, requisitoPresentado y requisitoTipo
+    Note over REST,DB: Actualmente implementado en propuesta, propuestaTipo, propuestaOferta, tipoDocumento, ubicacion, ubicacionTipo, responsableAcademica, requisito, requisitoPresentado y requisitoTipo
 ```
 
 ### Diagrama de Secuencia — Scheduler Preuniversitario
@@ -261,6 +261,24 @@ sequenceDiagram
     DB-->>JPA: Proposal relationship entities
     JPA-->>REST: Proposal relationship responses
     REST-->>User: 200 OK
+
+    User->>REST: GET /api/tesoreria/guarani/propuestaOferta/ubicacion/{ubicacion}
+    REST->>Service: getByUbicacion(ubicacion)
+    Service->>UseCase: getByUbicacion(ubicacion)
+    UseCase->>JPA: findAllByUbicacion(ubicacion)
+    JPA->>DB: SELECT proposal offers by location
+    DB-->>JPA: Proposal offer entities
+    JPA-->>REST: Proposal offer responses
+    REST-->>User: 200 OK
+
+    User->>REST: GET /api/tesoreria/guarani/propuestaOferta/ubicacion/{ubicacion}/propuestaTipo/204
+    REST->>Service: getByUbicacionPropuestaTipo204(ubicacion)
+    Service->>UseCase: getByUbicacionAndPropuestaTipo(ubicacion, 204)
+    UseCase->>JPA: findAllByUbicacionAndPropuestaTipo(ubicacion, 204)
+    JPA->>DB: SELECT proposal offers by location and type
+    DB-->>JPA: Proposal offer entities
+    JPA-->>REST: Proposal offer responses
+    REST-->>User: 200 OK
 ```
 
 ### Estructura del Proyecto
@@ -290,6 +308,12 @@ classDiagram
         +getAlumnosByNroDocumento(nroDocumento) ResponseEntity
         +generatePreuniversitarioTest() ResponseEntity
         +createPreuniversitarioByNroDocumento(nroDocumento) ResponseEntity
+    }
+
+    class PropuestaOfertaGuaraniController {
+        <<RestController>>
+        +getByUbicacion(ubicacion) ResponseEntity
+        +getByUbicacionPropuestaTipo204(ubicacion) ResponseEntity
     }
 
     class PersonaGuaraniController {
@@ -432,6 +456,12 @@ classDiagram
         <<Service>>
     }
 
+    class PropuestaOfertaGuaraniService {
+        <<Service>>
+        +getByUbicacion(ubicacion) List~PropuestaOfertaGuarani~
+        +getByUbicacionPropuestaTipo204(ubicacion) List~PropuestaOfertaGuarani~
+    }
+
     class AlumnoGuaraniScheduler {
         <<Component>>
         +generatePreuniversitarios() void
@@ -520,6 +550,7 @@ classDiagram
     ResponsableAcademicaGuaraniController --> ResponsableAcademicaGuaraniService : uses
     UbicacionTipoGuaraniController --> UbicacionTipoGuaraniService : uses
     PropuestaResponsableAcademicaGuaraniController --> PropuestaResponsableAcademicaGuaraniService : uses
+    PropuestaOfertaGuaraniController --> PropuestaOfertaGuaraniService : uses
     TipoDocumentoGuaraniController --> TipoDocumentoGuaraniService : uses
     UbicacionGuaraniController --> UbicacionGuaraniService : uses
     RequisitoGuaraniController --> RequisitoGuaraniService : uses
@@ -563,6 +594,8 @@ classDiagram
 | GET | `/api/tesoreria/guarani/propuestaAspira/propuesta/{propuesta}/ubicacion/{ubicacion}/fechaInscripcionDesde/{fechaDesde}` | Filtra propuestas aspiras por propuesta, ubicación y fecha de inscripción |
 | GET | `/api/tesoreria/guarani/propuestaResponsableAcademica/responsableAcademica/{responsableAcademica}` | Obtiene propuestas de una responsable académica |
 | GET | `/api/tesoreria/guarani/propuestaResponsableAcademica/responsableAcademica/preuniversitario/{responsableAcademica}` | Obtiene propuestas preuniversitarias de una responsable académica |
+| GET | `/api/tesoreria/guarani/propuestaOferta/ubicacion/{ubicacion}` | Obtiene ofertas de propuestas por ubicación |
+| GET | `/api/tesoreria/guarani/propuestaOferta/ubicacion/{ubicacion}/propuestaTipo/204` | Obtiene ofertas de propuestas de tipo 204 por ubicación |
 | POST | `/api/tesoreria/guarani/alumno/generate/preuniversitario/documento/{nroDocumento}` | Crea preuniversitarios por número de documento |
 
 ```
@@ -631,6 +664,7 @@ src/
 │   │       │   ├── propuesta/
 │   │       │   ├── propuestaTipo/
 │   │       │   ├── propuestaAspira/
+│   │       │   ├── propuestaOferta/
 │   │       │   └── propuestaResponsableAcademica/
 │   │       ├── requisitos/
 │   │       │   ├── requisito/

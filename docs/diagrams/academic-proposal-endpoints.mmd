@@ -27,3 +27,23 @@ sequenceDiagram
     UseCase-->>Service: Proposal relationship domains
     Service-->>REST: Proposal relationship domains
     REST-->>User: 200 OK proposal relationship responses
+
+    User->>REST: GET /api/tesoreria/guarani/propuestaOferta/ubicacion/{ubicacion}
+    REST->>Service: getByUbicacion(ubicacion)
+    Service->>UseCase: getByUbicacion(ubicacion)
+    UseCase->>JPA: findAllByUbicacion(ubicacion)
+    JPA->>DB: SELECT proposal offers by location
+    DB-->>JPA: Proposal offer entities
+    JPA-->>UseCase: Proposal offer domains
+    UseCase-->>Service: Proposal offer domains
+    Service-->>REST: Proposal offer domains
+    REST-->>User: 200 OK proposal offer responses
+
+    User->>REST: GET /api/tesoreria/guarani/propuestaOferta/ubicacion/{ubicacion}/propuestaTipo/204
+    REST->>Service: getByUbicacionPropuestaTipo204(ubicacion)
+    Service->>UseCase: getByUbicacionAndPropuestaTipo(ubicacion, 204)
+    UseCase->>JPA: findAllByUbicacionAndPropuestaTipo(ubicacion, 204)
+    JPA->>DB: SELECT proposal offers by location and type
+    DB-->>JPA: Proposal offer entities
+    JPA-->>REST: Proposal offer responses
+    REST-->>User: 200 OK

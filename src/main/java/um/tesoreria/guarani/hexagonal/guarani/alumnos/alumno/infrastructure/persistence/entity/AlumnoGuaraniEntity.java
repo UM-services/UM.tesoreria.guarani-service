@@ -2,6 +2,7 @@ package um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.per
 
 import jakarta.persistence.*;
 import lombok.*;
+import um.tesoreria.guarani.hexagonal.guarani.alumnos.persona.infrastructure.persistence.entity.PersonaGuaraniEntity;
 
 import java.math.BigDecimal;
 
@@ -22,6 +23,10 @@ public class AlumnoGuaraniEntity {
     private Integer propuesta;
     private Integer planVersion;
     private Integer ubicacion;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "persona", referencedColumnName = "persona", insertable = false, updatable = false)
+    private PersonaGuaraniEntity personaRel;
 
     @Column(columnDefinition = "bpchar")
     private String modalidad;
