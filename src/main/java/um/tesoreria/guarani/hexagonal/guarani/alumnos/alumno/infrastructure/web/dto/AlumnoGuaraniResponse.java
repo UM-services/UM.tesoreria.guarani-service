@@ -13,6 +13,7 @@ public class AlumnoGuaraniResponse {
     private Integer alumno;
     private String legajo;
     private Integer persona;
+    private PersonaAlumnoGuaraniResponse personaRel;
     private Integer propuesta;
     private Integer planVersion;
     private Integer ubicacion;

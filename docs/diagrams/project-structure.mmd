@@ -24,6 +24,12 @@ classDiagram
         +createPreuniversitarioByNroDocumento(nroDocumento) ResponseEntity
     }
 
+    class PropuestaOfertaGuaraniController {
+        <<RestController>>
+        +getByUbicacion(ubicacion) ResponseEntity
+        +getByUbicacionPropuestaTipo204(ubicacion) ResponseEntity
+    }
+
     class PersonaGuaraniController {
         <<RestController>>
         +getPersonaGuarani(persona) ResponseEntity
@@ -164,6 +170,12 @@ classDiagram
         <<Service>>
     }
 
+    class PropuestaOfertaGuaraniService {
+        <<Service>>
+        +getByUbicacion(ubicacion) List~PropuestaOfertaGuarani~
+        +getByUbicacionPropuestaTipo204(ubicacion) List~PropuestaOfertaGuarani~
+    }
+
     class AlumnoGuaraniScheduler {
         <<Component>>
         +generatePreuniversitarios() void
@@ -252,6 +264,7 @@ classDiagram
     ResponsableAcademicaGuaraniController --> ResponsableAcademicaGuaraniService : uses
     UbicacionTipoGuaraniController --> UbicacionTipoGuaraniService : uses
     PropuestaResponsableAcademicaGuaraniController --> PropuestaResponsableAcademicaGuaraniService : uses
+    PropuestaOfertaGuaraniController --> PropuestaOfertaGuaraniService : uses
     TipoDocumentoGuaraniController --> TipoDocumentoGuaraniService : uses
     UbicacionGuaraniController --> UbicacionGuaraniService : uses
     RequisitoGuaraniController --> RequisitoGuaraniService : uses

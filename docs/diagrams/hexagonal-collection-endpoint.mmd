@@ -18,4 +18,4 @@ sequenceDiagram
     Service-->>REST: List~Domain~
     REST->>REST: stream().map(mapper::toResponse)
     REST-->>User: 200 OK List~DTO~
-    Note over REST,DB: Actualmente implementado en propuesta, propuestaTipo, propuestaAspira, tipoDocumento, ubicacion, requisito, requisitoPresentado y requisitoTipo
+    Note over REST,DB: Actualmente implementado en propuesta, propuestaTipo, propuestaAspira, propuestaOferta, tipoDocumento, ubicacion, requisito, requisitoPresentado y requisitoTipo

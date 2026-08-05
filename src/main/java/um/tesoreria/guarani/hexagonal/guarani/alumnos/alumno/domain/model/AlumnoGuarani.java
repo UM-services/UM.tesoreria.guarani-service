@@ -1,6 +1,7 @@
 package um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.model;
 
 import lombok.*;
+import um.tesoreria.guarani.hexagonal.guarani.alumnos.persona.domain.model.PersonaGuarani;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.domain.model.PropuestaAspiraGuarani;
 import um.tesoreria.guarani.util.Jsonifier;
 
@@ -16,6 +17,7 @@ public class AlumnoGuarani {
     private Integer alumno;
     private String legajo;
     private Integer persona;
+    private PersonaGuarani personaRel;
     private Integer propuesta;
     private Integer planVersion;
     private Integer ubicacion;

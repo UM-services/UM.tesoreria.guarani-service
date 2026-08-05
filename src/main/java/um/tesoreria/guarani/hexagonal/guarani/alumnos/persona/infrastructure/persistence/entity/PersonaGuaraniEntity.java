@@ -2,6 +2,7 @@ package um.tesoreria.guarani.hexagonal.guarani.alumnos.persona.infrastructure.pe
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.personaContacto.infrastructure.persistence.entity.PersonaContactoGuaraniEntity;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.personaDocumento.infrastructure.persistence.entity.PersonaDocumentoGuaraniEntity;
 import um.tesoreria.guarani.hexagonal.guarani.requisitos.requisitoPresentado.infrastructure.persistence.entity.RequisitoPresentadoGuaraniEntity;
@@ -46,10 +47,12 @@ public class PersonaGuaraniEntity {
 
     @OneToMany
     @JoinColumn(name = "persona", referencedColumnName = "persona")
+    @BatchSize(size = 100)
     private List<PersonaContactoGuaraniEntity> contactos;
 
     @OneToMany
     @JoinColumn(name = "persona", referencedColumnName = "persona")
+    @BatchSize(size = 100)
     private List<RequisitoPresentadoGuaraniEntity> requisitosPresentados;
 
     private String usuario;

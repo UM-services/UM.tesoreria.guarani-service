@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.1.0] - 2026-08-04
+
+### Added
+- **New proposal-offer module** backed by `negocio.sga_propuestas_oferta`, including hexagonal domain, JPA persistence, mappings, and REST responses.
+- **New endpoint** `GET /api/tesoreria/guarani/propuestaOferta/ubicacion/{ubicacion}` to query proposal offers by location.
+- **New endpoint** `GET /api/tesoreria/guarani/propuestaOferta/ubicacion/{ubicacion}/propuestaTipo/204` to query proposal offers for proposal type `204` at a location.
+- **Enriched alumno responses** with the related persona, principal document, contacts, and presented requirements of type `4`.
+
+### Changed
+- **Alumno lookup by document** now queries matching person documents directly and loads the related person graph with an entity graph and batched collections.
+- **Proposal-offer responses** include the related proposal data.
+
 ## [2.0.0] - 2026-08-02
 
 ### BREAKING

@@ -3,15 +3,15 @@ package um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.per
 import org.springframework.stereotype.Component;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.model.AlumnoGuarani;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.persistence.entity.AlumnoGuaraniEntity;
-import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.infrastructure.persistence.mapper.PropuestaAspiraGuaraniMapper;
+import um.tesoreria.guarani.hexagonal.guarani.alumnos.persona.infrastructure.persistence.mapper.PersonaGuaraniMapper;
 
 @Component
 public class AlumnoGuaraniMapper {
 
-    private final PropuestaAspiraGuaraniMapper propuestaAspiraMapper;
+    private final PersonaGuaraniMapper personaMapper;
 
-    public AlumnoGuaraniMapper(PropuestaAspiraGuaraniMapper propuestaAspiraMapper) {
-        this.propuestaAspiraMapper = propuestaAspiraMapper;
+    public AlumnoGuaraniMapper(PersonaGuaraniMapper personaMapper) {
+        this.personaMapper = personaMapper;
     }
 
     public AlumnoGuaraniEntity toEntity(AlumnoGuarani domain) {
@@ -20,6 +20,7 @@ public class AlumnoGuaraniMapper {
                 .alumno(domain.getAlumno())
                 .legajo(domain.getLegajo())
                 .persona(domain.getPersona())
+                .personaRel(personaMapper.toEntity(domain.getPersonaRel()))
                 .propuesta(domain.getPropuesta())
                 .planVersion(domain.getPlanVersion())
                 .ubicacion(domain.getUbicacion())
@@ -39,6 +40,7 @@ public class AlumnoGuaraniMapper {
                 .alumno(entity.getAlumno())
                 .legajo(entity.getLegajo())
                 .persona(entity.getPersona())
+                .personaRel(personaMapper.toDomain(entity.getPersonaRel()))
                 .propuesta(entity.getPropuesta())
                 .planVersion(entity.getPlanVersion())
                 .ubicacion(entity.getUbicacion())
