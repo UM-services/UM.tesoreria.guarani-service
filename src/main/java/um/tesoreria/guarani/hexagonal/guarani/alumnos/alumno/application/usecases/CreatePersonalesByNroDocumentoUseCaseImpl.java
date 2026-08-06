@@ -20,13 +20,15 @@ public class CreatePersonalesByNroDocumentoUseCaseImpl implements CreatePersonal
 
     @Override
     public Boolean createPersonalesByNroDocumento(String nroDocumento) {
-        log.debug("Creating personales for document: {}", nroDocumento);
+        log.debug("\n\nCreating personales for document: {}\n\n", nroDocumento);
 
+        log.debug("\n\nLeyendo desde Guarani\n\n");
         List<AlumnoGuarani> alumnos = getAlumnosByNroDocumentoUseCase.getByNroDocumento(nroDocumento);
         if (alumnos == null || alumnos.isEmpty()) {
             return false;
         }
 
+        log.debug("\n\nCreando desde Guarani\n\n");
         boolean created = true;
         for (AlumnoGuarani alumno : alumnos) {
             created = Boolean.TRUE.equals(createPersonalesPort.createPersonales(alumno)) && created;
