@@ -1,0 +1,35 @@
+sequenceDiagram
+    participant User as Usuario
+    participant REST as AlumnoGuaraniController
+    participant Service as AlumnoGuaraniService
+    participant UseCase as CreatePersonalesByNroDocumento UseCase
+    participant GetUC as GetAlumnosByNroDocumento UseCase
+    participant JPA as JPA Repository Adapter
+    participant DB as PostgreSQL
+    participant Port as CreatePersonalesPort
+    participant Adapter as CreatePersonalesAdapter
+    participant Feign as AlumnoGuaraniClient
+    participant Core as Tesoreria Core Service
+
+    User->>REST: GET /api/tesoreria/guarani/alumno/generate/personales/documento/{nroDocumento}
+    REST->>Service: createPersonalesByNroDocumento(nroDocumento)
+    Service->>UseCase: createPersonalesByNroDocumento(nroDocumento)
+    UseCase->>GetUC: getByNroDocumento(nroDocumento)
+    GetUC->>JPA: findAllByNroDocumento(nroDocumento)
+    JPA->>DB: SELECT * FROM alumno WHERE nro_documento=?
+    DB-->>JPA: List~AlumnoGuaraniEntity~
+    JPA-->>GetUC: List~AlumnoGuarani~
+    GetUC-->>UseCase: List~AlumnoGuarani~
+    loop For each alumno
+        UseCase->>Port: createPersonales(alumno)
+        Port->>Adapter: createPersonales(alumno)
+        Adapter->>Feign: createPersonales(alumno)
+        Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/personales
+        Core-->>Feign: Boolean
+        Feign-->>Adapter: Boolean
+        Adapter-->>Port: Boolean
+        Port-->>UseCase: Boolean
+    end
+    UseCase-->>Service: Boolean
+    Service-->>REST: Boolean
+    REST-->>User: 200 OK Boolean

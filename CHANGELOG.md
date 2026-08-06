@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.0.0] - 2026-08-05
+
+### BREAKING
+- **Changed** `GET /api/tesoreria/guarani/alumno/generate/preuniversitario/documento/{nroDocumento}` from `POST` to `GET`; clients using the previous HTTP method must update their integrations.
+
+### Added
+- **New endpoint** `GET /api/tesoreria/guarani/alumno/generate/personales/documento/{nroDocumento}` to create personales for all alumnos matching a document number.
+- **New Feign operation** `POST /api/tesoreria/core/guarani/alumno/create/personales` delegated through `CreatePersonalesPort` and `CreatePersonalesByNroDocumentoUseCase`.
+
+### Changed
+- **Preuniversitario creation by document** now exposes the current `GET` contract and remains delegated through the existing reusable creation use case.
+
 ## [2.1.0] - 2026-08-04
 
 ### Added
