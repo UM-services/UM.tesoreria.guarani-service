@@ -20,6 +20,7 @@ classDiagram
         +getAlumnosByPropuestaTipo(propuestaTipo) ResponseEntity
         +getAlumnosByPropuestaTipoAndFechaLimite(propuestaTipo, fechaLimite) ResponseEntity
         +getAlumnosByNroDocumento(nroDocumento) ResponseEntity
+        +createPersonalesByNroDocumento(nroDocumento) ResponseEntity
         +generatePreuniversitarioTest() ResponseEntity
         +createPreuniversitarioByNroDocumento(nroDocumento) ResponseEntity
     }
@@ -184,6 +185,7 @@ classDiagram
     class AlumnoGuaraniClient {
         <<FeignClient>>
         +createPreuniversitario(AlumnoGuarani) AlumnoGuarani
+        +createPersonales(AlumnoGuarani) Boolean
         +desmarcarEnviados(List~AlumnoDeteccionRequest~) List~AlumnoDeteccionRequest~
     }
 
@@ -217,6 +219,16 @@ classDiagram
         +createPreuniversitarioByNroDocumento(String) List~AlumnoGuarani~
     }
 
+    class CreatePersonalesByNroDocumentoUseCase {
+        <<Interface>>
+        +createPersonalesByNroDocumento(String) Boolean
+    }
+
+    class CreatePersonalesPort {
+        <<Interface>>
+        +createPersonales(AlumnoGuarani) Boolean
+    }
+
     class GetAlumnosByPropuestaTipoAndFechaInscripcionUseCase {
         <<Interface>>
         +getByPropuestaTipoAndFechaInscripcionAfter(Integer, LocalDate) List~AlumnoGuarani~
@@ -247,12 +259,16 @@ classDiagram
     AlumnoGuaraniService --> ProcessNextPreuniversitarioUseCase : uses
     AlumnoGuaraniService --> GetAlumnosByPropuestaTipoAndFechaInscripcionUseCase : uses
     AlumnoGuaraniService --> CreatePreuniversitarioByNroDocumentoUseCase : uses
+    AlumnoGuaraniService --> CreatePersonalesByNroDocumentoUseCase : uses
     ProcessNextPreuniversitarioUseCase --> GetAlumnosByPropuestaTipoAndFechaInscripcionUseCase : queries
     ProcessNextPreuniversitarioUseCase --> CreatePreuniversitarioUseCase : delegates
     CreatePreuniversitarioUseCase --> AlumnoGuaraniClient : calls
     CreatePreuniversitarioUseCase --> CheckAllToUnmarkSendedUseCase : delegates
     CreatePreuniversitarioByNroDocumentoUseCase --> GetAlumnosByNroDocumentoUseCase : queries
     CreatePreuniversitarioByNroDocumentoUseCase --> CreatePreuniversitarioUseCase : delegates
+    CreatePersonalesByNroDocumentoUseCase --> GetAlumnosByNroDocumentoUseCase : queries
+    CreatePersonalesByNroDocumentoUseCase --> CreatePersonalesPort : delegates
+    CreatePersonalesPort --> AlumnoGuaraniClient : calls
     CheckAllToUnmarkSendedUseCase --> AlumnoGuaraniClient : calls
     AlumnoGuaraniController --> AlumnoGuaraniService : uses
     PersonaGuaraniController --> PersonaGuaraniService : uses

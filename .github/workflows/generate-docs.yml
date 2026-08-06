@@ -172,6 +172,18 @@ jobs:
               </div>
           EOF
 
+          # --- Inject create personales by documento diagram ---
+          cat >> docs/index.html << 'EOF'
+              <div id="create-personales-documento" class="section">
+                  <h2>🔄 Diagrama de Secuencia: Crear Personales por Documento</h2>
+                  <div class="mermaid">
+          EOF
+          cat docs/diagrams/create-personales-documento.mmd >> docs/index.html
+          cat >> docs/index.html << 'EOF'
+                  </div>
+              </div>
+          EOF
+
           cat >> docs/index.html << 'EOF'
               <div id="project-structure" class="section">
                   <h2>🏗️ Estructura del Proyecto</h2>

@@ -14,6 +14,9 @@ public interface AlumnoGuaraniClient {
     @PostMapping("/api/tesoreria/core/guarani/alumno/create/preuniversitario")
     AlumnoGuarani createPreuniversitario(@RequestBody AlumnoGuarani alumno);
 
+    @PostMapping("/api/tesoreria/core/guarani/alumno/create/personales")
+    Boolean createPersonales(@RequestBody AlumnoGuarani alumno);
+
     @PostMapping("/api/tesoreria/core/guarani/alumno/desmarcar/enviadas")
     List<AlumnoDeteccionRequest> desmarcarEnviados(@RequestBody List<AlumnoDeteccionRequest> encontrados);
 

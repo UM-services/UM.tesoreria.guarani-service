@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.model.AlumnoGuarani;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.ports.in.CreatePreuniversitarioByNroDocumentoUseCase;
+import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.ports.in.CreatePersonalesByNroDocumentoUseCase;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.ports.in.GetAlumnoGuaraniUseCase;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.ports.in.GetAlumnosByNroDocumentoUseCase;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.ports.in.GetAlumnosByPropuestaTipoAndFechaInscripcionUseCase;
@@ -23,6 +24,7 @@ public class AlumnoGuaraniService {
     private final ProcessNextPreuniversitarioUseCase processNextPreuniversitarioUseCase;
     private final GetAlumnosByNroDocumentoUseCase getAlumnosByNroDocumentoUseCase;
     private final CreatePreuniversitarioByNroDocumentoUseCase createPreuniversitarioByNroDocumentoUseCase;
+    private final CreatePersonalesByNroDocumentoUseCase createPersonalesByNroDocumentoUseCase;
 
     public AlumnoGuarani getByAlumnoId(Integer alumnoId) {
         return getAlumnoGuaraniUseCase.getByAlumnoId(alumnoId);
@@ -46,6 +48,10 @@ public class AlumnoGuaraniService {
 
     public List<AlumnoGuarani> createPreuniversitarioByNroDocumento(String nroDocumento) {
         return createPreuniversitarioByNroDocumentoUseCase.createPreuniversitarioByNroDocumento(nroDocumento);
+    }
+
+    public Boolean createPersonalesByNroDocumento(String nroDocumento) {
+        return createPersonalesByNroDocumentoUseCase.createPersonalesByNroDocumento(nroDocumento);
     }
 
 }

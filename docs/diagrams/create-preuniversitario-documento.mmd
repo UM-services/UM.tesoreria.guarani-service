@@ -11,7 +11,7 @@ sequenceDiagram
     participant Feign as AlumnoGuaraniClient
     participant Core as Tesoreria Core Service
 
-    User->>REST: POST /api/tesoreria/guarani/alumno/generate/preuniversitario/documento/{nroDocumento}
+    User->>REST: GET /api/tesoreria/guarani/alumno/generate/preuniversitario/documento/{nroDocumento}
     REST->>Service: createPreuniversitarioByNroDocumento(nroDocumento)
     Service->>CBNUC: createPreuniversitarioByNroDocumento(nroDocumento)
     CBNUC->>GetUC: getByNroDocumento(nroDocumento)
