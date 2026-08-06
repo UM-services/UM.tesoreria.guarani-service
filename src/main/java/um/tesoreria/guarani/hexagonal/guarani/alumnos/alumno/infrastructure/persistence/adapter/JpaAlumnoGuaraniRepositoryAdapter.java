@@ -8,8 +8,11 @@ import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.model.Alumno
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.ports.out.AlumnoGuaraniRepository;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.persistence.mapper.AlumnoGuaraniMapper;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.persistence.repository.JpaAlumnoGuaraniRepository;
+import um.tesoreria.guarani.hexagonal.guarani.alumnos.personaDocumento.infrastructure.persistence.entity.PersonaDocumentoGuaraniEntity;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.personaDocumento.infrastructure.persistence.repository.JpaPersonaDocumentoGuaraniRepository;
+import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuesta.infrastructure.persistence.entity.PropuestaGuaraniEntity;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuesta.infrastructure.persistence.repository.JpaPropuestaGuaraniRepository;
+import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.infrastructure.persistence.entity.PropuestaAspiraGuaraniEntity;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.infrastructure.persistence.repository.JpaPropuestaAspiraGuaraniRepository;
 
 import java.time.LocalDate;
@@ -57,13 +60,13 @@ public class JpaAlumnoGuaraniRepositoryAdapter implements AlumnoGuaraniRepositor
         log.debug("\n\nProcessing JpaAlumnoGuaraniRepositoryAdapter.findAllByPropuestaTipoAndFechaInscripcionAfter\n\n");
         Set<Integer> propuestas = jpaPropuestaGuaraniRepository.findAll().stream()
                 .filter(propuesta -> propuestaTipo.equals(propuesta.getPropuestaTipo()))
-                .map(propuesta -> propuesta.getPropuesta())
+                .map(PropuestaGuaraniEntity::getPropuesta)
                 .collect(Collectors.toSet());
         Set<Integer> propuestasConInscripcion = jpaPropuestaAspiraGuaraniRepository.findAll().stream()
                 .filter(aspira -> propuestas.contains(aspira.getPropuesta()))
                 .filter(aspira -> aspira.getFechaInscripcion() != null
                         && aspira.getFechaInscripcion().isAfter(fechaLimite))
-                .map(aspira -> aspira.getPropuesta())
+                .map(PropuestaAspiraGuaraniEntity::getPropuesta)
                 .collect(Collectors.toSet());
         return jpaAlumnoGuaraniRepository.findAll().stream()
                 .filter(alumno -> propuestasConInscripcion.contains(alumno.getPropuesta()))
@@ -75,7 +78,7 @@ public class JpaAlumnoGuaraniRepositoryAdapter implements AlumnoGuaraniRepositor
     @Transactional(readOnly = true)
     public List<AlumnoGuarani> findAllByNroDocumento(String nroDocumento) {
         Set<Integer> personas = jpaPersonaDocumentoGuaraniRepository.findAllByNroDocumento(nroDocumento).stream()
-                .map(documento -> documento.getPersona())
+                .map(PersonaDocumentoGuaraniEntity::getPersona)
                 .collect(Collectors.toSet());
         return jpaAlumnoGuaraniRepository.findAllByPersonaIn(personas).stream()
                 .map(mapper::toDomain)
