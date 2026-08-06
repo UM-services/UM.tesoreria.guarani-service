@@ -43,7 +43,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=UM-services_UM.tesoreria.guarani-service
 
-    # --- Job 1: Build the standard JVM image ---
+  # --- Job 1: Build the standard JVM image ---
   build-image:
     # Only run on pushes to the main branch
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
