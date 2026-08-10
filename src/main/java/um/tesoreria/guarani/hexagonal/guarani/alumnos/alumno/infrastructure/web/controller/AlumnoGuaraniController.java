@@ -57,20 +57,13 @@ public class AlumnoGuaraniController {
                 .toList());
     }
 
-    @GetMapping("/generate/personales/documento/{nroDocumento}")
+    @GetMapping("/generate/personales/create/{nroDocumento}")
     public ResponseEntity<Boolean> createPersonalesByNroDocumento(@PathVariable String nroDocumento) {
         log.debug("GET AlumnoGuaraniController.createPersonalesByNroDocumento for {}", nroDocumento);
         return ResponseEntity.ok(service.createPersonalesByNroDocumento(nroDocumento));
     }
 
-    @GetMapping("/generate/preuniversitario/test")
-    public ResponseEntity<Void> generatePreuniversitarioTest() {
-        log.debug("\n\nProcessing AlumnoGuaraniController.generatePreuniversitarioTest\n\n");
-        service.processNextInscripcion();
-        return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/generate/preuniversitario/documento/{nroDocumento}")
+    @GetMapping("/generate/preuniversitario/create/{nroDocumento}")
     public ResponseEntity<List<AlumnoGuaraniResponse>> createPreuniversitarioByNroDocumento(@PathVariable String nroDocumento) {
         log.debug("POST AlumnoGuaraniController.createPreuniversitarioByNroDocumento for {}", nroDocumento);
         return ResponseEntity.ok(service.createPreuniversitarioByNroDocumento(nroDocumento).stream()

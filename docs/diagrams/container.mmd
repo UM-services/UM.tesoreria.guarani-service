@@ -11,7 +11,7 @@ C4Container
         Container(jpa, "JPA Repositories", "Spring Data JPA", "Persistencia y mapeo ORM")
         Container(client, "Feign Clients", "OpenFeign", "Clientes HTTP declarativos (tesoreria-core-service)")
         Container(cache, "Cache Layer", "Caffeine", "Caché en memoria")
-        Container(scheduler, "Scheduler", "Spring @Scheduled", "Procesamiento periódico de preuniversitarios (cada 10min, 21:00-07:59 hora Mendoza)")
+        Container(scheduler, "Scheduler", "Spring @Scheduled", "Procesamiento programado de preuniversitarios (deshabilitado)")
         Container(openapi, "API Docs", "SpringDoc OpenAPI", "Documentación Swagger UI")
     }
 
@@ -26,6 +26,5 @@ C4Container
     Rel(hexagonal, jpa, "Persistencia")
     Rel(service, client, "Invocación")
     Rel(service, cache, "Cache consultas")
-    Rel(scheduler, service, "Ejecuta tareas programadas")
     Rel(client, internal_svc, "HTTP/Feign")
     Rel(jpa, postgresql, "JDBC", "5432")
