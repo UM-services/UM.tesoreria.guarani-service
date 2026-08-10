@@ -9,7 +9,6 @@ import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.ports.in.Get
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.ports.in.GetAlumnosByNroDocumentoUseCase;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.ports.in.GetAlumnosByPropuestaTipoAndFechaInscripcionUseCase;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.ports.in.GetAlumnosByPropuestaTipoUseCase;
-import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.ports.in.ProcessNextPreuniversitarioUseCase;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -21,7 +20,6 @@ public class AlumnoGuaraniService {
     private final GetAlumnoGuaraniUseCase getAlumnoGuaraniUseCase;
     private final GetAlumnosByPropuestaTipoUseCase getAlumnosByPropuestaTipoUseCase;
     private final GetAlumnosByPropuestaTipoAndFechaInscripcionUseCase getAlumnosByPropuestaTipoAndFechaInscripcionUseCase;
-    private final ProcessNextPreuniversitarioUseCase processNextPreuniversitarioUseCase;
     private final GetAlumnosByNroDocumentoUseCase getAlumnosByNroDocumentoUseCase;
     private final CreatePreuniversitarioByNroDocumentoUseCase createPreuniversitarioByNroDocumentoUseCase;
     private final CreatePersonalesByNroDocumentoUseCase createPersonalesByNroDocumentoUseCase;
@@ -40,10 +38,6 @@ public class AlumnoGuaraniService {
 
     public List<AlumnoGuarani> getAllByNroDocumento(String nroDocumento) {
         return getAlumnosByNroDocumentoUseCase.getByNroDocumento(nroDocumento);
-    }
-
-    public void processNextInscripcion() {
-        processNextPreuniversitarioUseCase.processNextPreuniversitario();
     }
 
     public List<AlumnoGuarani> createPreuniversitarioByNroDocumento(String nroDocumento) {

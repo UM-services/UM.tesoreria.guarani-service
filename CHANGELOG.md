@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.0.0] - 2026-08-10
+
+### BREAKING
+- **Renamed** `GET /api/tesoreria/guarani/alumno/generate/personales/documento/{nroDocumento}` to `GET /api/tesoreria/guarani/alumno/generate/personales/create/{nroDocumento}`; clients using the previous path must update their integrations.
+- **Renamed** `GET /api/tesoreria/guarani/alumno/generate/preuniversitario/documento/{nroDocumento}` to `GET /api/tesoreria/guarani/alumno/generate/preuniversitario/create/{nroDocumento}`; clients using the previous path must update their integrations.
+- **Removed** `GET /api/tesoreria/guarani/alumno/generate/preuniversitario/test`, the manual trigger of the preuniversitario scheduler.
+
+### Removed
+- **ProcessNextPreuniversitarioUseCase** and its implementation: the scheduled batch that selected alumnos by propuesta tipo `204` with inscription date within the last 15 days and created preuniversitarios via Feign is no longer available.
+- **AlumnoGuaraniService.processNextInscripcion()**, the service method that delegated to the removed use case.
+- **Scheduled preuniversitario processing**: `AlumnoGuaraniScheduler.generatePreuniversitarios()` no longer performs any work; its invocation of the service is commented out.
+
 ## [3.0.0] - 2026-08-05
 
 ### BREAKING
