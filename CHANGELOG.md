@@ -1,5 +1,24 @@
 # Changelog
 
+## [5.0.0] - 2026-08-11
+
+### BREAKING
+- **Changed** the response of `GET /api/tesoreria/guarani/alumno/generate/personales/create/{nroDocumento}` from `Boolean` to `List<CreatePersonalesResponse>`; each item carries `result`, the original `alumnoGuarani`, the `persona` and the `domicilio` created in the core service. Clients consuming the previous boolean response must update their integrations.
+- **Changed** the internal Feign contract with `tesoreria-core-service`: `POST /api/tesoreria/core/guarani/alumno/create/personales` now returns `CreatePersonalesResponse` instead of `Boolean`, and `POST /api/tesoreria/core/guarani/alumno/desmarcar/enviadas` was removed; the core service must expose the new response contract.
+
+### Added
+- **New DTOs** `CreatePersonalesResponse`, `PersonaCoreResponse` and `DomicilioCoreResponse` to carry the personales, persona and domicilio created in the core service.
+- **Logging** of the created personales list via `Jsonifier` in `CreatePersonalesByNroDocumentoUseCaseImpl`.
+
+### Removed
+- **CreatePreuniversitarioUseCase** and its implementation: the reusable preuniversitario creation flow (detection requests, chequera unmarking, batch processing) is no longer available.
+- **CheckAllToUnmarkSendedUseCase** and its implementation: the Feign call to `POST /api/tesoreria/core/guarani/alumno/desmarcar/enviadas` was removed.
+- **AlumnoDeteccionRequest** DTO, the request model used by the preuniversitario/desmarcar flow.
+- **AlumnoGuaraniClient.desmarcarEnviados()** Feign operation.
+
+### Changed
+- **Preuniversitario creation by document** (`GET /api/tesoreria/guarani/alumno/generate/preuniversitario/create/{nroDocumento}`) now delegates to `CreatePersonalesByNroDocumentoUseCase`: it returns an empty list when no alumnos are found, and the preuniversitario creation loop is not yet restored (the non-empty path currently returns `null`).
+
 ## [4.0.0] - 2026-08-10
 
 ### BREAKING

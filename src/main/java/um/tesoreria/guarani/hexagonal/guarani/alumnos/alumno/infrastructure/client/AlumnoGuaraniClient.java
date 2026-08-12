@@ -4,9 +4,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.model.AlumnoGuarani;
-import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.client.dto.AlumnoDeteccionRequest;
-
-import java.util.List;
+import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.client.dto.CreatePersonalesResponse;
 
 @FeignClient(name = "tesoreria-core-service")
 public interface AlumnoGuaraniClient {
@@ -15,9 +13,6 @@ public interface AlumnoGuaraniClient {
     AlumnoGuarani createPreuniversitario(@RequestBody AlumnoGuarani alumno);
 
     @PostMapping("/api/tesoreria/core/guarani/alumno/create/personales")
-    Boolean createPersonales(@RequestBody AlumnoGuarani alumno);
-
-    @PostMapping("/api/tesoreria/core/guarani/alumno/desmarcar/enviadas")
-    List<AlumnoDeteccionRequest> desmarcarEnviados(@RequestBody List<AlumnoDeteccionRequest> encontrados);
+    CreatePersonalesResponse createPersonales(@RequestBody AlumnoGuarani alumno);
 
 }

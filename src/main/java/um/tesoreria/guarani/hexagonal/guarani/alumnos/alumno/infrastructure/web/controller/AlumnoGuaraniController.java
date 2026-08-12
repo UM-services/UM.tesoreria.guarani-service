@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.application.exception.AlumnoGuaraniException;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.application.service.AlumnoGuaraniService;
+import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.client.dto.CreatePersonalesResponse;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.web.dto.AlumnoGuaraniResponse;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.web.mapper.AlumnoGuaraniDtoMapper;
 
@@ -58,7 +59,7 @@ public class AlumnoGuaraniController {
     }
 
     @GetMapping("/generate/personales/create/{nroDocumento}")
-    public ResponseEntity<Boolean> createPersonalesByNroDocumento(@PathVariable String nroDocumento) {
+    public ResponseEntity<List<CreatePersonalesResponse>> createPersonalesByNroDocumento(@PathVariable String nroDocumento) {
         log.debug("GET AlumnoGuaraniController.createPersonalesByNroDocumento for {}", nroDocumento);
         return ResponseEntity.ok(service.createPersonalesByNroDocumento(nroDocumento));
     }

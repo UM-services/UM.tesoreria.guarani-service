@@ -7,7 +7,10 @@ import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.model.Alumno
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.ports.in.CreatePersonalesByNroDocumentoUseCase;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.ports.in.GetAlumnosByNroDocumentoUseCase;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.ports.out.CreatePersonalesPort;
+import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.client.dto.CreatePersonalesResponse;
+import um.tesoreria.guarani.util.Jsonifier;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -19,20 +22,21 @@ public class CreatePersonalesByNroDocumentoUseCaseImpl implements CreatePersonal
     private final CreatePersonalesPort createPersonalesPort;
 
     @Override
-    public Boolean createPersonalesByNroDocumento(String nroDocumento) {
+    public List<CreatePersonalesResponse> createPersonalesByNroDocumento(String nroDocumento) {
         log.debug("\n\nCreating personales for document: {}\n\n", nroDocumento);
 
         log.debug("\n\nLeyendo desde Guarani\n\n");
         List<AlumnoGuarani> alumnos = getAlumnosByNroDocumentoUseCase.getByNroDocumento(nroDocumento);
         if (alumnos == null || alumnos.isEmpty()) {
-            return false;
+            return List.of();
         }
 
         log.debug("\n\nCreando desde Guarani\n\n");
-        boolean created = true;
+        List<CreatePersonalesResponse> created = new ArrayList<>();
         for (AlumnoGuarani alumno : alumnos) {
-            created = Boolean.TRUE.equals(createPersonalesPort.createPersonales(alumno)) && created;
+            created.add(createPersonalesPort.createPersonales(alumno));
         }
+        log.debug("\n\nAlumnos Creados -> {}\n\n", Jsonifier.builder(created).build());
         return created;
     }
 }

@@ -3,9 +3,9 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-brightgreen)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-25-orange)](https://openjdk.org/projects/jdk/25/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-4.0.0-blue)](pom.xml)
+[![Version](https://img.shields.io/badge/version-5.0.0-blue)](pom.xml)
 
-Microservicio de tesorería integrado con el sistema Guarani (v4.0.0). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, ofertas de propuestas, tipos de propuestas, propuestas aspiras, responsables académicas, ubicaciones y tipos de ubicación, requisitos, requisitos presentados y tipos de requisitos, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, creación de personales y preuniversitarios por documento, y documentación OpenAPI.
+Microservicio de tesorería integrado con el sistema Guarani (v5.0.0). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, ofertas de propuestas, tipos de propuestas, propuestas aspiras, responsables académicas, ubicaciones y tipos de ubicación, requisitos, requisitos presentados y tipos de requisitos, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, creación de personales y preuniversitarios por documento, y documentación OpenAPI.
 
 ## Arquitectura
 
@@ -22,13 +22,13 @@ C4Context
     System_Ext(consul, "HashiCorp Consul", "Service discovery y registro")
     System_Ext(feign_clients, "Servicios Internos", "Otros microservicios (Feign clients)")
     System_Ext(postgresql, "PostgreSQL", "Base de datos relacional (esquema negocio)")
-    System_Ext(core, "Tesoreria Core Service", "Procesamiento y gestión de chequeras")
+    System_Ext(core, "Tesoreria Core Service", "Procesamiento y gestión de personales")
 
     Rel(user, guarani, "Consulta endpoints REST", "HTTP/JSON")
     Rel(guarani, consul, "Registro y descubrimiento", "HTTP/8500")
     Rel(guarani, feign_clients, "Comunicación interna", "HTTP/OpenFeign")
     Rel(guarani, postgresql, "Persistencia JPA", "JDBC/5432")
-    Rel(guarani, core, "Procesamiento preuniversitario y chequeras", "HTTP/Feign")
+    Rel(guarani, core, "Creación de personales y preuniversitarios", "HTTP/Feign")
 ```
 
 ### Diagrama de Contenedores
@@ -139,42 +139,38 @@ sequenceDiagram
     participant REST as AlumnoGuaraniController
     participant Service as AlumnoGuaraniService
     participant CBNUC as CreatePreuniversitarioByNroDocumento UseCase
+    participant PersonalesUC as CreatePersonalesByNroDocumento UseCase
     participant GetUC as GetAlumnosByNroDocumento UseCase
     participant JPA as JPA Repository Adapter
     participant DB as PostgreSQL
-    participant CreateUC as CreatePreuniversitario UseCase
-    participant CheckUC as CheckAllToUnmarkSended UseCase
+    participant Port as CreatePersonalesPort
+    participant Adapter as CreatePersonalesAdapter
     participant Feign as AlumnoGuaraniClient
     participant Core as Tesoreria Core Service
 
     User->>REST: GET /api/tesoreria/guarani/alumno/generate/preuniversitario/create/{nroDocumento}
     REST->>Service: createPreuniversitarioByNroDocumento(nroDocumento)
     Service->>CBNUC: createPreuniversitarioByNroDocumento(nroDocumento)
-    CBNUC->>GetUC: getByNroDocumento(nroDocumento)
+    CBNUC->>PersonalesUC: createPersonalesByNroDocumento(nroDocumento)
+    PersonalesUC->>GetUC: getByNroDocumento(nroDocumento)
     GetUC->>JPA: findAllByNroDocumento(nroDocumento)
     JPA->>DB: SELECT * FROM alumno WHERE nro_documento=?
     DB-->>JPA: List~AlumnoGuaraniEntity~
-    JPA->>JPA: map to domain
     JPA-->>GetUC: List~AlumnoGuarani~
-    GetUC-->>CBNUC: List~AlumnoGuarani~
-    CBNUC->>CBNUC: Filter by propuestaTipo == 204
-    CBNUC->>CreateUC: createPreuniversitario(preuniversitarioAlumnos)
-    CreateUC->>CreateUC: Build AlumnoDeteccionRequest list
-    CreateUC->>CheckUC: checkAllAlumnosWithoutChequera(encontrados)
-    CheckUC->>Feign: desmarcarEnviados(encontrados)
-    Feign->>Core: POST /api/tesoreria/core/guarani/alumno/desmarcar/enviadas
-    Core-->>Feign: List~AlumnoDeteccionRequest~ pendientes
-    Feign-->>CheckUC: pendientes
-    CheckUC-->>CreateUC: pendientes
-    CreateUC->>CreateUC: Filter and process first 50 alumnos
-    loop For each pending alumno
-        CreateUC->>Feign: createPreuniversitario(alumno)
-        Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/preuniversitario
-        Core-->>Feign: 200 OK
-        Feign-->>CreateUC: AlumnoGuarani response
+    GetUC-->>PersonalesUC: List~AlumnoGuarani~
+    loop For each alumno
+        PersonalesUC->>Port: createPersonales(alumno)
+        Port->>Adapter: createPersonales(alumno)
+        Adapter->>Feign: createPersonales(alumno)
+        Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/personales
+        Core-->>Feign: CreatePersonalesResponse
+        Feign-->>Adapter: CreatePersonalesResponse
+        Adapter-->>Port: CreatePersonalesResponse
+        Port-->>PersonalesUC: CreatePersonalesResponse
     end
-    CreateUC-->>CBNUC: List~AlumnoGuarani~ creados
-    CBNUC-->>Service: List~AlumnoGuarani~
+    PersonalesUC-->>CBNUC: List~CreatePersonalesResponse~
+    Note over CBNUC: La creación de preuniversitarios vía Feign aún no fue restaurada
+    CBNUC-->>Service: List~AlumnoGuarani~ (vacía si no hay alumnos)
     Service-->>REST: List~AlumnoGuarani~
     REST->>REST: stream().map(mapper::toResponse)
     REST-->>User: 200 OK List~AlumnoGuaraniResponse~
@@ -210,14 +206,14 @@ sequenceDiagram
         Port->>Adapter: createPersonales(alumno)
         Adapter->>Feign: createPersonales(alumno)
         Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/personales
-        Core-->>Feign: Boolean
-        Feign-->>Adapter: Boolean
-        Adapter-->>Port: Boolean
-        Port-->>UseCase: Boolean
+        Core-->>Feign: CreatePersonalesResponse
+        Feign-->>Adapter: CreatePersonalesResponse
+        Adapter-->>Port: CreatePersonalesResponse
+        Port-->>UseCase: CreatePersonalesResponse
     end
-    UseCase-->>Service: Boolean
-    Service-->>REST: Boolean
-    REST-->>User: 200 OK Boolean
+    UseCase-->>Service: List~CreatePersonalesResponse~
+    Service-->>REST: List~CreatePersonalesResponse~
+    REST-->>User: 200 OK List~CreatePersonalesResponse~
 ```
 
 ### Diagrama de Secuencia — Endpoints Académicos y de Propuestas
@@ -294,7 +290,6 @@ classDiagram
         +getAlumnosByPropuestaTipoAndFechaLimite(propuestaTipo, fechaLimite) ResponseEntity
         +getAlumnosByNroDocumento(nroDocumento) ResponseEntity
         +createPersonalesByNroDocumento(nroDocumento) ResponseEntity
-        +generatePreuniversitarioTest() ResponseEntity
         +createPreuniversitarioByNroDocumento(nroDocumento) ResponseEntity
     }
 
@@ -458,28 +453,53 @@ classDiagram
     class AlumnoGuaraniClient {
         <<FeignClient>>
         +createPreuniversitario(AlumnoGuarani) AlumnoGuarani
-        +createPersonales(AlumnoGuarani) Boolean
-        +desmarcarEnviados(List~AlumnoDeteccionRequest~) List~AlumnoDeteccionRequest~
+        +createPersonales(AlumnoGuarani) CreatePersonalesResponse
     }
 
-    class AlumnoDeteccionRequest {
+    class CreatePersonalesResponse {
         <<DTO>>
-        +Integer alumno
-        +Integer ubicacion
-        +Integer propuesta
-        +String nroDocumento
-        +Short tipoDocumento
-        +Boolean pendiente
+        +Boolean result
+        +AlumnoGuarani alumnoGuarani
+        +PersonaCoreResponse persona
+        +DomicilioCoreResponse domicilio
     }
 
-    class CheckAllToUnmarkSendedUseCase {
-        <<Interface>>
-        +checkAllAlumnosWithoutChequera(List~AlumnoDeteccionRequest~) List~AlumnoDeteccionRequest~
+    class PersonaCoreResponse {
+        <<DTO>>
+        +Integer uniqueId
+        +Integer personaId
+        +Integer documentoId
+        +String apellido
+        +String nombre
+        +String sexo
+        +String primero
+        +String cuit
+        +String cbu
+        +String password
+        +String hpum
     }
 
-    class CreatePreuniversitarioUseCase {
-        <<Interface>>
-        +createPreuniversitario(List~AlumnoGuarani~) List~AlumnoGuarani~
+    class DomicilioCoreResponse {
+        <<DTO>>
+        +Integer domicilioId
+        +Integer personaId
+        +Integer documentoId
+        +OffsetDateTime fecha
+        +String calle
+        +String puerta
+        +String piso
+        +String dpto
+        +String telefono
+        +String movil
+        +String observaciones
+        +String codigoPostal
+        +Integer facultadId
+        +Integer provinciaId
+        +Integer localidadId
+        +String emailPersonal
+        +String emailInstitucional
+        +String laboral
+        +String emailPagador
     }
 
     class CreatePreuniversitarioByNroDocumentoUseCase {
@@ -489,12 +509,12 @@ classDiagram
 
     class CreatePersonalesByNroDocumentoUseCase {
         <<Interface>>
-        +createPersonalesByNroDocumento(String) Boolean
+        +createPersonalesByNroDocumento(String) List~CreatePersonalesResponse~
     }
 
     class CreatePersonalesPort {
         <<Interface>>
-        +createPersonales(AlumnoGuarani) Boolean
+        +createPersonales(AlumnoGuarani) CreatePersonalesResponse
     }
 
     class GetAlumnosByPropuestaTipoAndFechaInscripcionUseCase {
@@ -527,14 +547,10 @@ classDiagram
     AlumnoGuaraniService --> GetAlumnosByPropuestaTipoAndFechaInscripcionUseCase : uses
     AlumnoGuaraniService --> CreatePreuniversitarioByNroDocumentoUseCase : uses
     AlumnoGuaraniService --> CreatePersonalesByNroDocumentoUseCase : uses
-    CreatePreuniversitarioUseCase --> AlumnoGuaraniClient : calls
-    CreatePreuniversitarioUseCase --> CheckAllToUnmarkSendedUseCase : delegates
-    CreatePreuniversitarioByNroDocumentoUseCase --> GetAlumnosByNroDocumentoUseCase : queries
-    CreatePreuniversitarioByNroDocumentoUseCase --> CreatePreuniversitarioUseCase : delegates
+    CreatePreuniversitarioByNroDocumentoUseCase --> CreatePersonalesByNroDocumentoUseCase : delegates
     CreatePersonalesByNroDocumentoUseCase --> GetAlumnosByNroDocumentoUseCase : queries
     CreatePersonalesByNroDocumentoUseCase --> CreatePersonalesPort : delegates
     CreatePersonalesPort --> AlumnoGuaraniClient : calls
-    CheckAllToUnmarkSendedUseCase --> AlumnoGuaraniClient : calls
     AlumnoGuaraniController --> AlumnoGuaraniService : uses
     PersonaGuaraniController --> PersonaGuaraniService : uses
     PersonaContactoGuaraniController --> PersonaContactoGuaraniService : uses
@@ -563,7 +579,7 @@ classDiagram
 | GET | `/api/tesoreria/guarani/alumno/propuestaTipo/{propuestaTipo}` | Obtiene alumnos por tipo de propuesta |
 | GET | `/api/tesoreria/guarani/alumno/propuestaTipo/{propuestaTipo}/fechaLimite/{fechaLimite}` | Obtiene alumnos por tipo de propuesta y fecha límite de inscripción |
 | GET | `/api/tesoreria/guarani/alumno/documento/{nroDocumento}` | Obtiene alumnos por número de documento |
-| GET | `/api/tesoreria/guarani/alumno/generate/personales/create/{nroDocumento}` | Crea los personales asociados a los alumnos del documento |
+| GET | `/api/tesoreria/guarani/alumno/generate/personales/create/{nroDocumento}` | Crea los personales asociados a los alumnos del documento y devuelve `List<CreatePersonalesResponse>` |
 | GET | `/api/tesoreria/guarani/persona/{id}` | Obtiene una persona por ID |
 | GET | `/api/tesoreria/guarani/personaContacto/{id}` | Obtiene un contacto de persona por ID |
 | GET | `/api/tesoreria/guarani/personaDocumento/{id}` | Obtiene un documento de persona por ID |
@@ -591,7 +607,7 @@ classDiagram
 | GET | `/api/tesoreria/guarani/propuestaResponsableAcademica/responsableAcademica/preuniversitario/{responsableAcademica}` | Obtiene propuestas preuniversitarias de una responsable académica |
 | GET | `/api/tesoreria/guarani/propuestaOferta/ubicacion/{ubicacion}` | Obtiene ofertas de propuestas por ubicación |
 | GET | `/api/tesoreria/guarani/propuestaOferta/ubicacion/{ubicacion}/propuestaTipo/204` | Obtiene ofertas de propuestas de tipo 204 por ubicación |
-| GET | `/api/tesoreria/guarani/alumno/generate/preuniversitario/create/{nroDocumento}` | Crea preuniversitarios por número de documento |
+| GET | `/api/tesoreria/guarani/alumno/generate/preuniversitario/create/{nroDocumento}` | Crea los personales por número de documento (creación de preuniversitarios en reconstrucción) |
 
 ```
 src/
@@ -611,9 +627,8 @@ src/
 │   │       │   │   ├── application/
 │   │       │   │   │   ├── service/AlumnoGuaraniService.java
 │   │       │   │   │   └── usecases/
-│   │       │   │   │       ├── CheckAllToUnmarkSendedUseCaseImpl.java
+│   │       │   │   │       ├── CreatePersonalesByNroDocumentoUseCaseImpl.java
 │   │       │   │   │       ├── CreatePreuniversitarioByNroDocumentoUseCaseImpl.java
-│   │       │   │   │       ├── CreatePreuniversitarioUseCaseImpl.java
 │   │       │   │   │       ├── GetAlumnoGuaraniUseCaseImpl.java
 │   │       │   │   │       ├── GetAlumnosByNroDocumentoUseCaseImpl.java
 │   │       │   │   │       ├── GetAlumnosByPropuestaTipoAndFechaInscripcionUseCaseImpl.java
@@ -622,9 +637,8 @@ src/
 │   │       │   │   │   ├── model/AlumnoGuarani.java
 │   │       │   │   │   └── ports/
 │   │       │   │   │       ├── in/
-│   │       │   │   │       │   ├── CheckAllToUnmarkSendedUseCase.java
+│   │       │   │   │       │   ├── CreatePersonalesByNroDocumentoUseCase.java
 │   │       │   │   │       │   ├── CreatePreuniversitarioByNroDocumentoUseCase.java
-│   │       │   │   │       │   ├── CreatePreuniversitarioUseCase.java
 │   │       │   │   │       │   ├── GetAlumnoGuaraniUseCase.java
 │   │       │   │   │       │   ├── GetAlumnosByNroDocumentoUseCase.java
 │   │       │   │   │       │   ├── GetAlumnosByPropuestaTipoAndFechaInscripcionUseCase.java
@@ -633,7 +647,10 @@ src/
 │   │       │   │   └── infrastructure/
 │   │       │   │       ├── client/
 │   │       │   │       │   ├── AlumnoGuaraniClient.java
-│   │       │   │       │   └── dto/AlumnoDeteccionRequest.java
+│   │       │   │       │   └── dto/
+│   │       │   │       │       ├── CreatePersonalesResponse.java
+│   │       │   │       │       ├── DomicilioCoreResponse.java
+│   │       │   │       │       └── PersonaCoreResponse.java
 │   │       │   │       ├── persistence/
 │   │       │   │       │   ├── adapter/JpaAlumnoGuaraniRepositoryAdapter.java
 │   │       │   │       │   ├── entity/AlumnoGuaraniEntity.java

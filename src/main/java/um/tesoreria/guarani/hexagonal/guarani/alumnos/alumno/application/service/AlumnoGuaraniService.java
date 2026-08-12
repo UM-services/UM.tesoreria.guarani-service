@@ -9,6 +9,7 @@ import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.ports.in.Get
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.ports.in.GetAlumnosByNroDocumentoUseCase;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.ports.in.GetAlumnosByPropuestaTipoAndFechaInscripcionUseCase;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.ports.in.GetAlumnosByPropuestaTipoUseCase;
+import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.client.dto.CreatePersonalesResponse;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -44,7 +45,7 @@ public class AlumnoGuaraniService {
         return createPreuniversitarioByNroDocumentoUseCase.createPreuniversitarioByNroDocumento(nroDocumento);
     }
 
-    public Boolean createPersonalesByNroDocumento(String nroDocumento) {
+    public List<CreatePersonalesResponse> createPersonalesByNroDocumento(String nroDocumento) {
         return createPersonalesByNroDocumentoUseCase.createPersonalesByNroDocumento(nroDocumento);
     }
 

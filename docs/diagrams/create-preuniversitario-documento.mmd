@@ -3,42 +3,38 @@ sequenceDiagram
     participant REST as AlumnoGuaraniController
     participant Service as AlumnoGuaraniService
     participant CBNUC as CreatePreuniversitarioByNroDocumento UseCase
+    participant PersonalesUC as CreatePersonalesByNroDocumento UseCase
     participant GetUC as GetAlumnosByNroDocumento UseCase
     participant JPA as JPA Repository Adapter
     participant DB as PostgreSQL
-    participant CreateUC as CreatePreuniversitario UseCase
-    participant CheckUC as CheckAllToUnmarkSended UseCase
+    participant Port as CreatePersonalesPort
+    participant Adapter as CreatePersonalesAdapter
     participant Feign as AlumnoGuaraniClient
     participant Core as Tesoreria Core Service
 
-    User->>REST: GET /api/tesoreria/guarani/alumno/generate/preuniversitario/documento/{nroDocumento}
+    User->>REST: GET /api/tesoreria/guarani/alumno/generate/preuniversitario/create/{nroDocumento}
     REST->>Service: createPreuniversitarioByNroDocumento(nroDocumento)
     Service->>CBNUC: createPreuniversitarioByNroDocumento(nroDocumento)
-    CBNUC->>GetUC: getByNroDocumento(nroDocumento)
+    CBNUC->>PersonalesUC: createPersonalesByNroDocumento(nroDocumento)
+    PersonalesUC->>GetUC: getByNroDocumento(nroDocumento)
     GetUC->>JPA: findAllByNroDocumento(nroDocumento)
     JPA->>DB: SELECT * FROM alumno WHERE nro_documento=?
     DB-->>JPA: List~AlumnoGuaraniEntity~
-    JPA->>JPA: map to domain
     JPA-->>GetUC: List~AlumnoGuarani~
-    GetUC-->>CBNUC: List~AlumnoGuarani~
-    CBNUC->>CBNUC: Filter by propuestaTipo == 204
-    CBNUC->>CreateUC: createPreuniversitario(preuniversitarioAlumnos)
-    CreateUC->>CreateUC: Build AlumnoDeteccionRequest list
-    CreateUC->>CheckUC: checkAllAlumnosWithoutChequera(encontrados)
-    CheckUC->>Feign: desmarcarEnviados(encontrados)
-    Feign->>Core: POST /api/tesoreria/core/guarani/alumno/desmarcar/enviadas
-    Core-->>Feign: List~AlumnoDeteccionRequest~ pendientes
-    Feign-->>CheckUC: pendientes
-    CheckUC-->>CreateUC: pendientes
-    CreateUC->>CreateUC: Filter and process first 50 alumnos
-    loop For each pending alumno
-        CreateUC->>Feign: createPreuniversitario(alumno)
-        Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/preuniversitario
-        Core-->>Feign: 200 OK
-        Feign-->>CreateUC: AlumnoGuarani response
+    GetUC-->>PersonalesUC: List~AlumnoGuarani~
+    loop For each alumno
+        PersonalesUC->>Port: createPersonales(alumno)
+        Port->>Adapter: createPersonales(alumno)
+        Adapter->>Feign: createPersonales(alumno)
+        Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/personales
+        Core-->>Feign: CreatePersonalesResponse
+        Feign-->>Adapter: CreatePersonalesResponse
+        Adapter-->>Port: CreatePersonalesResponse
+        Port-->>PersonalesUC: CreatePersonalesResponse
     end
-    CreateUC-->>CBNUC: List~AlumnoGuarani~ creados
-    CBNUC-->>Service: List~AlumnoGuarani~
+    PersonalesUC-->>CBNUC: List~CreatePersonalesResponse~
+    Note over CBNUC: La creación de preuniversitarios vía Feign aún no fue restaurada
+    CBNUC-->>Service: List~AlumnoGuarani~ (vacía si no hay alumnos)
     Service-->>REST: List~AlumnoGuarani~
     REST->>REST: stream().map(mapper::toResponse)
     REST-->>User: 200 OK List~AlumnoGuaraniResponse~

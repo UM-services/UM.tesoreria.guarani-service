@@ -21,7 +21,6 @@ classDiagram
         +getAlumnosByPropuestaTipoAndFechaLimite(propuestaTipo, fechaLimite) ResponseEntity
         +getAlumnosByNroDocumento(nroDocumento) ResponseEntity
         +createPersonalesByNroDocumento(nroDocumento) ResponseEntity
-        +generatePreuniversitarioTest() ResponseEntity
         +createPreuniversitarioByNroDocumento(nroDocumento) ResponseEntity
     }
 
@@ -185,33 +184,53 @@ classDiagram
     class AlumnoGuaraniClient {
         <<FeignClient>>
         +createPreuniversitario(AlumnoGuarani) AlumnoGuarani
-        +createPersonales(AlumnoGuarani) Boolean
-        +desmarcarEnviados(List~AlumnoDeteccionRequest~) List~AlumnoDeteccionRequest~
+        +createPersonales(AlumnoGuarani) CreatePersonalesResponse
     }
 
-    class AlumnoDeteccionRequest {
+    class CreatePersonalesResponse {
         <<DTO>>
-        +Integer alumno
-        +Integer ubicacion
-        +Integer propuesta
-        +String nroDocumento
-        +Short tipoDocumento
-        +Boolean pendiente
+        +Boolean result
+        +AlumnoGuarani alumnoGuarani
+        +PersonaCoreResponse persona
+        +DomicilioCoreResponse domicilio
     }
 
-    class ProcessNextPreuniversitarioUseCase {
-        <<Interface>>
-        +processNextPreuniversitario() void
+    class PersonaCoreResponse {
+        <<DTO>>
+        +Integer uniqueId
+        +Integer personaId
+        +Integer documentoId
+        +String apellido
+        +String nombre
+        +String sexo
+        +String primero
+        +String cuit
+        +String cbu
+        +String password
+        +String hpum
     }
 
-    class CheckAllToUnmarkSendedUseCase {
-        <<Interface>>
-        +checkAllAlumnosWithoutChequera(List~AlumnoDeteccionRequest~) List~AlumnoDeteccionRequest~
-    }
-
-    class CreatePreuniversitarioUseCase {
-        <<Interface>>
-        +createPreuniversitario(List~AlumnoGuarani~) List~AlumnoGuarani~
+    class DomicilioCoreResponse {
+        <<DTO>>
+        +Integer domicilioId
+        +Integer personaId
+        +Integer documentoId
+        +OffsetDateTime fecha
+        +String calle
+        +String puerta
+        +String piso
+        +String dpto
+        +String telefono
+        +String movil
+        +String observaciones
+        +String codigoPostal
+        +Integer facultadId
+        +Integer provinciaId
+        +Integer localidadId
+        +String emailPersonal
+        +String emailInstitucional
+        +String laboral
+        +String emailPagador
     }
 
     class CreatePreuniversitarioByNroDocumentoUseCase {
@@ -221,12 +240,12 @@ classDiagram
 
     class CreatePersonalesByNroDocumentoUseCase {
         <<Interface>>
-        +createPersonalesByNroDocumento(String) Boolean
+        +createPersonalesByNroDocumento(String) List~CreatePersonalesResponse~
     }
 
     class CreatePersonalesPort {
         <<Interface>>
-        +createPersonales(AlumnoGuarani) Boolean
+        +createPersonales(AlumnoGuarani) CreatePersonalesResponse
     }
 
     class GetAlumnosByPropuestaTipoAndFechaInscripcionUseCase {
@@ -256,20 +275,13 @@ classDiagram
 
     GuaraniApplication --> GuaraniConfiguration : uses
     AlumnoGuaraniScheduler --> AlumnoGuaraniService : schedules
-    AlumnoGuaraniService --> ProcessNextPreuniversitarioUseCase : uses
     AlumnoGuaraniService --> GetAlumnosByPropuestaTipoAndFechaInscripcionUseCase : uses
     AlumnoGuaraniService --> CreatePreuniversitarioByNroDocumentoUseCase : uses
     AlumnoGuaraniService --> CreatePersonalesByNroDocumentoUseCase : uses
-    ProcessNextPreuniversitarioUseCase --> GetAlumnosByPropuestaTipoAndFechaInscripcionUseCase : queries
-    ProcessNextPreuniversitarioUseCase --> CreatePreuniversitarioUseCase : delegates
-    CreatePreuniversitarioUseCase --> AlumnoGuaraniClient : calls
-    CreatePreuniversitarioUseCase --> CheckAllToUnmarkSendedUseCase : delegates
-    CreatePreuniversitarioByNroDocumentoUseCase --> GetAlumnosByNroDocumentoUseCase : queries
-    CreatePreuniversitarioByNroDocumentoUseCase --> CreatePreuniversitarioUseCase : delegates
+    CreatePreuniversitarioByNroDocumentoUseCase --> CreatePersonalesByNroDocumentoUseCase : delegates
     CreatePersonalesByNroDocumentoUseCase --> GetAlumnosByNroDocumentoUseCase : queries
     CreatePersonalesByNroDocumentoUseCase --> CreatePersonalesPort : delegates
     CreatePersonalesPort --> AlumnoGuaraniClient : calls
-    CheckAllToUnmarkSendedUseCase --> AlumnoGuaraniClient : calls
     AlumnoGuaraniController --> AlumnoGuaraniService : uses
     PersonaGuaraniController --> PersonaGuaraniService : uses
     PersonaContactoGuaraniController --> PersonaContactoGuaraniService : uses
