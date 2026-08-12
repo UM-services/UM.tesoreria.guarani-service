@@ -11,7 +11,7 @@ sequenceDiagram
     participant Feign as AlumnoGuaraniClient
     participant Core as Tesoreria Core Service
 
-    User->>REST: GET /api/tesoreria/guarani/alumno/generate/personales/documento/{nroDocumento}
+    User->>REST: GET /api/tesoreria/guarani/alumno/generate/personales/create/{nroDocumento}
     REST->>Service: createPersonalesByNroDocumento(nroDocumento)
     Service->>UseCase: createPersonalesByNroDocumento(nroDocumento)
     UseCase->>GetUC: getByNroDocumento(nroDocumento)
@@ -25,11 +25,11 @@ sequenceDiagram
         Port->>Adapter: createPersonales(alumno)
         Adapter->>Feign: createPersonales(alumno)
         Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/personales
-        Core-->>Feign: Boolean
-        Feign-->>Adapter: Boolean
-        Adapter-->>Port: Boolean
-        Port-->>UseCase: Boolean
+        Core-->>Feign: CreatePersonalesResponse
+        Feign-->>Adapter: CreatePersonalesResponse
+        Adapter-->>Port: CreatePersonalesResponse
+        Port-->>UseCase: CreatePersonalesResponse
     end
-    UseCase-->>Service: Boolean
-    Service-->>REST: Boolean
-    REST-->>User: 200 OK Boolean
+    UseCase-->>Service: List~CreatePersonalesResponse~
+    Service-->>REST: List~CreatePersonalesResponse~
+    REST-->>User: 200 OK List~CreatePersonalesResponse~
