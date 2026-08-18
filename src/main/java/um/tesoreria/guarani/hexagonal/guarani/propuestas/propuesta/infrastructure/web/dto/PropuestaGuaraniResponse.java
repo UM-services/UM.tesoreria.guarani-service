@@ -1,9 +1,11 @@
 package um.tesoreria.guarani.hexagonal.guarani.propuestas.propuesta.infrastructure.web.dto;
 
 import lombok.*;
+import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaResponsableAcademica.infrastructure.web.dto.PropuestaResponsableAcademicaGuaraniResponse;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaTipo.infrastructure.web.dto.PropuestaTipoGuaraniResponse;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -17,6 +19,7 @@ public class PropuestaGuaraniResponse {
     private String codigo;
     private Integer propuestaTipo;
     private PropuestaTipoGuaraniResponse propuestaTipoRel;
+    private List<PropuestaResponsableAcademicaGuaraniResponse> responsablesAcademicas;
     private String publica;
     private Integer documentoAlta;
     private LocalDate fechaAlta;

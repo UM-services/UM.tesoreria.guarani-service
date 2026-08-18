@@ -183,7 +183,7 @@ classDiagram
 
     class AlumnoGuaraniClient {
         <<FeignClient>>
-        +createPreuniversitario(AlumnoGuarani) AlumnoGuarani
+        +createPreuniversitario(CreatePersonalesResponse) AlumnoGuarani
         +createPersonales(AlumnoGuarani) CreatePersonalesResponse
     }
 
@@ -191,6 +191,7 @@ classDiagram
         <<DTO>>
         +Boolean result
         +AlumnoGuarani alumnoGuarani
+        +PropuestaGuaraniResponse propuestaGuarani
         +PersonaCoreResponse persona
         +DomicilioCoreResponse domicilio
     }
