@@ -8,6 +8,8 @@ import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.ports.in.Cre
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.ports.in.GetAlumnosByNroDocumentoUseCase;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.ports.out.CreatePersonalesPort;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.client.dto.CreatePersonalesResponse;
+import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuesta.application.service.PropuestaGuaraniService;
+import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuesta.infrastructure.web.mapper.PropuestaGuaraniDtoMapper;
 import um.tesoreria.guarani.util.Jsonifier;
 
 import java.util.ArrayList;
@@ -20,6 +22,8 @@ public class CreatePersonalesByNroDocumentoUseCaseImpl implements CreatePersonal
 
     private final GetAlumnosByNroDocumentoUseCase getAlumnosByNroDocumentoUseCase;
     private final CreatePersonalesPort createPersonalesPort;
+    private final PropuestaGuaraniService propuestaGuaraniService;
+    private final PropuestaGuaraniDtoMapper propuestaGuaraniDtoMapper;
 
     @Override
     public List<CreatePersonalesResponse> createPersonalesByNroDocumento(String nroDocumento) {
@@ -34,7 +38,10 @@ public class CreatePersonalesByNroDocumentoUseCaseImpl implements CreatePersonal
         log.debug("\n\nCreando desde Guarani\n\n");
         List<CreatePersonalesResponse> created = new ArrayList<>();
         for (AlumnoGuarani alumno : alumnos) {
-            created.add(createPersonalesPort.createPersonales(alumno));
+            var alumnoFull = createPersonalesPort.createPersonales(alumno);
+            var propuestaGuarani = propuestaGuaraniService.getByPropuestaId(alumno.getPropuesta());
+            alumnoFull.setPropuestaGuarani(propuestaGuaraniDtoMapper.toResponse(propuestaGuarani));
+            created.add(alumnoFull);
         }
         log.debug("\n\nAlumnos Creados -> {}\n\n", Jsonifier.builder(created).build());
         return created;
