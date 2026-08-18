@@ -25,10 +25,10 @@ sequenceDiagram
         Port->>Adapter: createPersonales(alumno)
         Adapter->>Feign: createPersonales(alumno)
         Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/personales
-        Core-->>Feign: CreatePersonalesResponse
+        Core-->>Feign: CreatePersonalesResponse con propuestaGuarani
         Feign-->>Adapter: CreatePersonalesResponse
         Adapter-->>Port: CreatePersonalesResponse
-        Port-->>UseCase: CreatePersonalesResponse
+        Port-->>UseCase: CreatePersonalesResponse con propuestaGuarani
     end
     UseCase-->>Service: List~CreatePersonalesResponse~
     Service-->>REST: List~CreatePersonalesResponse~

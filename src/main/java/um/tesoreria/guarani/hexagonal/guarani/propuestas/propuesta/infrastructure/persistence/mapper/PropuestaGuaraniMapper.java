@@ -1,17 +1,26 @@
 package um.tesoreria.guarani.hexagonal.guarani.propuestas.propuesta.infrastructure.persistence.mapper;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuesta.domain.model.PropuestaGuarani;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuesta.infrastructure.persistence.entity.PropuestaGuaraniEntity;
+import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaResponsableAcademica.infrastructure.persistence.mapper.PropuestaResponsableAcademicaGuaraniMapper;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaTipo.infrastructure.persistence.mapper.PropuestaTipoGuaraniMapper;
+
+import java.util.List;
+import java.util.Objects;
 
 @Component
 public class PropuestaGuaraniMapper {
 
     private final PropuestaTipoGuaraniMapper propuestaTipoMapper;
+    private final PropuestaResponsableAcademicaGuaraniMapper responsablesAcademicasMapper;
 
-    public PropuestaGuaraniMapper(PropuestaTipoGuaraniMapper propuestaTipoMapper) {
+    public PropuestaGuaraniMapper(
+            PropuestaTipoGuaraniMapper propuestaTipoMapper,
+            @Lazy PropuestaResponsableAcademicaGuaraniMapper responsablesAcademicasMapper) {
         this.propuestaTipoMapper = propuestaTipoMapper;
+        this.responsablesAcademicasMapper = responsablesAcademicasMapper;
     }
 
     public PropuestaGuaraniEntity toEntity(PropuestaGuarani domain) {
@@ -55,6 +64,12 @@ public class PropuestaGuaraniMapper {
                 .aTermino(entity.getATermino())
                 .entidad(entity.getEntidad())
                 .estado(entity.getEstado())
+                .responsablesAcademicas(entity.getResponsablesAcademicas() == null
+                        ? List.of()
+                        : entity.getResponsablesAcademicas().stream()
+                        .map(responsablesAcademicasMapper::toDomainWithoutPropuesta)
+                        .filter(Objects::nonNull)
+                        .toList())
                 .build();
     }
 }

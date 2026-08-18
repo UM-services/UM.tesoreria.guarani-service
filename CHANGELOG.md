@@ -1,5 +1,14 @@
 # Changelog
 
+## [5.1.0] - 2026-08-18
+
+### Added
+- **Restored preuniversitario creation by document**: the endpoint `GET /api/tesoreria/guarani/alumno/generate/preuniversitario/create/{nroDocumento}` now sends each created personales response to `tesoreria-core-service` and returns the successfully created preuniversitarios.
+- **Enriched personales responses** with the related `propuestaGuarani`, including its academic responsibility relationships.
+
+### Changed
+- **Updated** the Feign contract for `POST /api/tesoreria/core/guarani/alumno/create/preuniversitario` to receive `CreatePersonalesResponse`.
+
 ## [5.0.0] - 2026-08-11
 
 ### BREAKING

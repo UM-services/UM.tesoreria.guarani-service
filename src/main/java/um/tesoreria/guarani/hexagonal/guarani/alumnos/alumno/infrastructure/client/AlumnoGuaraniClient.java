@@ -10,7 +10,7 @@ import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.clie
 public interface AlumnoGuaraniClient {
 
     @PostMapping("/api/tesoreria/core/guarani/alumno/create/preuniversitario")
-    AlumnoGuarani createPreuniversitario(@RequestBody AlumnoGuarani alumno);
+    AlumnoGuarani createPreuniversitario(@RequestBody CreatePersonalesResponse alumno);
 
     @PostMapping("/api/tesoreria/core/guarani/alumno/create/personales")
     CreatePersonalesResponse createPersonales(@RequestBody AlumnoGuarani alumno);

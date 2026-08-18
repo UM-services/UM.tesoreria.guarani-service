@@ -33,8 +33,13 @@ sequenceDiagram
         Port-->>PersonalesUC: CreatePersonalesResponse
     end
     PersonalesUC-->>CBNUC: List~CreatePersonalesResponse~
-    Note over CBNUC: La creación de preuniversitarios vía Feign aún no fue restaurada
-    CBNUC-->>Service: List~AlumnoGuarani~ (vacía si no hay alumnos)
+    loop For each personales response
+        CBNUC->>Feign: createPreuniversitario(response)
+        Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/preuniversitario
+        Core-->>Feign: AlumnoGuarani
+        Feign-->>CBNUC: AlumnoGuarani
+    end
+    CBNUC-->>Service: List~AlumnoGuarani~
     Service-->>REST: List~AlumnoGuarani~
     REST->>REST: stream().map(mapper::toResponse)
     REST-->>User: 200 OK List~AlumnoGuaraniResponse~

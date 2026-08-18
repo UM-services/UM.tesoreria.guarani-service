@@ -30,4 +30,17 @@ public class PropuestaResponsableAcademicaGuaraniDtoMapper {
                 .informaAraucanoCodigoUa(domain.getInformaAraucanoCodigoUa())
                 .build();
     }
+
+    public PropuestaResponsableAcademicaGuaraniResponse toResponseWithoutPropuesta(
+            PropuestaResponsableAcademicaGuarani domain) {
+        if (domain == null) {
+            return null;
+        }
+        return PropuestaResponsableAcademicaGuaraniResponse.builder()
+                .propuesta(domain.getPropuesta())
+                .responsableAcademica(domain.getResponsableAcademica())
+                .responsableAcademicaRel(responsableAcademicaMapper.toResponse(domain.getResponsableAcademicaRel()))
+                .informaAraucanoCodigoUa(domain.getInformaAraucanoCodigoUa())
+                .build();
+    }
 }
