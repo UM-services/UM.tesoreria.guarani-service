@@ -3,9 +3,9 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-brightgreen)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-25-orange)](https://openjdk.org/projects/jdk/25/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-5.0.0-blue)](pom.xml)
+[![Version](https://img.shields.io/badge/version-5.1.0-blue)](pom.xml)
 
-Microservicio de tesorería integrado con el sistema Guarani (v5.0.0). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, ofertas de propuestas, tipos de propuestas, propuestas aspiras, responsables académicas, ubicaciones y tipos de ubicación, requisitos, requisitos presentados y tipos de requisitos, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, creación de personales y preuniversitarios por documento, y documentación OpenAPI.
+Microservicio de tesorería integrado con el sistema Guarani (v5.1.0). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, ofertas de propuestas, tipos de propuestas, propuestas aspiras, responsables académicas, ubicaciones y tipos de ubicación, requisitos, requisitos presentados y tipos de requisitos, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, creación de personales y preuniversitarios por documento, y documentación OpenAPI.
 
 ## Arquitectura
 
@@ -169,8 +169,13 @@ sequenceDiagram
         Port-->>PersonalesUC: CreatePersonalesResponse
     end
     PersonalesUC-->>CBNUC: List~CreatePersonalesResponse~
-    Note over CBNUC: La creación de preuniversitarios vía Feign aún no fue restaurada
-    CBNUC-->>Service: List~AlumnoGuarani~ (vacía si no hay alumnos)
+    loop For each personales response
+        CBNUC->>Feign: createPreuniversitario(response)
+        Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/preuniversitario
+        Core-->>Feign: AlumnoGuarani
+        Feign-->>CBNUC: AlumnoGuarani
+    end
+    CBNUC-->>Service: List~AlumnoGuarani~
     Service-->>REST: List~AlumnoGuarani~
     REST->>REST: stream().map(mapper::toResponse)
     REST-->>User: 200 OK List~AlumnoGuaraniResponse~
@@ -206,10 +211,10 @@ sequenceDiagram
         Port->>Adapter: createPersonales(alumno)
         Adapter->>Feign: createPersonales(alumno)
         Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/personales
-        Core-->>Feign: CreatePersonalesResponse
+        Core-->>Feign: CreatePersonalesResponse con propuestaGuarani
         Feign-->>Adapter: CreatePersonalesResponse
         Adapter-->>Port: CreatePersonalesResponse
-        Port-->>UseCase: CreatePersonalesResponse
+        Port-->>UseCase: CreatePersonalesResponse con propuestaGuarani
     end
     UseCase-->>Service: List~CreatePersonalesResponse~
     Service-->>REST: List~CreatePersonalesResponse~
@@ -452,7 +457,7 @@ classDiagram
 
     class AlumnoGuaraniClient {
         <<FeignClient>>
-        +createPreuniversitario(AlumnoGuarani) AlumnoGuarani
+        +createPreuniversitario(CreatePersonalesResponse) AlumnoGuarani
         +createPersonales(AlumnoGuarani) CreatePersonalesResponse
     }
 
@@ -460,6 +465,7 @@ classDiagram
         <<DTO>>
         +Boolean result
         +AlumnoGuarani alumnoGuarani
+        +PropuestaGuaraniResponse propuestaGuarani
         +PersonaCoreResponse persona
         +DomicilioCoreResponse domicilio
     }
@@ -607,7 +613,7 @@ classDiagram
 | GET | `/api/tesoreria/guarani/propuestaResponsableAcademica/responsableAcademica/preuniversitario/{responsableAcademica}` | Obtiene propuestas preuniversitarias de una responsable académica |
 | GET | `/api/tesoreria/guarani/propuestaOferta/ubicacion/{ubicacion}` | Obtiene ofertas de propuestas por ubicación |
 | GET | `/api/tesoreria/guarani/propuestaOferta/ubicacion/{ubicacion}/propuestaTipo/204` | Obtiene ofertas de propuestas de tipo 204 por ubicación |
-| GET | `/api/tesoreria/guarani/alumno/generate/preuniversitario/create/{nroDocumento}` | Crea los personales por número de documento (creación de preuniversitarios en reconstrucción) |
+| GET | `/api/tesoreria/guarani/alumno/generate/preuniversitario/create/{nroDocumento}` | Crea preuniversitarios por número de documento a partir de los personales creados |
 
 ```
 src/

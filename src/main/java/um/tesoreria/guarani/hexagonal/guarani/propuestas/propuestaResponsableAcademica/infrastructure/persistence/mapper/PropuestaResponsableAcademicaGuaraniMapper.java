@@ -30,4 +30,17 @@ public class PropuestaResponsableAcademicaGuaraniMapper {
                 .informaAraucanoCodigoUa(entity.getInformaAraucanoCodigoUa())
                 .build();
     }
+
+    public PropuestaResponsableAcademicaGuarani toDomainWithoutPropuesta(
+            PropuestaResponsableAcademicaGuaraniEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+        return PropuestaResponsableAcademicaGuarani.builder()
+                .propuesta(entity.getPropuesta())
+                .responsableAcademica(entity.getResponsableAcademica())
+                .responsableAcademicaRel(responsableAcademicaMapper.toDomain(entity.getResponsableAcademicaRel()))
+                .informaAraucanoCodigoUa(entity.getInformaAraucanoCodigoUa())
+                .build();
+    }
 }
