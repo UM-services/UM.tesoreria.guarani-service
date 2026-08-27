@@ -5,12 +5,12 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.0</version>
+        <version>4.1.1</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>tesoreria</groupId>
     <artifactId>um-tesoreria-guarani</artifactId>
-    <version>5.1.0</version>
+    <version>5.1.1</version>
     <name>UM.tesoreria.guarani-service</name>
     <description>um.tesoreria.guarani-service</description>
     <url/>
