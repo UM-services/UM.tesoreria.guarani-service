@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.1.1] - 2026-08-27
+
+### Changed
+- **Updated Spring Boot** from `4.1.0` to `4.1.1`.
+
+### Added
+- **GitHub Actions workflows** for automated deployment to `develop` and `staging` environments, including verification, Docker image build/push, and deployment steps.
+
 ## [5.1.0] - 2026-08-18
 
 ### Added
