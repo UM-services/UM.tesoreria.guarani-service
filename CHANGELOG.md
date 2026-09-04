@@ -1,5 +1,27 @@
 # Changelog
 
+## [6.0.0] - 2026-09-03
+
+### BREAKING
+- **Changed** the filtered proposal-aspira endpoint from `GET /api/tesoreria/guarani/propuestaAspira/propuesta/{propuesta}/ubicacion/{ubicacion}/fechaInscripcionDesde/{fechaDesde}` to `GET /api/tesoreria/guarani/propuestaAspira/propuesta/{propuesta}/ubicacion/{ubicacion}/fechaInscripcionDesde/{fechaDesde}/anio/academico/{anioAcademico}`: `anioAcademico` is now a required path variable and filters by academic year. Clients using the previous path must update their integrations.
+
+### Added
+- **Academic-year filter** (`Integer anioAcademico`) propagated through the entire propuestaAspira chain: `PropuestaAspiraGuaraniService`, `GetPropuestaAspirasByPropuestaUbicacionAndFechaInscripcionUseCase`, `PropuestaAspiraGuaraniRepository`, `JpaPropuestaAspiraGuaraniRepositoryAdapter` (with `Integer` → `BigDecimal` conversion, `null`-safe) and `JpaPropuestaAspiraGuaraniRepository`.
+- **New unit tests** for the propuestaAspira module covering the service, the use case, the JPA adapter and the JPA repository.
+
+### Changed
+- **Renamed** internal operations to match the new contract: `getByPropuestaUbicacionFechaInscripcionAndAnioAcademico` and `findAllByPropuestaAndUbicacionAndFechaInscripcionFromAndAnioAcademico`.
+- **Updated Spring Cloud** from `2025.1.2` to `2025.1.3`.
+- **Fixed documentation diagrams**: spaced class-diagram annotations (`<< Annotation >>`) in `project-structure.mmd` to avoid HTML-viewer corruption, updated the proposal-aspira controller contract, corrected the collection/single-resource endpoint notes to match the implemented controllers, and repaired the return chain in `academic-proposal-endpoints.mmd`. Updated `README.md` (version badge, SpringDoc `3.1.0`).
+
+## [5.1.1] - 2026-08-27
+
+### Changed
+- **Updated Spring Boot** from `4.1.0` to `4.1.1`.
+
+### Added
+- **GitHub Actions workflows** for automated deployment to `develop` and `staging` environments, including verification, Docker image build/push, and deployment steps.
+
 ## [5.1.0] - 2026-08-18
 
 ### Added

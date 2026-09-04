@@ -1,11 +1,11 @@
 # UM.tesoreria.guarani-service
 
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-brightgreen)](https://spring.io/projects/spring-boot)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-brightgreen)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-25-orange)](https://openjdk.org/projects/jdk/25/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-5.1.0-blue)](pom.xml)
+[![Version](https://img.shields.io/badge/version-6.0.0-blue)](pom.xml)
 
-Microservicio de tesorería integrado con el sistema Guarani (v5.1.0). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, ofertas de propuestas, tipos de propuestas, propuestas aspiras, responsables académicas, ubicaciones y tipos de ubicación, requisitos, requisitos presentados y tipos de requisitos, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, creación de personales y preuniversitarios por documento, y documentación OpenAPI.
+Microservicio de tesorería integrado con el sistema Guarani (v6.0.0). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, ofertas de propuestas, tipos de propuestas, propuestas aspiras, responsables académicas, ubicaciones y tipos de ubicación, requisitos, requisitos presentados y tipos de requisitos, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, creación de personales y preuniversitarios por documento, y documentación OpenAPI.
 
 ## Arquitectura
 
@@ -102,7 +102,7 @@ sequenceDiagram
     Service-->>REST: Domain model
     REST->>REST: mapper::toResponse(domain)
     REST-->>User: 200 OK DTO
-    Note over REST,DB: Aplica a alumno, persona, personaContacto, personaDocumento, propuesta, propuestaTipo, propuestaAspira, responsableAcademica, ubicacion, ubicacionTipo, requisito, requisitoPresentado y requisitoTipo
+    Note over REST,DB: Aplica a alumno, persona, personaContacto, personaDocumento, propuesta, propuestaTipo, propuestaAspira, tipoDocumento, ubicacion, requisito, requisitoPresentado y requisitoTipo
 ```
 
 ### Diagrama de Secuencia — Endpoints Hexagonales (Colección)
@@ -128,7 +128,7 @@ sequenceDiagram
     Service-->>REST: List~Domain~
     REST->>REST: stream().map(mapper::toResponse)
     REST-->>User: 200 OK List~DTO~
-    Note over REST,DB: Actualmente implementado en propuesta, propuestaTipo, propuestaOferta, tipoDocumento, ubicacion, ubicacionTipo, responsableAcademica, requisito, requisitoPresentado y requisitoTipo
+    Note over REST,DB: Actualmente implementado en propuesta, propuestaTipo, tipoDocumento, ubicacion, ubicacionTipo, responsableAcademica, requisito, requisitoPresentado y requisitoTipo
 ```
 
 ### Diagrama de Secuencia — Crear Preuniversitario por Documento
@@ -365,7 +365,7 @@ classDiagram
     class PropuestaAspiraGuaraniController {
         <<RestController>>
         +getPropuestaAspiraGuarani(propuestaAspira) ResponseEntity
-        +getByPropuestaUbicacionAndFechaInscripcion(propuesta, ubicacion, fechaDesde) ResponseEntity
+        +getByPropuestaUbicacionFechaInscripcionAndAnioAcademico(propuesta, ubicacion, fechaDesde, anioAcademico) ResponseEntity
     }
 
     class ResponsableAcademicaGuaraniController {
@@ -608,7 +608,7 @@ classDiagram
 | GET | `/api/tesoreria/guarani/requisitoTipo/` | Obtiene todos los tipos de requisito |
 | GET | `/api/tesoreria/guarani/requisitoTipo/{id}` | Obtiene un tipo de requisito por ID |
 | GET | `/api/tesoreria/guarani/propuestaAspira/{id}` | Obtiene una propuesta aspira por ID |
-| GET | `/api/tesoreria/guarani/propuestaAspira/propuesta/{propuesta}/ubicacion/{ubicacion}/fechaInscripcionDesde/{fechaDesde}` | Filtra propuestas aspiras por propuesta, ubicación y fecha de inscripción |
+| GET | `/api/tesoreria/guarani/propuestaAspira/propuesta/{propuesta}/ubicacion/{ubicacion}/fechaInscripcionDesde/{fechaDesde}/anio/academico/{anioAcademico}` | Filtra propuestas aspiras por propuesta, ubicación, fecha de inscripción desde y año académico |
 | GET | `/api/tesoreria/guarani/propuestaResponsableAcademica/responsableAcademica/{responsableAcademica}` | Obtiene propuestas de una responsable académica |
 | GET | `/api/tesoreria/guarani/propuestaResponsableAcademica/responsableAcademica/preuniversitario/{responsableAcademica}` | Obtiene propuestas preuniversitarias de una responsable académica |
 | GET | `/api/tesoreria/guarani/propuestaOferta/ubicacion/{ubicacion}` | Obtiene ofertas de propuestas por ubicación |
@@ -699,14 +699,14 @@ src/
 | Tecnología | Versión | Propósito |
 |---|---|---|
 | Java | 25 | Lenguaje de programación |
-| Spring Boot | 4.1.0 | Framework principal |
-| Spring Cloud | 2025.1.2 | Microservicios |
+| Spring Boot | 4.1.1 | Framework principal |
+| Spring Cloud | 2025.1.3 | Microservicios |
 | Spring Data JPA | - | Persistencia ORM |
 | PostgreSQL | - | Base de datos relacional |
 | Consul Discovery | - | Service discovery |
 | OpenFeign | - | Clientes HTTP declarativos |
 | Caffeine | - | Caché en memoria |
-| SpringDoc OpenAPI | 3.0.3 | Documentación de APIs |
+| SpringDoc OpenAPI | 3.1.0 | Documentación de APIs |
 | Lombok | - | Reducción de boilerplate |
 | Maven | 3+ | Build tool |
 
