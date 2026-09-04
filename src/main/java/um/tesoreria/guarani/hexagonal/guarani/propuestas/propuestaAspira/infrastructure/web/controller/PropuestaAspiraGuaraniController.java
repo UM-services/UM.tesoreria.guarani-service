@@ -33,10 +33,14 @@ public class PropuestaAspiraGuaraniController {
         }
     }
 
-    @GetMapping("/propuesta/{propuesta}/ubicacion/{ubicacion}/fechaInscripcionDesde/{fechaDesde}")
-    public ResponseEntity<List<PropuestaAspiraGuaraniResponse>> getByPropuestaUbicacionAndFechaInscripcion(
-            @PathVariable Integer propuesta, @PathVariable Integer ubicacion, @PathVariable LocalDate fechaDesde) {
-        return ResponseEntity.ok(service.getByPropuestaUbicacionAndFechaInscripcion(propuesta, ubicacion, fechaDesde)
+    @GetMapping("/propuesta/{propuesta}/ubicacion/{ubicacion}/fechaInscripcionDesde/{fechaDesde}/anio/academico/{anioAcademico}")
+    public ResponseEntity<List<PropuestaAspiraGuaraniResponse>> getByPropuestaUbicacionFechaInscripcionAndAnioAcademico(
+            @PathVariable Integer propuesta,
+            @PathVariable Integer ubicacion,
+            @PathVariable LocalDate fechaDesde,
+            @PathVariable Integer anioAcademico) {
+        return ResponseEntity.ok(service.getByPropuestaUbicacionFechaInscripcionAndAnioAcademico(
+                        propuesta, ubicacion, fechaDesde, anioAcademico)
                 .stream()
                 .map(mapper::toResponse)
                 .toList());

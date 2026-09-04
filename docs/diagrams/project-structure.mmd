@@ -4,18 +4,18 @@ classDiagram
     }
 
     class GuaraniConfiguration {
-        <<Configuration>>
-        <<EnableFeignClients>>
-        <<EnableScheduling>>
+        << Configuration >>
+        << EnableFeignClients >>
+        << EnableScheduling >>
     }
 
     class HelloTest {
-        <<RestController>>
+        << RestController >>
         +test() ResponseEntity~String~
     }
 
     class AlumnoGuaraniController {
-        <<RestController>>
+        << RestController >>
         +getAlumnoGuarani(alumno) ResponseEntity
         +getAlumnosByPropuestaTipo(propuestaTipo) ResponseEntity
         +getAlumnosByPropuestaTipoAndFechaLimite(propuestaTipo, fechaLimite) ResponseEntity
@@ -25,170 +25,170 @@ classDiagram
     }
 
     class PropuestaOfertaGuaraniController {
-        <<RestController>>
+        << RestController >>
         +getByUbicacion(ubicacion) ResponseEntity
         +getByUbicacionPropuestaTipo204(ubicacion) ResponseEntity
     }
 
     class PersonaGuaraniController {
-        <<RestController>>
+        << RestController >>
         +getPersonaGuarani(persona) ResponseEntity
     }
 
     class PersonaContactoGuaraniController {
-        <<RestController>>
+        << RestController >>
         +getPersonaContactoGuarani(personaContacto) ResponseEntity
     }
 
     class PersonaDocumentoGuaraniController {
-        <<RestController>>
+        << RestController >>
         +getPersonaDocumentoGuarani(documento) ResponseEntity
     }
 
     class PropuestaGuaraniController {
-        <<RestController>>
+        << RestController >>
         +getPropuestaGuarani(propuesta) ResponseEntity
         +getAllPropuestas() ResponseEntity
     }
 
     class PropuestaTipoGuaraniController {
-        <<RestController>>
+        << RestController >>
         +getPropuestaTipoGuarani(propuestaTipo) ResponseEntity
         +getAllPropuestaTipos() ResponseEntity
     }
 
     class TipoDocumentoGuaraniController {
-        <<RestController>>
+        << RestController >>
         +getTipoDocumentoGuarani(tipoDocumento) ResponseEntity
         +getAllTipoDocumentos() ResponseEntity
     }
 
     class UbicacionGuaraniController {
-        <<RestController>>
+        << RestController >>
         +getUbicacionGuarani(ubicacion) ResponseEntity
         +getAllUbicaciones() ResponseEntity
     }
 
     class RequisitoGuaraniController {
-        <<RestController>>
+        << RestController >>
         +getRequisitoGuarani(requisito) ResponseEntity
         +getAllRequisitos() ResponseEntity
         +getRequisitosByTipo(requisitoTipo) ResponseEntity
     }
 
     class RequisitoPresentadoGuaraniController {
-        <<RestController>>
+        << RestController >>
         +getRequisitoPresentadoGuarani(requisitoPresentado) ResponseEntity
         +getAllRequisitosPresentados() ResponseEntity
     }
 
     class RequisitoTipoGuaraniController {
-        <<RestController>>
+        << RestController >>
         +getRequisitoTipoGuarani(requisitoTipo) ResponseEntity
         +getAllRequisitoTipos() ResponseEntity
     }
 
     class PropuestaAspiraGuaraniController {
-        <<RestController>>
+        << RestController >>
         +getPropuestaAspiraGuarani(propuestaAspira) ResponseEntity
-        +getByPropuestaUbicacionAndFechaInscripcion(propuesta, ubicacion, fechaDesde) ResponseEntity
+        +getByPropuestaUbicacionFechaInscripcionAndAnioAcademico(propuesta, ubicacion, fechaDesde, anioAcademico) ResponseEntity
     }
 
     class ResponsableAcademicaGuaraniController {
-        <<RestController>>
+        << RestController >>
         +getAllResponsablesAcademicas() ResponseEntity
     }
 
     class UbicacionTipoGuaraniController {
-        <<RestController>>
+        << RestController >>
         +getAllUbicacionTipos() ResponseEntity
     }
 
     class PropuestaResponsableAcademicaGuaraniController {
-        <<RestController>>
+        << RestController >>
         +getByResponsableAcademica(responsableAcademica) ResponseEntity
         +getByResponsableAcademicaAndPropuestaTipo(responsableAcademica) ResponseEntity
     }
 
     class AlumnoGuaraniService {
-        <<Service>>
+        << Service >>
     }
 
     class PersonaGuaraniService {
-        <<Service>>
+        << Service >>
     }
 
     class PersonaContactoGuaraniService {
-        <<Service>>
+        << Service >>
     }
 
     class PersonaDocumentoGuaraniService {
-        <<Service>>
+        << Service >>
     }
 
     class PropuestaGuaraniService {
-        <<Service>>
+        << Service >>
     }
 
     class PropuestaTipoGuaraniService {
-        <<Service>>
+        << Service >>
     }
 
     class TipoDocumentoGuaraniService {
-        <<Service>>
+        << Service >>
     }
 
     class UbicacionGuaraniService {
-        <<Service>>
+        << Service >>
     }
 
     class RequisitoGuaraniService {
-        <<Service>>
+        << Service >>
     }
 
     class RequisitoPresentadoGuaraniService {
-        <<Service>>
+        << Service >>
     }
 
     class RequisitoTipoGuaraniService {
-        <<Service>>
+        << Service >>
     }
 
     class PropuestaAspiraGuaraniService {
-        <<Service>>
+        << Service >>
     }
 
     class ResponsableAcademicaGuaraniService {
-        <<Service>>
+        << Service >>
     }
 
     class UbicacionTipoGuaraniService {
-        <<Service>>
+        << Service >>
     }
 
     class PropuestaResponsableAcademicaGuaraniService {
-        <<Service>>
+        << Service >>
     }
 
     class PropuestaOfertaGuaraniService {
-        <<Service>>
+        << Service >>
         +getByUbicacion(ubicacion) List~PropuestaOfertaGuarani~
         +getByUbicacionPropuestaTipo204(ubicacion) List~PropuestaOfertaGuarani~
     }
 
     class AlumnoGuaraniScheduler {
-        <<Component>>
+        << Component >>
         +generatePreuniversitarios() void
     }
 
     class AlumnoGuaraniClient {
-        <<FeignClient>>
+        << FeignClient >>
         +createPreuniversitario(CreatePersonalesResponse) AlumnoGuarani
         +createPersonales(AlumnoGuarani) CreatePersonalesResponse
     }
 
     class CreatePersonalesResponse {
-        <<DTO>>
+        << DTO >>
         +Boolean result
         +AlumnoGuarani alumnoGuarani
         +PropuestaGuaraniResponse propuestaGuarani
@@ -197,7 +197,7 @@ classDiagram
     }
 
     class PersonaCoreResponse {
-        <<DTO>>
+        << DTO >>
         +Integer uniqueId
         +Integer personaId
         +Integer documentoId
@@ -212,7 +212,7 @@ classDiagram
     }
 
     class DomicilioCoreResponse {
-        <<DTO>>
+        << DTO >>
         +Integer domicilioId
         +Integer personaId
         +Integer documentoId
@@ -235,42 +235,42 @@ classDiagram
     }
 
     class CreatePreuniversitarioByNroDocumentoUseCase {
-        <<Interface>>
+        << Interface >>
         +createPreuniversitarioByNroDocumento(String) List~AlumnoGuarani~
     }
 
     class CreatePersonalesByNroDocumentoUseCase {
-        <<Interface>>
+        << Interface >>
         +createPersonalesByNroDocumento(String) List~CreatePersonalesResponse~
     }
 
     class CreatePersonalesPort {
-        <<Interface>>
+        << Interface >>
         +createPersonales(AlumnoGuarani) CreatePersonalesResponse
     }
 
     class GetAlumnosByPropuestaTipoAndFechaInscripcionUseCase {
-        <<Interface>>
+        << Interface >>
         +getByPropuestaTipoAndFechaInscripcionAfter(Integer, LocalDate) List~AlumnoGuarani~
     }
 
     class GetAlumnosByNroDocumentoUseCase {
-        <<Interface>>
+        << Interface >>
         +getByNroDocumento(nroDocumento) List~AlumnoGuarani~
     }
 
     class GetUbicacionesByUbicacionTipoUseCase {
-        <<Interface>>
+        << Interface >>
         +getByUbicacionTipo(ubicacionTipo) List~UbicacionGuarani~
     }
 
     class Jsonifier {
-        <<Utility>>
+        << Utility >>
         +builder(T) Builder~T~
     }
 
     class GuaraniApplicationTests {
-        <<SpringBootTest>>
+        << SpringBootTest >>
         +contextLoads() void
     }
 
