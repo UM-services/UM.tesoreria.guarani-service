@@ -20,9 +20,9 @@ public class PropuestaAspiraGuaraniService {
         return getPropuestaAspiraGuaraniUseCase.getByPropuestaAspiraId(propuestaAspiraId);
     }
 
-    public List<PropuestaAspiraGuarani> getByPropuestaUbicacionAndFechaInscripcion(
-            Integer propuesta, Integer ubicacion, LocalDate fechaDesde) {
+    public List<PropuestaAspiraGuarani> getByPropuestaUbicacionFechaInscripcionAndAnioAcademico(
+            Integer propuesta, Integer ubicacion, LocalDate fechaDesde, Integer anioAcademico) {
         return getPropuestaAspirasByPropuestaUbicacionAndFechaInscripcionUseCase
-                .getByPropuestaUbicacionAndFechaInscripcion(propuesta, ubicacion, fechaDesde);
+                .getByPropuestaUbicacionFechaInscripcionAndAnioAcademico(propuesta, ubicacion, fechaDesde, anioAcademico);
     }
 }

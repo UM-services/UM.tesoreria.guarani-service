@@ -6,6 +6,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface GetPropuestaAspirasByPropuestaUbicacionAndFechaInscripcionUseCase {
-    List<PropuestaAspiraGuarani> getByPropuestaUbicacionAndFechaInscripcion(
-            Integer propuesta, Integer ubicacion, LocalDate fechaDesde);
+    List<PropuestaAspiraGuarani> getByPropuestaUbicacionFechaInscripcionAndAnioAcademico(
+            Integer propuesta, Integer ubicacion, LocalDate fechaDesde, Integer anioAcademico);
 }

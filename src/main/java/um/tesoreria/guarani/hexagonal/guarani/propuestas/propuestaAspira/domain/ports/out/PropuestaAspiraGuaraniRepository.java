@@ -9,6 +9,6 @@ import java.util.Optional;
 public interface PropuestaAspiraGuaraniRepository {
     Optional<PropuestaAspiraGuarani> findByPropuestaAspiraId(Integer propuestaAspiraId);
 
-    List<PropuestaAspiraGuarani> findAllByPropuestaAndUbicacionAndFechaInscripcionFrom(
-            Integer propuesta, Integer ubicacion, LocalDate fechaDesde);
+    List<PropuestaAspiraGuarani> findAllByPropuestaAndUbicacionAndFechaInscripcionFromAndAnioAcademico(
+            Integer propuesta, Integer ubicacion, LocalDate fechaDesde, Integer anioAcademico);
 }
