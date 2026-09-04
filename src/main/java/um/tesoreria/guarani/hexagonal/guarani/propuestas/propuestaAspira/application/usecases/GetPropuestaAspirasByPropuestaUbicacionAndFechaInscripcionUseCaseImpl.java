@@ -17,8 +17,9 @@ public class GetPropuestaAspirasByPropuestaUbicacionAndFechaInscripcionUseCaseIm
     private final PropuestaAspiraGuaraniRepository repository;
 
     @Override
-    public List<PropuestaAspiraGuarani> getByPropuestaUbicacionAndFechaInscripcion(
-            Integer propuesta, Integer ubicacion, LocalDate fechaDesde) {
-        return repository.findAllByPropuestaAndUbicacionAndFechaInscripcionFrom(propuesta, ubicacion, fechaDesde);
+    public List<PropuestaAspiraGuarani> getByPropuestaUbicacionFechaInscripcionAndAnioAcademico(
+            Integer propuesta, Integer ubicacion, LocalDate fechaDesde, Integer anioAcademico) {
+        return repository.findAllByPropuestaAndUbicacionAndFechaInscripcionFromAndAnioAcademico(
+                propuesta, ubicacion, fechaDesde, anioAcademico);
     }
 }
