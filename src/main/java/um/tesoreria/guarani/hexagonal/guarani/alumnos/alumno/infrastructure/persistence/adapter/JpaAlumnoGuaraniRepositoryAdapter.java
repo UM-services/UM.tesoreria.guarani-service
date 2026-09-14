@@ -8,11 +8,14 @@ import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.model.Alumno
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.ports.out.AlumnoGuaraniRepository;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.persistence.mapper.AlumnoGuaraniMapper;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.persistence.repository.JpaAlumnoGuaraniRepository;
+import um.tesoreria.guarani.hexagonal.guarani.alumnos.personaDocumento.domain.model.NumeroDocumento;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.personaDocumento.infrastructure.persistence.entity.PersonaDocumentoGuaraniEntity;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.personaDocumento.infrastructure.persistence.repository.JpaPersonaDocumentoGuaraniRepository;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuesta.infrastructure.persistence.entity.PropuestaGuaraniEntity;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuesta.infrastructure.persistence.repository.JpaPropuestaGuaraniRepository;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.infrastructure.persistence.entity.PropuestaAspiraGuaraniEntity;
+import um.tesoreria.guarani.hexagonal.guarani.alumnos.persona.infrastructure.persistence.mapper.PersonaGuaraniMapper;
+import um.tesoreria.guarani.hexagonal.guarani.alumnos.persona.infrastructure.persistence.repository.JpaPersonaGuaraniRepository;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaAspira.infrastructure.persistence.repository.JpaPropuestaAspiraGuaraniRepository;
 
 import java.time.LocalDate;
@@ -30,6 +33,8 @@ public class JpaAlumnoGuaraniRepositoryAdapter implements AlumnoGuaraniRepositor
     private final JpaPropuestaGuaraniRepository jpaPropuestaGuaraniRepository;
     private final JpaPropuestaAspiraGuaraniRepository jpaPropuestaAspiraGuaraniRepository;
     private final JpaPersonaDocumentoGuaraniRepository jpaPersonaDocumentoGuaraniRepository;
+    private final JpaPersonaGuaraniRepository jpaPersonaGuaraniRepository;
+    private final PersonaGuaraniMapper personaGuaraniMapper;
     private final AlumnoGuaraniMapper mapper;
 
     @Override
@@ -77,11 +82,37 @@ public class JpaAlumnoGuaraniRepositoryAdapter implements AlumnoGuaraniRepositor
     @Override
     @Transactional(readOnly = true)
     public List<AlumnoGuarani> findAllByNroDocumento(String nroDocumento) {
-        Set<Integer> personas = jpaPersonaDocumentoGuaraniRepository.findAllByNroDocumento(nroDocumento).stream()
+        var documentos = jpaPersonaDocumentoGuaraniRepository.findAllByNroDocumento(nroDocumento);
+        if (documentos.isEmpty()) {
+            String digitos = NumeroDocumento.soloDigitos(nroDocumento);
+            if (!digitos.isEmpty()) {
+                log.debug("Sin coincidencia exacta para '{}', se busca por los dígitos '{}'", nroDocumento, digitos);
+                documentos = jpaPersonaDocumentoGuaraniRepository.findAllByDigitosNroDocumento(digitos);
+            }
+        }
+        Set<Integer> personas = documentos.stream()
                 .map(PersonaDocumentoGuaraniEntity::getPersona)
                 .collect(Collectors.toSet());
-        return jpaAlumnoGuaraniRepository.findAllByPersonaIn(personas).stream()
+        if (personas.isEmpty()) {
+            return List.of();
+        }
+        List<AlumnoGuarani> alumnos = jpaAlumnoGuaraniRepository.findAllByPersonaIn(personas).stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
+        Set<Integer> personasConAlumno = alumnos.stream()
+                .map(AlumnoGuarani::getPersona)
+                .collect(Collectors.toSet());
+        Set<Integer> personasSinAlumno = personas.stream()
+                .filter(p -> !personasConAlumno.contains(p))
+                .collect(Collectors.toSet());
+        if (!personasSinAlumno.isEmpty()) {
+            jpaPersonaGuaraniRepository.findAllById(personasSinAlumno).forEach(personaEntity ->
+                    alumnos.add(AlumnoGuarani.builder()
+                            .persona(personaEntity.getPersona())
+                            .personaRel(personaGuaraniMapper.toDomain(personaEntity))
+                            .build())
+            );
+        }
+        return alumnos;
     }
 }
