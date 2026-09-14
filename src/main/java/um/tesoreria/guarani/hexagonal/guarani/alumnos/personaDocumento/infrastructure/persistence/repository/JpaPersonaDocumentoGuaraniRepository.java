@@ -7,7 +7,8 @@ import um.tesoreria.guarani.hexagonal.guarani.alumnos.personaDocumento.infrastru
 import java.util.List;
 
 @Repository
-public interface JpaPersonaDocumentoGuaraniRepository extends JpaRepository<PersonaDocumentoGuaraniEntity, Integer> {
+public interface JpaPersonaDocumentoGuaraniRepository extends JpaRepository<PersonaDocumentoGuaraniEntity, Integer>,
+        PersonaDocumentoGuaraniRepositoryCustom {
 
     List<PersonaDocumentoGuaraniEntity> findAllByNroDocumento(String nroDocumento);
 }

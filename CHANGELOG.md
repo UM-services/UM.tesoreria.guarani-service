@@ -1,5 +1,21 @@
 # Changelog
 
+## [6.1.0] - 2026-09-14
+
+### Added
+- **`NumeroDocumento` domain model** (`alumnos/personaDocumento/domain/model`): splits a Guarani `nro_documento` into `prefijo` (leading letters), `digitos` (numeric part only) and `posfijo` (trailing letters) — prefijo/posfijo uppercased and never `null` — and returns an empty `Optional` when the value carries no digits.
+- **Document normalization toward Core**: `CreatePersonalesAdapter` now sends only the numeric part as `nroDocumento` and sets `numeroPrefijo`, `numeroPosfijo` and `guaraniPersona` (Guarani `persona` id) on `personaRel` before the Feign call; `PersonaGuarani` gained `numeroPrefijo`/`numeroPosfijo` fields and `PersonaCoreResponse` gained the `numeroPrefijo`, `numeroPosfijo` and `guaraniPersona` read-back fields.
+- **Digits-only fallback lookup** in `JpaAlumnoGuaraniRepositoryAdapter.findAllByNroDocumento()`: when the exact `nro_documento` match returns nothing, retries via the new `PersonaDocumentoGuaraniRepositoryCustom`/`PersonaDocumentoGuaraniRepositoryCustomImpl` (Criteria API + `regexp_replace` on `nro_documento`, no `@Query`); persons without an alumno record are returned as `personaRel`-only results.
+- **`CreatePersonalesResponse.esCreado()`** `@JsonIgnore` helper: true only when `result` is `true` and `persona` is not null.
+- **Six new unit test classes** covering the personales and preuniversitario use cases, `CreatePersonalesAdapter`, the alumno JPA adapter, `NumeroDocumento` and the custom document repository.
+
+### Changed
+- **`CreatePersonalesByNroDocumentoUseCaseImpl`** skips a not-created Core response (logged), enriches with `propuestaGuarani` only when the alumno has a propuesta, and logs a `WARN` when Core echoes prefijo/posfijo/guaraniPersona values different from those sent (deployment-drift guard).
+- **`CreatePreuniversitarioByNroDocumentoUseCaseImpl`** only forwards personales responses with `result` true, a returned `alumnoGuarani` and a `propuestaGuarani` with at least one academic responsible; rejected responses are logged and skipped instead of reaching `create/preuniversitario`.
+- **Documents without a numeric part are no longer sent to Core**: the adapter short-circuits with a `result=false` response carrying the original alumno.
+- **Aligned Core DTO field types** with the Core model: `PersonaCoreResponse.uniqueId` `Integer`→`Long`, `personaId` `Integer`→`BigDecimal`, `primero`/`hpum` `String`→`Byte`; `DomicilioCoreResponse.domicilioId` `Integer`→`Long`, `personaId` `Integer`→`BigDecimal`.
+- **Updated documentation**: new README "Normalización del número de documento hacia Core" section with the prefijo/digitos/posfijo table, revised document-endpoint note, and the `create-personales-documento`/`create-preuniversitario-documento` sequence diagrams now show the normalization step, the digits fallback query and the `result`-gated preuniversitario loop.
+
 ## [6.0.0] - 2026-09-03
 
 ### BREAKING
