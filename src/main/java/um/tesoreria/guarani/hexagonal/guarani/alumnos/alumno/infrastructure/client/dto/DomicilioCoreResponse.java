@@ -2,6 +2,7 @@ package um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.cli
 
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 @Getter
@@ -11,8 +12,8 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 public class DomicilioCoreResponse {
 
-    private Integer domicilioId;
-    private Integer personaId;
+    private Long domicilioId;
+    private BigDecimal personaId;
     private Integer documentoId;
     private OffsetDateTime fecha;
     private String calle;

@@ -3,9 +3,9 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-brightgreen)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-25-orange)](https://openjdk.org/projects/jdk/25/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-6.0.0-blue)](pom.xml)
+[![Version](https://img.shields.io/badge/version-6.1.0-blue)](pom.xml)
 
-Microservicio de tesorería integrado con el sistema Guarani (v6.0.0). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, ofertas de propuestas, tipos de propuestas, propuestas aspiras, responsables académicas, ubicaciones y tipos de ubicación, requisitos, requisitos presentados y tipos de requisitos, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, creación de personales y preuniversitarios por documento, y documentación OpenAPI.
+Microservicio de tesorería integrado con el sistema Guarani (v6.1.0). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, ofertas de propuestas, tipos de propuestas, propuestas aspiras, responsables académicas, ubicaciones y tipos de ubicación, requisitos, requisitos presentados y tipos de requisitos, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, creación de personales y preuniversitarios por documento, y documentación OpenAPI.
 
 ## Arquitectura
 
@@ -154,14 +154,15 @@ sequenceDiagram
     CBNUC->>PersonalesUC: createPersonalesByNroDocumento(nroDocumento)
     PersonalesUC->>GetUC: getByNroDocumento(nroDocumento)
     GetUC->>JPA: findAllByNroDocumento(nroDocumento)
-    JPA->>DB: SELECT * FROM alumno WHERE nro_documento=?
+    JPA->>DB: SELECT por nro_documento exacto y, si no hay coincidencia, por los digitos
     DB-->>JPA: List~AlumnoGuaraniEntity~
     JPA-->>GetUC: List~AlumnoGuarani~
     GetUC-->>PersonalesUC: List~AlumnoGuarani~
     loop For each alumno
         PersonalesUC->>Port: createPersonales(alumno)
         Port->>Adapter: createPersonales(alumno)
-        Adapter->>Feign: createPersonales(alumno)
+        Adapter->>Adapter: separa prefijo, digitos y posfijo del nroDocumento
+        Adapter->>Feign: createPersonales(alumno normalizado)
         Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/personales
         Core-->>Feign: CreatePersonalesResponse
         Feign-->>Adapter: CreatePersonalesResponse
@@ -169,7 +170,7 @@ sequenceDiagram
         Port-->>PersonalesUC: CreatePersonalesResponse
     end
     PersonalesUC-->>CBNUC: List~CreatePersonalesResponse~
-    loop For each personales response
+    loop For each personales response con result verdadero
         CBNUC->>Feign: createPreuniversitario(response)
         Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/preuniversitario
         Core-->>Feign: AlumnoGuarani
@@ -202,24 +203,53 @@ sequenceDiagram
     Service->>UseCase: createPersonalesByNroDocumento(nroDocumento)
     UseCase->>GetUC: getByNroDocumento(nroDocumento)
     GetUC->>JPA: findAllByNroDocumento(nroDocumento)
-    JPA->>DB: SELECT * FROM alumno WHERE nro_documento=?
+    JPA->>DB: SELECT por nro_documento exacto y, si no hay coincidencia, por los digitos
     DB-->>JPA: List~AlumnoGuaraniEntity~
     JPA-->>GetUC: List~AlumnoGuarani~
     GetUC-->>UseCase: List~AlumnoGuarani~
     loop For each alumno
         UseCase->>Port: createPersonales(alumno)
         Port->>Adapter: createPersonales(alumno)
-        Adapter->>Feign: createPersonales(alumno)
+        Adapter->>Adapter: separa prefijo, digitos y posfijo del nroDocumento
+        Adapter->>Feign: createPersonales(alumno normalizado)
         Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/personales
-        Core-->>Feign: CreatePersonalesResponse con propuestaGuarani
+        Core-->>Feign: CreatePersonalesResponse con persona
         Feign-->>Adapter: CreatePersonalesResponse
         Adapter-->>Port: CreatePersonalesResponse
-        Port-->>UseCase: CreatePersonalesResponse con propuestaGuarani
+        Port-->>UseCase: CreatePersonalesResponse
+        UseCase->>UseCase: valida result y persona, completa propuestaGuarani y verifica prefijo/posfijo
     end
     UseCase-->>Service: List~CreatePersonalesResponse~
     Service-->>REST: List~CreatePersonalesResponse~
     REST-->>User: 200 OK List~CreatePersonalesResponse~
 ```
+
+### Normalización del número de documento hacia Core
+
+En Guarani (`negocio.mdp_personas_documentos.nro_documento`) conviven documentos con letras, por ejemplo
+`AA1234567` o `1234567B`. Core guarda la persona con `per_id` numérico y, además, las columnas
+`numero_prefijo`, `numero_posfijo` y `guarani_persona`. El reparto que hace este servicio, en
+`NumeroDocumento` (`alumnos/personaDocumento/domain/model`), es:
+
+| Valor en Guarani | `nroDocumento` enviado | `numeroPrefijo` | `numeroPosfijo` |
+|---|---|---|---|
+| `1234567` | `1234567` | `""` | `""` |
+| `AA1234567` | `1234567` | `AA` | `""` |
+| `1234567B` | `1234567` | `""` | `B` |
+| `12.345.678-X` | `12345678` | `""` | `X` |
+| `ABC` | no se envía a Core: se devuelve `result=false` y se loguea | — | — |
+
+Reglas: las letras iniciales van al prefijo, las finales al posfijo (ambos en mayúsculas y nunca `null`),
+y del medio se conservan sólo dígitos. `personaRel.persona` viaja siempre para que Core lo registre en
+`guarani_persona`. A la vuelta se leen `uniqueId`, `personaId` (`BigDecimal`), `documentoId`,
+`numeroPrefijo`, `numeroPosfijo` y `guaraniPersona` desde `PersonaCoreResponse`; si Core devuelve valores
+distintos a los enviados se registra un `WARN` de despliegue desfasado. Los personales que Core no creó
+(`result` distinto de `true` o `persona` nula) no se enriquecen con la propuesta ni se reenvían a
+`create/preuniversitario`.
+
+La lectura por documento (`GET /api/tesoreria/guarani/alumno/documento/{nroDocumento}` y los endpoints de
+generación) primero intenta el match exacto y, si no hay coincidencias, vuelve a buscar comparando sólo la
+parte numérica del documento guardado en Guarani, de modo que `1234567` encuentra a `AA1234567`. El reintento recorre `mdp_personas_documentos` sin índice, por eso sólo se ejecuta cuando el match exacto no devolvió filas.
 
 ### Diagrama de Secuencia — Endpoints Académicos y de Propuestas
 
@@ -584,7 +614,7 @@ classDiagram
 | GET | `/api/tesoreria/guarani/alumno/{id}` | Obtiene un alumno por ID |
 | GET | `/api/tesoreria/guarani/alumno/propuestaTipo/{propuestaTipo}` | Obtiene alumnos por tipo de propuesta |
 | GET | `/api/tesoreria/guarani/alumno/propuestaTipo/{propuestaTipo}/fechaLimite/{fechaLimite}` | Obtiene alumnos por tipo de propuesta y fecha límite de inscripción |
-| GET | `/api/tesoreria/guarani/alumno/documento/{nroDocumento}` | Obtiene alumnos por número de documento |
+| GET | `/api/tesoreria/guarani/alumno/documento/{nroDocumento}` | Obtiene alumnos por número de documento; si el match exacto no devuelve nada, rebusca por la parte numérica |
 | GET | `/api/tesoreria/guarani/alumno/generate/personales/create/{nroDocumento}` | Crea los personales asociados a los alumnos del documento y devuelve `List<CreatePersonalesResponse>` |
 | GET | `/api/tesoreria/guarani/persona/{id}` | Obtiene una persona por ID |
 | GET | `/api/tesoreria/guarani/personaContacto/{id}` | Obtiene un contacto de persona por ID |

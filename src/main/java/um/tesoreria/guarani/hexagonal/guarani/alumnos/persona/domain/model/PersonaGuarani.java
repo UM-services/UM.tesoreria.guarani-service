@@ -31,6 +31,8 @@ public class PersonaGuarani {
     private Integer paisOrigen;
     private Integer documentoPrincipal;
     private PersonaDocumentoGuarani documentoPrincipalRel;
+    private String numeroPrefijo;
+    private String numeroPosfijo;
     private List<PersonaContactoGuarani> contactos;
     private List<RequisitoPresentadoGuarani> requisitosPresentados;
     private String usuario;

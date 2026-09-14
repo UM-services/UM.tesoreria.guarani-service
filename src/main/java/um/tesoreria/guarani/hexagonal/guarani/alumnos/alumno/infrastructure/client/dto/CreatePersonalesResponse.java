@@ -1,5 +1,6 @@
 package um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.client.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.domain.model.AlumnoGuarani;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuesta.infrastructure.web.dto.PropuestaGuaraniResponse;
@@ -16,5 +17,10 @@ public class CreatePersonalesResponse {
     private PropuestaGuaraniResponse propuestaGuarani;
     private PersonaCoreResponse persona;
     private DomicilioCoreResponse domicilio;
+
+    @JsonIgnore
+    public boolean esCreado() {
+        return Boolean.TRUE.equals(result) && persona != null;
+    }
 
 }
