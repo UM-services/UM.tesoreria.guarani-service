@@ -2,6 +2,8 @@ package um.tesoreria.guarani.hexagonal.guarani.alumnos.alumno.infrastructure.cli
 
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @Builder
@@ -9,16 +11,19 @@ import lombok.*;
 @AllArgsConstructor
 public class PersonaCoreResponse {
 
-    private Integer uniqueId;
-    private Integer personaId;
+    private Long uniqueId;
+    private BigDecimal personaId;
     private Integer documentoId;
     private String apellido;
     private String nombre;
     private String sexo;
-    private String primero;
+    private Byte primero;
     private String cuit;
     private String cbu;
     private String password;
-    private String hpum;
+    private Byte hpum;
+    private String numeroPrefijo;
+    private String numeroPosfijo;
+    private Long guaraniPersona;
 
 }

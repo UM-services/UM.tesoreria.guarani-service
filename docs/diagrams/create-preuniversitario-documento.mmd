@@ -18,14 +18,15 @@ sequenceDiagram
     CBNUC->>PersonalesUC: createPersonalesByNroDocumento(nroDocumento)
     PersonalesUC->>GetUC: getByNroDocumento(nroDocumento)
     GetUC->>JPA: findAllByNroDocumento(nroDocumento)
-    JPA->>DB: SELECT * FROM alumno WHERE nro_documento=?
+    JPA->>DB: SELECT por nro_documento exacto y, si no hay coincidencia, por los digitos
     DB-->>JPA: List~AlumnoGuaraniEntity~
     JPA-->>GetUC: List~AlumnoGuarani~
     GetUC-->>PersonalesUC: List~AlumnoGuarani~
     loop For each alumno
         PersonalesUC->>Port: createPersonales(alumno)
         Port->>Adapter: createPersonales(alumno)
-        Adapter->>Feign: createPersonales(alumno)
+        Adapter->>Adapter: separa prefijo, digitos y posfijo del nroDocumento
+        Adapter->>Feign: createPersonales(alumno normalizado)
         Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/personales
         Core-->>Feign: CreatePersonalesResponse
         Feign-->>Adapter: CreatePersonalesResponse
@@ -33,7 +34,7 @@ sequenceDiagram
         Port-->>PersonalesUC: CreatePersonalesResponse
     end
     PersonalesUC-->>CBNUC: List~CreatePersonalesResponse~
-    loop For each personales response
+    loop For each personales response con result verdadero
         CBNUC->>Feign: createPreuniversitario(response)
         Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/preuniversitario
         Core-->>Feign: AlumnoGuarani

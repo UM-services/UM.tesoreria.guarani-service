@@ -16,19 +16,21 @@ sequenceDiagram
     Service->>UseCase: createPersonalesByNroDocumento(nroDocumento)
     UseCase->>GetUC: getByNroDocumento(nroDocumento)
     GetUC->>JPA: findAllByNroDocumento(nroDocumento)
-    JPA->>DB: SELECT * FROM alumno WHERE nro_documento=?
+    JPA->>DB: SELECT por nro_documento exacto y, si no hay coincidencia, por los digitos
     DB-->>JPA: List~AlumnoGuaraniEntity~
     JPA-->>GetUC: List~AlumnoGuarani~
     GetUC-->>UseCase: List~AlumnoGuarani~
     loop For each alumno
         UseCase->>Port: createPersonales(alumno)
         Port->>Adapter: createPersonales(alumno)
-        Adapter->>Feign: createPersonales(alumno)
+        Adapter->>Adapter: separa prefijo, digitos y posfijo del nroDocumento
+        Adapter->>Feign: createPersonales(alumno normalizado)
         Feign->>Core: POST /api/tesoreria/core/guarani/alumno/create/personales
-        Core-->>Feign: CreatePersonalesResponse con propuestaGuarani
+        Core-->>Feign: CreatePersonalesResponse con persona
         Feign-->>Adapter: CreatePersonalesResponse
         Adapter-->>Port: CreatePersonalesResponse
-        Port-->>UseCase: CreatePersonalesResponse con propuestaGuarani
+        Port-->>UseCase: CreatePersonalesResponse
+        UseCase->>UseCase: valida result y persona, completa propuestaGuarani y verifica prefijo/posfijo
     end
     UseCase-->>Service: List~CreatePersonalesResponse~
     Service-->>REST: List~CreatePersonalesResponse~
