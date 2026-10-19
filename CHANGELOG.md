@@ -1,5 +1,14 @@
 # Changelog
 
+## [6.1.1] - 2026-10-19
+
+### Added
+- **Second staging deployment target**: the staging pipeline now publishes the built image to a `staging-new` environment in addition to `staging`.
+
+### Changed
+- **Matrix staging deployment** (`.github/workflows/deploy-staging.yml`): the `deploy` job runs a `fail-fast: false` matrix over `environment: [staging, staging-new]`, deriving both its self-hosted `runs-on` labels and its GitHub `environment` from the matrix, so the same image is deployed to each target; the job name now includes the target environment.
+- **Documented feature gating** (`AGENTS.md`): permissions are centralized in `tesoreria-core-service` (`modulo.accion` keys and the `permisoEfectivo` bundle endpoint), new features must register their key, and no security may be added to existing or legacy endpoints.
+
 ## [6.1.0] - 2026-09-14
 
 ### Added
