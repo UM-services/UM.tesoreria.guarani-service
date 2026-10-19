@@ -20,3 +20,10 @@
 - Feature modules live under `hexagonal/guarani/` and follow `domain` (models and ports), `application` (services/use cases), and `infrastructure` (web, persistence, clients, schedulers) boundaries.
 - Keep domain/application code independent of HTTP and JPA. Controllers map DTOs, persistence adapters map JPA entities, and repository interfaces in `domain/ports/out` are implemented under infrastructure.
 - Existing REST routes are rooted at `/api/tesoreria/guarani`; API documentation is exposed at `/swagger-ui/index.html` and `/v3/api-docs` when the service is running.
+
+## Permissions (Feature Gating)
+
+Permissions are **centralized** in `tesoreria-core-service` (catalog `permiso`, roles, role×permission matrix, overrides and the effective bundle `GET /api/tesoreria/core/permisoEfectivo/usuario/{userId}`). Keys follow the `modulo.accion` convention.
+
+- For a new feature that requires a permission, register the key in the catalog (administrador module) and wire it in the **new** code. Server-side enforcement (`@RequierePermiso`) lives in core; this service has none.
+- **Golden rule:** never add or change security on existing endpoints or legacy code. The legacy system sends no token or permissions, so any enforcement there breaks it. When in doubt, stop and ask.
