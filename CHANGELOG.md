@@ -1,5 +1,11 @@
 # Changelog
 
+## [6.1.2] - 2026-10-21
+
+### Changed
+- **Consul health check** (`src/main/resources/bootstrap.yml`): service registration now advertises `/actuator/health/readiness` as its health check path instead of the default Actuator health endpoint, and `health-check-critical-timeout: 5m` prunes (deregisters) the instance when that check stays critical for five minutes. No REST contract, dependency or runtime requirement changed.
+- **Updated documentation**: `README.md` version badge and description now reflect `6.1.2`, and the Consul registration section documents the configured health check path and critical timeout.
+
 ## [6.1.1] - 2026-10-19
 
 ### Added
