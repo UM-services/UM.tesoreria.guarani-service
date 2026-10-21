@@ -3,9 +3,9 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-brightgreen)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-25-orange)](https://openjdk.org/projects/jdk/25/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-6.1.1-blue)](pom.xml)
+[![Version](https://img.shields.io/badge/version-6.1.2-blue)](pom.xml)
 
-Microservicio de tesorería integrado con el sistema Guarani (v6.1.1). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, ofertas de propuestas, tipos de propuestas, propuestas aspiras, responsables académicas, ubicaciones y tipos de ubicación, requisitos, requisitos presentados y tipos de requisitos, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, creación de personales y preuniversitarios por documento, y documentación OpenAPI.
+Microservicio de tesorería integrado con el sistema Guarani (v6.1.2). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, ofertas de propuestas, tipos de propuestas, propuestas aspiras, responsables académicas, ubicaciones y tipos de ubicación, requisitos, requisitos presentados y tipos de requisitos, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, creación de personales y preuniversitarios por documento, y documentación OpenAPI.
 
 ## Arquitectura
 
@@ -786,6 +786,7 @@ Las propiedades se definen en `bootstrap.yml` y pueden sobrescribirse por variab
 El servicio se registra en Consul con:
 - **Nombre:** `tesoreria-guarani-service`
 - **Tags:** `tesoreria`, `guarani`
+- **Health check:** `/actuator/health/readiness`; si el chequeo queda en estado crítico durante 5 minutos, el registro se poda (deregistra)
 
 ## API
 
