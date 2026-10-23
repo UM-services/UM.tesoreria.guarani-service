@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.1.3] - 2026-10-23
+
+### Changed
+- **Updated Spring Boot** from `4.1.1` to `4.1.2`, **Spring Cloud** from `2025.1.3` to `2025.1.4`, **SpringDoc OpenAPI** from `3.1.0` to `3.1.1` and **JaCoCo** from `0.8.13` to `0.8.15` (`pom.xml`).
+- **Instance resolution filters by passing checks** (`src/main/resources/bootstrap.yml`): `spring.cloud.consul.discovery.query-passing: true`, so Feign/LoadBalancer only resolve instances of discovered services whose Consul checks are in `passing` state. Registration (name, tags, readiness path and critical timeout) is unchanged, and no REST contract changed.
+- **Updated documentation**: `README.md` version badge and description now reflect `6.1.3`, the technology table lists Spring Boot `4.1.2`, Spring Cloud `2025.1.4` and SpringDoc `3.1.1`, and the Consul registration section documents the `query-passing` instance resolution.
+
 ## [6.1.2] - 2026-10-21
 
 ### Changed
