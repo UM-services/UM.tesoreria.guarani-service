@@ -1,11 +1,11 @@
 # UM.tesoreria.guarani-service
 
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-brightgreen)](https://spring.io/projects/spring-boot)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.2-brightgreen)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-25-orange)](https://openjdk.org/projects/jdk/25/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-6.1.2-blue)](pom.xml)
+[![Version](https://img.shields.io/badge/version-6.1.3-blue)](pom.xml)
 
-Microservicio de tesorería integrado con el sistema Guarani (v6.1.2). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, ofertas de propuestas, tipos de propuestas, propuestas aspiras, responsables académicas, ubicaciones y tipos de ubicación, requisitos, requisitos presentados y tipos de requisitos, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, creación de personales y preuniversitarios por documento, y documentación OpenAPI.
+Microservicio de tesorería integrado con el sistema Guarani (v6.1.3). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, ofertas de propuestas, tipos de propuestas, propuestas aspiras, responsables académicas, ubicaciones y tipos de ubicación, requisitos, requisitos presentados y tipos de requisitos, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, creación de personales y preuniversitarios por documento, y documentación OpenAPI.
 
 ## Arquitectura
 
@@ -729,14 +729,14 @@ src/
 | Tecnología | Versión | Propósito |
 |---|---|---|
 | Java | 25 | Lenguaje de programación |
-| Spring Boot | 4.1.1 | Framework principal |
-| Spring Cloud | 2025.1.3 | Microservicios |
+| Spring Boot | 4.1.2 | Framework principal |
+| Spring Cloud | 2025.1.4 | Microservicios |
 | Spring Data JPA | - | Persistencia ORM |
 | PostgreSQL | - | Base de datos relacional |
 | Consul Discovery | - | Service discovery |
 | OpenFeign | - | Clientes HTTP declarativos |
 | Caffeine | - | Caché en memoria |
-| SpringDoc OpenAPI | 3.1.0 | Documentación de APIs |
+| SpringDoc OpenAPI | 3.1.1 | Documentación de APIs |
 | Lombok | - | Reducción de boilerplate |
 | Maven | 3+ | Build tool |
 
@@ -787,6 +787,7 @@ El servicio se registra en Consul con:
 - **Nombre:** `tesoreria-guarani-service`
 - **Tags:** `tesoreria`, `guarani`
 - **Health check:** `/actuator/health/readiness`; si el chequeo queda en estado crítico durante 5 minutos, el registro se poda (deregistra)
+- **Resolución de instancias:** `query-passing: true`, por lo que Feign/LoadBalancer solo resuelven instancias de otros servicios cuyos checks están en estado `passing`
 
 ## API
 
