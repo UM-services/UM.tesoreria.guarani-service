@@ -1,5 +1,20 @@
 # Changelog
 
+## [6.2.0] - 2026-10-27
+
+### Added
+- **Auditoría de requests** (`src/main/java/um/tesoreria/guarani/audit`): `AuditRequestFilter` (registrado con `Ordered.HIGHEST_PRECEDENCE + 10` desde `AuditConfiguration`) captura cada request bajo `/api/tesoreria/guarani` — los `GET` cuando `access-events` está activo y los métodos mutantes cuando `request-events` está activo — y emite un evento `REQUEST` con `operation` (`ACCESS`, `INSERT`, `UPDATE`, `DELETE`), actor (`X-User-Id` o el legacy `X-Usuario-Id`, `X-Usuario-Login`), IP (`X-Forwarded-For` o remota), `correlationId` (`X-Request-Id`, generado si falta), `outcome`, `httpStatus` y `durationMs`. Excluye `/actuator`, `/error`, `/swagger-ui` y `/v3/api-docs`.
+- **Auditoría de cambios por JPA**: `AuditEntityListener` y `AuditEventListenerRegistrar` enganchan `POST_INSERT`, `POST_UPDATE` y `POST_DELETE` en la `SessionFactory` y publican un evento `CHANGE` con `entity`, `entityId`, `operation`, `changedFields` y diff escalar en `afterCommit` (no se audita lo que termina en rollback). `AuditDiffBuilder` omite asociaciones y colecciones, normaliza binarios/fechas/enums y descarta el diff marcando `truncated` cuando supera `max-payload-chars`.
+- **Enmascaramiento de datos personales** (`AuditDiffBuilder` + `mask-fields`): credenciales y correos se reemplazan por `****`; documento, teléfono, CBU y cuenta conservan sólo los últimos cuatro caracteres.
+- **Cola y envío por lote**: `AuditQueue` usa una cola acotada (descarta y cuenta `dropped` al llenarse) y `AuditSender` la drena cada `sender-delay-ms` para enviar `POST {url}/api/tesoreria/auditoria/evento/lote` con header `X-API-Key`, loguear los índices que el servicio informe como rechazados y reintentar hasta `max-attempts` (un intento por ciclo del sender); los lotes con HTTP `400`/`401`/`403`/`422` se descartan.
+- **Modos de operación**: `OFF` (no captura), `LOG` (captura y loguea) y `SEND` (cola en memoria + envío HTTP, valor por defecto).
+- **Tres nuevas clases de test** (`AuditRequestFilterTest`, `AuditQueueTest`, `AuditDiffBuilderTest`) y `src/test/resources/application.properties`, que fija `tesoreria.audit.mode=OFF` para que las pruebas no encolen eventos.
+
+### Changed
+- **Nueva configuración `tesoreria.audit`** en `src/main/resources/bootstrap.yml`, sobrescribible por entorno: `TESORERIA_AUDIT_MODE`, `TESORERIA_AUDIT_REQUEST_EVENTS`, `TESORERIA_AUDIT_ACCESS_EVENTS`, `TESORERIA_AUDIT_CHANGE_EVENTS`, `TESORERIA_AUDIT_URL` (por defecto `http://localhost:8211`), `TESORERIA_AUDIT_API_KEY`, `TESORERIA_AUDIT_QUEUE_CAPACITY`, `TESORERIA_AUDIT_BATCH_SIZE`, `TESORERIA_AUDIT_MAX_ATTEMPTS`, `TESORERIA_AUDIT_SENDER_DELAY_MS`, `TESORERIA_AUDIT_SENDER_INITIAL_DELAY_MS`, `TESORERIA_AUDIT_MAX_PAYLOAD_CHARS`, `TESORERIA_AUDIT_MASK_FIELDS` y `TESORERIA_AUDIT_INCLUDE_PREFIXES`. No se modificó ninguna propiedad existente.
+- **Nueva dependencia de runtime con el servicio de auditoría**: con modo `SEND`, `AuditSender` no envía mientras `url` o `api-key` estén vacíos (deja los eventos en la cola y loguea el aviso). Sin outbox, los eventos en vuelo se pierden si el proceso termina.
+- **Updated documentation**: `README.md` version badge and description now reflect `6.2.0`; the context and container diagrams include `Servicio de Auditoría`, the project-structure diagrams include the `audit` module, and a new "Auditoría" section documents modes, identity headers, masking, delivery semantics and the `TESORERIA_AUDIT_*` variables. `docs/diagrams/audit-event-flow.mmd` is new and `generate-docs.yml` injects it into the generated site.
+
 ## [6.1.3] - 2026-10-23
 
 ### Changed
