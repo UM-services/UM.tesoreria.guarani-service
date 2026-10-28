@@ -50,6 +50,28 @@ spring:
         health-check-critical-timeout: 5m
         tags: tesoreria,guarani
 
+tesoreria:
+  audit:
+    # OFF = no captura | LOG = captura y loguea | SEND = cola en memoria + HTTP
+    # Default SEND: la auditoría se registra desde el primer request.
+    mode: ${TESORERIA_AUDIT_MODE:SEND}
+    request-events: ${TESORERIA_AUDIT_REQUEST_EVENTS:true}
+    # Guarani sólo lee: las consultas son el evento que hay que registrar.
+    access-events: ${TESORERIA_AUDIT_ACCESS_EVENTS:true}
+    # Escrituras (cuando empiecen a existir): listeners de JPA con diff enmascarado.
+    change-events: ${TESORERIA_AUDIT_CHANGE_EVENTS:true}
+    url: ${TESORERIA_AUDIT_URL:http://localhost:8211}
+    api-key: ${TESORERIA_AUDIT_API_KEY:}
+    queue-capacity: ${TESORERIA_AUDIT_QUEUE_CAPACITY:2000}
+    batch-size: ${TESORERIA_AUDIT_BATCH_SIZE:200}
+    max-attempts: ${TESORERIA_AUDIT_MAX_ATTEMPTS:10}
+    sender-delay-ms: ${TESORERIA_AUDIT_SENDER_DELAY_MS:2000}
+    sender-initial-delay-ms: ${TESORERIA_AUDIT_SENDER_INITIAL_DELAY_MS:5000}
+    max-payload-chars: ${TESORERIA_AUDIT_MAX_PAYLOAD_CHARS:32768}
+    # Datos personales: nunca en texto plano en la auditoría.
+    mask-fields: ${TESORERIA_AUDIT_MASK_FIELDS:password,clave,autenticacion,token,tokenAlta,email,emailTemporal,cbu,cuenta,documento,nroDocumento,telefono,telefonoCodigoArea,telefonoNumero,celular}
+    include-prefixes: ${TESORERIA_AUDIT_INCLUDE_PREFIXES:/api/tesoreria/guarani}
+
 logging:
   level:
     um.tesoreria.guarani: ${app.logging}

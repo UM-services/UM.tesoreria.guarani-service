@@ -1,0 +1,27 @@
+sequenceDiagram
+    participant User as Usuario
+    participant Filter as AuditRequestFilter
+    participant App as Controllers / UseCases
+    participant ORM as Hibernate
+    participant Listener as AuditEntityListener
+    participant Queue as AuditQueue
+    participant Sender as AuditSender
+    participant Audit as Servicio de Auditoría
+
+    User->>Filter: request /api/tesoreria/guarani/...
+    Filter->>Filter: arma contexto (X-Request-Id, X-User-Id, X-Usuario-Login, X-Forwarded-For)
+    Filter->>App: doFilter(request, response)
+    App-->>Filter: status y excepción (si hubo)
+    opt Escritura de entidad
+        App->>ORM: save / delete
+        ORM->>Listener: post-insert / post-update / post-delete
+        Listener->>Listener: arma diff con campos enmascarados
+        Listener->>Queue: evento CHANGE en afterCommit
+    end
+    Filter->>Queue: evento REQUEST (ACCESS o INSERT/UPDATE/DELETE)
+    Queue-->>Sender: drain(batch-size) cada sender-delay-ms
+    Sender->>Audit: POST /api/tesoreria/auditoria/evento/lote (X-API-Key)
+    Audit-->>Sender: 200 OK con eventos rechazados
+    opt Error de transporte o 5xx
+        Sender->>Queue: reencola hasta max-attempts
+    end
