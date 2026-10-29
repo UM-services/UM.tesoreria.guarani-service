@@ -1,5 +1,19 @@
 # Changelog
 
+## [6.3.0] - 2026-10-29
+
+### Added
+- **Cursadas por alumno y año académico** (`src/main/java/um/tesoreria/guarani/hexagonal/guarani/cursadas/cursada`): `GET /api/tesoreria/guarani/cursada/documento/{nroDocumento}/anioAcademico/{anioAcademico}` devuelve las inscripciones a cursada vigentes del documento en ese año. Cada fila lleva `responsableAcademica`, `propuesta`, `propuestaNombre`, `planVersion`, `actividadCodigo`, `actividadNombre`, `anioPlan`, `periodo`, `periodoLectivo`, `periodoNombre` y `anioCursada`. Sin alumno o sin cursadas responde `200 []`, nunca `404`.
+- **Resolución del documento** con `GetAlumnosByNroDocumentoUseCase` del slice `alumno`, por lo que usa la misma normalización que `alumno/documento/{nroDocumento}`. Se descartan las personas sin alumno.
+- **Reglas de lectura**: vigente es `sga_insc_cursada.estado = 'A'` (las bajas se borran de la tabla); `anioAcademico` es `sga_periodos.anio_academico` literal; `periodo` se traduce desde el id de `sga_periodos_genericos` (1 y 103 `ANUAL`; 2 y 4 `PRIMER_SEMESTRE`; 3 y 5 `SEGUNDO_SEMESTRE`; el resto y `null` `OTRO`) y `periodoNombre` conserva el nombre original; `anioPlan` es `sga_elementos_plan.anio_de_cursada` del par exacto (`planVersion`, elemento) y es `null` si no hay filas o los valores difieren.
+- **Una fila por clave** `(propuesta, planVersion, actividadCodigo, periodoLectivo)`: si se repite, se conserva la inscripción de menor id y se registra un `WARN` sin datos personales. Con varias responsables académicas en una propuesta se usa la de menor id (`WARN` con el id de la propuesta); sin responsables, `null`. El orden es propuesta, `planVersion`, `actividadCodigo`, `periodoLectivo`.
+- **Ocho entidades de solo lectura** sobre `negocio.sga_insc_cursada`, `sga_comisiones`, `sga_periodos_lectivos`, `sga_periodos`, `sga_periodos_genericos`, `sga_elementos`, `sga_elementos_revision` y `sga_elementos_plan`, con dos repositorios Spring Data (métodos derivados y `EntityGraph`; sin `@Query` ni SQL nativo).
+- **Tests**: `PeriodoCursadaTest`, `CursadaGuaraniMapperTest`, `GetCursadasByNroDocumentoAndAnioAcademicoUseCaseImplTest`, `JpaCursadaGuaraniRepositoryAdapterTest` y `CursadaGuaraniControllerTest`, cada uno con su ficha `protects / fails_when / no_claim`. `CursadaPostgresDevIT` es una prueba opt-in de solo lectura contra el Postgres de desarrollo: se corre con `GUARANI_DEV_IT=true ./mvnw -Dtest=CursadaPostgresDevIT test` y las variables `APP_*`.
+
+### Changed
+- **Nuevo requisito de esquema**: con `ddl-auto: validate`, las ocho tablas anteriores y las columnas mapeadas deben existir en cada ambiente antes de desplegar; si falta una, el servicio no arranca.
+- **Updated documentation**: `README.md` (badge, descripción, endpoint, estructura y diagrama) y `docs/diagrams/hexagonal-cursada.mmd` (nuevo). No cambia ningún endpoint existente ni la configuración.
+
 ## [6.2.0] - 2026-10-27
 
 ### Added

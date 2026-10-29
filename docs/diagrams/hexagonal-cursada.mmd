@@ -1,0 +1,31 @@
+sequenceDiagram
+    participant User as Usuario
+    participant REST as CursadaGuaraniController
+    participant Service as CursadaGuaraniService
+    participant UseCase as GetCursadasByNroDocumentoAndAnioAcademico UseCase
+    participant GetUC as GetAlumnosByNroDocumento UseCase
+    participant JPA as JpaCursadaGuaraniRepositoryAdapter
+    participant DB as PostgreSQL
+
+    User->>REST: GET /api/tesoreria/guarani/cursada/documento/{nroDocumento}/anioAcademico/{anioAcademico}
+    REST->>Service: getAllByNroDocumentoAndAnioAcademico(nroDocumento, anioAcademico)
+    Service->>UseCase: getByNroDocumentoAndAnioAcademico(nroDocumento, anioAcademico)
+    UseCase->>GetUC: getByNroDocumento(nroDocumento)
+    GetUC-->>UseCase: List~AlumnoGuarani~ (se descartan las personas sin alumno)
+    alt Sin alumnos
+        UseCase-->>REST: lista vacía
+    else Con alumnos
+        UseCase->>JPA: findAllByAlumnoInAndAnioAcademico(alumnos, anioAcademico)
+        JPA->>DB: inscripciones en estado A del año académico, con comisión, actividad, período lectivo, período y período genérico
+        DB-->>JPA: List~InscripcionCursadaGuaraniEntity~
+        JPA->>DB: sga_elementos_plan por planVersion y elemento
+        DB-->>JPA: List~ElementoPlanGuaraniEntity~
+        JPA->>DB: propuestas y sus responsables académicas
+        DB-->>JPA: List~PropuestaGuaraniEntity~
+        JPA->>JPA: anioPlan por par exacto (planVersion, elemento), responsable de menor id, período por id genérico
+        JPA-->>UseCase: List~CursadaGuarani~
+        UseCase->>UseCase: una fila por (propuesta, planVersion, actividadCodigo, periodoLectivo) y orden estable
+        UseCase-->>REST: List~CursadaGuarani~
+    end
+    REST->>REST: stream().map(mapper::toResponse)
+    REST-->>User: 200 OK List~CursadaGuaraniResponse~ (nunca 404)
