@@ -269,12 +269,85 @@ classDiagram
         +builder(T) Builder~T~
     }
 
+    class AuditConfiguration {
+        << Configuration >>
+        +auditRequestFilter(AuditProperties, AuditQueue) AuditRequestFilter
+    }
+
+    class AuditRequestFilter {
+        << Filter >>
+        +doFilterInternal(request, response, chain) void
+    }
+
+    class AuditContext {
+        << Utility >>
+        +correlationId() String
+        +actorId() Long
+        +actorType() String
+        +incrementChanges() void
+    }
+
+    class AuditEventPublisher {
+        << Component >>
+        +changePayload(entity, entityId, operation, diff, metadata) AuditEventPayload
+        +publish(payload) void
+        +publishScheduled(job, outcome, durationMs, error) void
+    }
+
+    class AuditQueue {
+        << Component >>
+        +offer(payload) void
+        +drain(max) List~QueuedEvent~
+        +dropped() long
+    }
+
+    class AuditSender {
+        << Component >>
+        +sendPending() void
+    }
+
+    class AuditProperties {
+        << ConfigurationProperties >>
+        +Mode mode
+        +String url
+        +String apiKey
+        +List~String~ maskFields
+    }
+
+    class AuditDiffBuilder {
+        << Component >>
+        +build(persister, beforeState, afterState, operation) DiffResult
+    }
+
+    class AuditEntityListener {
+        << Component >>
+        +onPostInsert(event) void
+        +onPostUpdate(event) void
+        +onPostDelete(event) void
+    }
+
+    class AuditEventListenerRegistrar {
+        << Component >>
+        +register() void
+    }
+
     class GuaraniApplicationTests {
         << SpringBootTest >>
         +contextLoads() void
     }
 
     GuaraniApplication --> GuaraniConfiguration : uses
+    AuditConfiguration --> AuditRequestFilter : creates
+    AuditRequestFilter --> AuditContext : sets
+    AuditRequestFilter --> AuditQueue : offers REQUEST
+    AuditEntityListener --> AuditDiffBuilder : builds diff
+    AuditEntityListener --> AuditEventPublisher : publishes CHANGE
+    AuditEntityListener --> AuditContext : reads actor
+    AuditEventListenerRegistrar --> AuditEntityListener : registers
+    AuditEventPublisher --> AuditQueue : offers
+    AuditSender --> AuditQueue : drains
+    AuditSender --> AuditProperties : reads
+    AuditDiffBuilder --> AuditProperties : masks
     AlumnoGuaraniScheduler --> AlumnoGuaraniService : schedules
     AlumnoGuaraniService --> GetAlumnosByPropuestaTipoAndFechaInscripcionUseCase : uses
     AlumnoGuaraniService --> CreatePreuniversitarioByNroDocumentoUseCase : uses
