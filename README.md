@@ -3,9 +3,17 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.2-brightgreen)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-25-orange)](https://openjdk.org/projects/jdk/25/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-6.2.0-blue)](pom.xml)
+[![Version](https://img.shields.io/badge/version-6.3.1-blue)](pom.xml)
+[![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2025.1.4-6DB33F?logo=spring&logoColor=white)](https://spring.io/projects/spring-cloud)
+[![SpringDoc OpenAPI](https://img.shields.io/badge/SpringDoc-3.1.1-85EA2D?logo=swagger&logoColor=black)](https://springdoc.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Consul](https://img.shields.io/badge/Consul-F24C53?logo=hashicorp&logoColor=white)](https://developer.hashicorp.com/consul)
+[![Maven](https://img.shields.io/badge/Maven-3-C71A36?logo=apachemaven&logoColor=white)](https://maven.apache.org/)
+[![JUnit 5](https://img.shields.io/badge/JUnit-5-25A162?logo=junit5&logoColor=white)](https://junit.org/junit5/)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)](https://github.com/features/actions)
 
-Microservicio de tesorería integrado con el sistema Guarani (v6.2.0). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, ofertas de propuestas, tipos de propuestas, propuestas aspiras, responsables académicas, ubicaciones y tipos de ubicación, requisitos, requisitos presentados y tipos de requisitos, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, creación de personales y preuniversitarios por documento, auditoría de requests y cambios, y documentación OpenAPI.
+Microservicio de tesorería integrado con el sistema Guarani (v6.3.1). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, ofertas de propuestas, tipos de propuestas, propuestas aspiras, responsables académicas, cursadas por alumno y año académico, ubicaciones y tipos de ubicación, requisitos, requisitos presentados y tipos de requisitos, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, creación de personales y preuniversitarios por documento, auditoría de requests y cambios, y documentación OpenAPI.
 
 ## Arquitectura
 
@@ -336,6 +344,42 @@ sequenceDiagram
     opt Error de transporte o 5xx
         Sender->>Queue: reencola hasta max-attempts
     end
+```
+
+### Diagrama de Secuencia — Cursadas por Alumno y Año Académico
+
+```mermaid
+sequenceDiagram
+    participant User as Usuario
+    participant REST as CursadaGuaraniController
+    participant Service as CursadaGuaraniService
+    participant UseCase as GetCursadasByNroDocumentoAndAnioAcademico UseCase
+    participant GetUC as GetAlumnosByNroDocumento UseCase
+    participant JPA as JpaCursadaGuaraniRepositoryAdapter
+    participant DB as PostgreSQL
+
+    User->>REST: GET /api/tesoreria/guarani/cursada/documento/{nroDocumento}/anioAcademico/{anioAcademico}
+    REST->>Service: getAllByNroDocumentoAndAnioAcademico(nroDocumento, anioAcademico)
+    Service->>UseCase: getByNroDocumentoAndAnioAcademico(nroDocumento, anioAcademico)
+    UseCase->>GetUC: getByNroDocumento(nroDocumento)
+    GetUC-->>UseCase: List~AlumnoGuarani~ (se descartan las personas sin alumno)
+    alt Sin alumnos
+        UseCase-->>REST: lista vacía
+    else Con alumnos
+        UseCase->>JPA: findAllByAlumnoInAndAnioAcademico(alumnos, anioAcademico)
+        JPA->>DB: inscripciones en estado A del año académico, con comisión, actividad, período lectivo, período y período genérico
+        DB-->>JPA: List~InscripcionCursadaGuaraniEntity~
+        JPA->>DB: sga_elementos_plan por planVersion y elemento
+        DB-->>JPA: List~ElementoPlanGuaraniEntity~
+        JPA->>DB: propuestas y sus responsables académicas
+        DB-->>JPA: List~PropuestaGuaraniEntity~
+        JPA->>JPA: anioPlan por par exacto (planVersion, elemento), responsable de menor id, período por id genérico
+        JPA-->>UseCase: List~CursadaGuarani~
+        UseCase->>UseCase: una fila por (propuesta, planVersion, actividadCodigo, periodoLectivo) y orden estable
+        UseCase-->>REST: List~CursadaGuarani~
+    end
+    REST->>REST: stream().map(mapper::toResponse)
+    REST-->>User: 200 OK List~CursadaGuaraniResponse~ (nunca 404)
 ```
 
 ### Estructura del Proyecto
@@ -728,6 +772,7 @@ classDiagram
 | GET | `/api/tesoreria/guarani/alumno/propuestaTipo/{propuestaTipo}/fechaLimite/{fechaLimite}` | Obtiene alumnos por tipo de propuesta y fecha límite de inscripción |
 | GET | `/api/tesoreria/guarani/alumno/documento/{nroDocumento}` | Obtiene alumnos por número de documento; si el match exacto no devuelve nada, rebusca por la parte numérica |
 | GET | `/api/tesoreria/guarani/alumno/generate/personales/create/{nroDocumento}` | Crea los personales asociados a los alumnos del documento y devuelve `List<CreatePersonalesResponse>` |
+| GET | `/api/tesoreria/guarani/cursada/documento/{nroDocumento}/anioAcademico/{anioAcademico}` | Obtiene las cursadas vigentes del documento en el año académico (una fila por propuesta, plan, actividad y período lectivo); `200 []` si no hay coincidencias |
 | GET | `/api/tesoreria/guarani/persona/{id}` | Obtiene una persona por ID |
 | GET | `/api/tesoreria/guarani/personaContacto/{id}` | Obtiene un contacto de persona por ID |
 | GET | `/api/tesoreria/guarani/personaDocumento/{id}` | Obtiene un documento de persona por ID |
@@ -830,6 +875,8 @@ src/
 │   │       │   ├── responsableAcademica/
 │   │       │   ├── ubicacion/
 │   │       │   └── ubicacionTipo/
+│   │       ├── cursadas/
+│   │       │   └── cursada/
 │   │       ├── propuestas/
 │   │       │   ├── propuesta/
 │   │       │   ├── propuestaTipo/
@@ -851,7 +898,7 @@ src/
     │       ├── AuditQueueTest.java
     │       └── AuditRequestFilterTest.java
     └── resources/
-        └── application.properties
+        └── application.yml
 ```
 
 ## Tecnologías
@@ -945,7 +992,7 @@ La auditoría se envía al servicio de auditoría configurado en `TESORERIA_AUDI
 - **Qué se audita:** requests bajo los prefijos incluidos — `GET` con `access-events` activo y métodos mutantes con `request-events` activo — y escrituras de entidades. Se excluyen `/actuator`, `/error`, `/swagger-ui` y `/v3/api-docs`.
 - **Identidad:** el actor se toma de `X-User-Id` (o el legacy `X-Usuario-Id`) y `X-Usuario-Login`; sin esos headers el evento queda como `ANONYMOUS` con `actor_trust=CLIENT`. La correlación usa `X-Request-Id` (se genera si falta) y la IP sale de `X-Forwarded-For` o del socket.
 - **Entrega:** `POST {url}/api/tesoreria/auditoria/evento/lote` con `X-API-Key`. Los errores de transporte y los `5xx` se reintentan hasta `max-attempts`; los lotes con `400`/`401`/`403`/`422` se descartan y se loguean. Si `url` o `api-key` están vacíos no se envía nada y los eventos permanecen en la cola.
-- **Límites:** la cola es en memoria (sin outbox); si el proceso termina con eventos pendientes, se pierden. Los tests fijan `tesoreria.audit.mode=OFF` en `src/test/resources/application.properties`.
+- **Límites:** la cola es en memoria (sin outbox); si el proceso termina con eventos pendientes, se pierden. Los tests fijan `tesoreria.audit.mode=OFF` en `src/test/resources/application.yml`.
 
 ## API
 
