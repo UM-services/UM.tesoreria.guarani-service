@@ -1,5 +1,11 @@
 # Changelog
 
+## [6.3.1] - 2026-11-01
+
+### Changed
+- **Configuración de tests en YAML** (`src/test/resources/application.yml`): `src/test/resources/application.properties` se reemplazó por `application.yml` con el mismo contenido (`tesoreria.audit.mode: "OFF"`), alineado con el formato YAML del resto de la configuración (`src/main/resources/bootstrap.yml`). Sólo afecta a las pruebas: no cambia propiedades de runtime, endpoints, dependencias ni requisitos de despliegue.
+- **Documentación**: `README.md` actualiza el badge de versión y la descripción a `6.3.1`, la estructura del proyecto y la sección de auditoría referencian `src/test/resources/application.yml`, y el bloque de badges incorpora Spring Cloud `2025.1.4`, SpringDoc OpenAPI `3.1.1`, PostgreSQL, Consul, Maven, JUnit 5, Docker y GitHub Actions. `.github/workflows/generate-docs.yml` inyecta `docs/diagrams/hexagonal-cursada.mmd` en el sitio generado; el diagrama ya existía desde `6.3.0` pero no estaba en la lista explícita del pipeline.
+
 ## [6.3.0] - 2026-10-29
 
 ### Added
