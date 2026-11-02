@@ -1,5 +1,62 @@
 # Changelog
 
+## [6.3.1] - 2026-11-01
+
+### Changed
+- **Configuración de tests en YAML** (`src/test/resources/application.yml`): `src/test/resources/application.properties` se reemplazó por `application.yml` con el mismo contenido (`tesoreria.audit.mode: "OFF"`), alineado con el formato YAML del resto de la configuración (`src/main/resources/bootstrap.yml`). Sólo afecta a las pruebas: no cambia propiedades de runtime, endpoints, dependencias ni requisitos de despliegue.
+- **Documentación**: `README.md` actualiza el badge de versión y la descripción a `6.3.1`, la estructura del proyecto y la sección de auditoría referencian `src/test/resources/application.yml`, y el bloque de badges incorpora Spring Cloud `2025.1.4`, SpringDoc OpenAPI `3.1.1`, PostgreSQL, Consul, Maven, JUnit 5, Docker y GitHub Actions. `.github/workflows/generate-docs.yml` inyecta `docs/diagrams/hexagonal-cursada.mmd` en el sitio generado; el diagrama ya existía desde `6.3.0` pero no estaba en la lista explícita del pipeline.
+
+## [6.3.0] - 2026-10-29
+
+### Added
+- **Cursadas por alumno y año académico** (`src/main/java/um/tesoreria/guarani/hexagonal/guarani/cursadas/cursada`): `GET /api/tesoreria/guarani/cursada/documento/{nroDocumento}/anioAcademico/{anioAcademico}` devuelve las inscripciones a cursada vigentes del documento en ese año. Cada fila lleva `responsableAcademica`, `propuesta`, `propuestaNombre`, `planVersion`, `actividadCodigo`, `actividadNombre`, `anioPlan`, `periodo`, `periodoLectivo`, `periodoNombre` y `anioCursada`. Sin alumno o sin cursadas responde `200 []`, nunca `404`.
+- **Resolución del documento** con `GetAlumnosByNroDocumentoUseCase` del slice `alumno`, por lo que usa la misma normalización que `alumno/documento/{nroDocumento}`. Se descartan las personas sin alumno.
+- **Reglas de lectura**: vigente es `sga_insc_cursada.estado = 'A'` (las bajas se borran de la tabla); `anioAcademico` es `sga_periodos.anio_academico` literal; `periodo` se traduce desde el id de `sga_periodos_genericos` (1 y 103 `ANUAL`; 2 y 4 `PRIMER_SEMESTRE`; 3 y 5 `SEGUNDO_SEMESTRE`; el resto y `null` `OTRO`) y `periodoNombre` conserva el nombre original; `anioPlan` es `sga_elementos_plan.anio_de_cursada` del par exacto (`planVersion`, elemento) y es `null` si no hay filas o los valores difieren.
+- **Una fila por clave** `(propuesta, planVersion, actividadCodigo, periodoLectivo)`: si se repite, se conserva la inscripción de menor id y se registra un `WARN` sin datos personales. Con varias responsables académicas en una propuesta se usa la de menor id (`WARN` con el id de la propuesta); sin responsables, `null`. El orden es propuesta, `planVersion`, `actividadCodigo`, `periodoLectivo`.
+- **Ocho entidades de solo lectura** sobre `negocio.sga_insc_cursada`, `sga_comisiones`, `sga_periodos_lectivos`, `sga_periodos`, `sga_periodos_genericos`, `sga_elementos`, `sga_elementos_revision` y `sga_elementos_plan`, con dos repositorios Spring Data (métodos derivados y `EntityGraph`; sin `@Query` ni SQL nativo).
+- **Tests**: `PeriodoCursadaTest`, `CursadaGuaraniMapperTest`, `GetCursadasByNroDocumentoAndAnioAcademicoUseCaseImplTest`, `JpaCursadaGuaraniRepositoryAdapterTest` y `CursadaGuaraniControllerTest`, cada uno con su ficha `protects / fails_when / no_claim`. `CursadaPostgresDevIT` es una prueba opt-in de solo lectura contra el Postgres de desarrollo: se corre con `GUARANI_DEV_IT=true ./mvnw -Dtest=CursadaPostgresDevIT test` y las variables `APP_*`.
+
+### Changed
+- **Nuevo requisito de esquema**: con `ddl-auto: validate`, las ocho tablas anteriores y las columnas mapeadas deben existir en cada ambiente antes de desplegar; si falta una, el servicio no arranca.
+- **Updated documentation**: `README.md` (badge, descripción, endpoint, estructura y diagrama) y `docs/diagrams/hexagonal-cursada.mmd` (nuevo). No cambia ningún endpoint existente ni la configuración.
+
+## [6.2.0] - 2026-10-27
+
+### Added
+- **Auditoría de requests** (`src/main/java/um/tesoreria/guarani/audit`): `AuditRequestFilter` (registrado con `Ordered.HIGHEST_PRECEDENCE + 10` desde `AuditConfiguration`) captura cada request bajo `/api/tesoreria/guarani` — los `GET` cuando `access-events` está activo y los métodos mutantes cuando `request-events` está activo — y emite un evento `REQUEST` con `operation` (`ACCESS`, `INSERT`, `UPDATE`, `DELETE`), actor (`X-User-Id` o el legacy `X-Usuario-Id`, `X-Usuario-Login`), IP (`X-Forwarded-For` o remota), `correlationId` (`X-Request-Id`, generado si falta), `outcome`, `httpStatus` y `durationMs`. Excluye `/actuator`, `/error`, `/swagger-ui` y `/v3/api-docs`.
+- **Auditoría de cambios por JPA**: `AuditEntityListener` y `AuditEventListenerRegistrar` enganchan `POST_INSERT`, `POST_UPDATE` y `POST_DELETE` en la `SessionFactory` y publican un evento `CHANGE` con `entity`, `entityId`, `operation`, `changedFields` y diff escalar en `afterCommit` (no se audita lo que termina en rollback). `AuditDiffBuilder` omite asociaciones y colecciones, normaliza binarios/fechas/enums y descarta el diff marcando `truncated` cuando supera `max-payload-chars`.
+- **Enmascaramiento de datos personales** (`AuditDiffBuilder` + `mask-fields`): credenciales y correos se reemplazan por `****`; documento, teléfono, CBU y cuenta conservan sólo los últimos cuatro caracteres.
+- **Cola y envío por lote**: `AuditQueue` usa una cola acotada (descarta y cuenta `dropped` al llenarse) y `AuditSender` la drena cada `sender-delay-ms` para enviar `POST {url}/api/tesoreria/auditoria/evento/lote` con header `X-API-Key`, loguear los índices que el servicio informe como rechazados y reintentar hasta `max-attempts` (un intento por ciclo del sender); los lotes con HTTP `400`/`401`/`403`/`422` se descartan.
+- **Modos de operación**: `OFF` (no captura), `LOG` (captura y loguea) y `SEND` (cola en memoria + envío HTTP, valor por defecto).
+- **Tres nuevas clases de test** (`AuditRequestFilterTest`, `AuditQueueTest`, `AuditDiffBuilderTest`) y `src/test/resources/application.properties`, que fija `tesoreria.audit.mode=OFF` para que las pruebas no encolen eventos.
+
+### Changed
+- **Nueva configuración `tesoreria.audit`** en `src/main/resources/bootstrap.yml`, sobrescribible por entorno: `TESORERIA_AUDIT_MODE`, `TESORERIA_AUDIT_REQUEST_EVENTS`, `TESORERIA_AUDIT_ACCESS_EVENTS`, `TESORERIA_AUDIT_CHANGE_EVENTS`, `TESORERIA_AUDIT_URL` (por defecto `http://localhost:8211`), `TESORERIA_AUDIT_API_KEY`, `TESORERIA_AUDIT_QUEUE_CAPACITY`, `TESORERIA_AUDIT_BATCH_SIZE`, `TESORERIA_AUDIT_MAX_ATTEMPTS`, `TESORERIA_AUDIT_SENDER_DELAY_MS`, `TESORERIA_AUDIT_SENDER_INITIAL_DELAY_MS`, `TESORERIA_AUDIT_MAX_PAYLOAD_CHARS`, `TESORERIA_AUDIT_MASK_FIELDS` y `TESORERIA_AUDIT_INCLUDE_PREFIXES`. No se modificó ninguna propiedad existente.
+- **Nueva dependencia de runtime con el servicio de auditoría**: con modo `SEND`, `AuditSender` no envía mientras `url` o `api-key` estén vacíos (deja los eventos en la cola y loguea el aviso). Sin outbox, los eventos en vuelo se pierden si el proceso termina.
+- **Updated documentation**: `README.md` version badge and description now reflect `6.2.0`; the context and container diagrams include `Servicio de Auditoría`, the project-structure diagrams include the `audit` module, and a new "Auditoría" section documents modes, identity headers, masking, delivery semantics and the `TESORERIA_AUDIT_*` variables. `docs/diagrams/audit-event-flow.mmd` is new and `generate-docs.yml` injects it into the generated site.
+
+## [6.1.3] - 2026-10-23
+
+### Changed
+- **Updated Spring Boot** from `4.1.1` to `4.1.2`, **Spring Cloud** from `2025.1.3` to `2025.1.4`, **SpringDoc OpenAPI** from `3.1.0` to `3.1.1` and **JaCoCo** from `0.8.13` to `0.8.15` (`pom.xml`).
+- **Instance resolution filters by passing checks** (`src/main/resources/bootstrap.yml`): `spring.cloud.consul.discovery.query-passing: true`, so Feign/LoadBalancer only resolve instances of discovered services whose Consul checks are in `passing` state. Registration (name, tags, readiness path and critical timeout) is unchanged, and no REST contract changed.
+- **Updated documentation**: `README.md` version badge and description now reflect `6.1.3`, the technology table lists Spring Boot `4.1.2`, Spring Cloud `2025.1.4` and SpringDoc `3.1.1`, and the Consul registration section documents the `query-passing` instance resolution.
+
+## [6.1.2] - 2026-10-21
+
+### Changed
+- **Consul health check** (`src/main/resources/bootstrap.yml`): service registration now advertises `/actuator/health/readiness` as its health check path instead of the default Actuator health endpoint, and `health-check-critical-timeout: 5m` prunes (deregisters) the instance when that check stays critical for five minutes. No REST contract, dependency or runtime requirement changed.
+- **Updated documentation**: `README.md` version badge and description now reflect `6.1.2`, and the Consul registration section documents the configured health check path and critical timeout.
+
+## [6.1.1] - 2026-10-19
+
+### Added
+- **Second staging deployment target**: the staging pipeline now publishes the built image to a `staging-new` environment in addition to `staging`.
+
+### Changed
+- **Matrix staging deployment** (`.github/workflows/deploy-staging.yml`): the `deploy` job runs a `fail-fast: false` matrix over `environment: [staging, staging-new]`, deriving both its self-hosted `runs-on` labels and its GitHub `environment` from the matrix, so the same image is deployed to each target; the job name now includes the target environment.
+- **Documented feature gating** (`AGENTS.md`): permissions are centralized in `tesoreria-core-service` (`modulo.accion` keys and the `permisoEfectivo` bundle endpoint), new features must register their key, and no security may be added to existing or legacy endpoints.
+
 ## [6.1.0] - 2026-09-14
 
 ### Added

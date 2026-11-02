@@ -1,11 +1,19 @@
 # UM.tesoreria.guarani-service
 
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-brightgreen)](https://spring.io/projects/spring-boot)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.2-brightgreen)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-25-orange)](https://openjdk.org/projects/jdk/25/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-6.1.0-blue)](pom.xml)
+[![Version](https://img.shields.io/badge/version-6.3.1-blue)](pom.xml)
+[![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2025.1.4-6DB33F?logo=spring&logoColor=white)](https://spring.io/projects/spring-cloud)
+[![SpringDoc OpenAPI](https://img.shields.io/badge/SpringDoc-3.1.1-85EA2D?logo=swagger&logoColor=black)](https://springdoc.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Consul](https://img.shields.io/badge/Consul-F24C53?logo=hashicorp&logoColor=white)](https://developer.hashicorp.com/consul)
+[![Maven](https://img.shields.io/badge/Maven-3-C71A36?logo=apachemaven&logoColor=white)](https://maven.apache.org/)
+[![JUnit 5](https://img.shields.io/badge/JUnit-5-25A162?logo=junit5&logoColor=white)](https://junit.org/junit5/)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)](https://github.com/features/actions)
 
-Microservicio de tesorería integrado con el sistema Guarani (v6.1.0). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, ofertas de propuestas, tipos de propuestas, propuestas aspiras, responsables académicas, ubicaciones y tipos de ubicación, requisitos, requisitos presentados y tipos de requisitos, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, creación de personales y preuniversitarios por documento, y documentación OpenAPI.
+Microservicio de tesorería integrado con el sistema Guarani (v6.3.1). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, ofertas de propuestas, tipos de propuestas, propuestas aspiras, responsables académicas, cursadas por alumno y año académico, ubicaciones y tipos de ubicación, requisitos, requisitos presentados y tipos de requisitos, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, creación de personales y preuniversitarios por documento, auditoría de requests y cambios, y documentación OpenAPI.
 
 ## Arquitectura
 
@@ -23,12 +31,14 @@ C4Context
     System_Ext(feign_clients, "Servicios Internos", "Otros microservicios (Feign clients)")
     System_Ext(postgresql, "PostgreSQL", "Base de datos relacional (esquema negocio)")
     System_Ext(core, "Tesoreria Core Service", "Procesamiento y gestión de personales")
+    System_Ext(audit, "Servicio de Auditoría", "Almacenamiento de eventos de auditoría")
 
     Rel(user, guarani, "Consulta endpoints REST", "HTTP/JSON")
     Rel(guarani, consul, "Registro y descubrimiento", "HTTP/8500")
     Rel(guarani, feign_clients, "Comunicación interna", "HTTP/OpenFeign")
     Rel(guarani, postgresql, "Persistencia JPA", "JDBC/5432")
     Rel(guarani, core, "Creación de personales y preuniversitarios", "HTTP/Feign")
+    Rel(guarani, audit, "Envío de eventos de auditoría", "HTTP/JSON")
 ```
 
 ### Diagrama de Contenedores
@@ -48,22 +58,27 @@ C4Container
         Container(client, "Feign Clients", "OpenFeign", "Clientes HTTP declarativos (tesoreria-core-service)")
         Container(cache, "Cache Layer", "Caffeine", "Caché en memoria")
         Container(scheduler, "Scheduler", "Spring @Scheduled", "Procesamiento programado de preuniversitarios (deshabilitado)")
+        Container(audit, "Auditoría", "Spring Filter + Hibernate Listeners", "Captura requests y cambios de entidades; cola en memoria y envío por lote")
         Container(openapi, "API Docs", "SpringDoc OpenAPI", "Documentación Swagger UI")
     }
 
     System_Ext(consul, "Consul", "Service discovery :8500")
     System_Ext(internal_svc, "Servicios Internos", "Microservicios del ecosistema")
     System_Ext(postgresql, "PostgreSQL", "Base de datos (esquema negocio)")
+    System_Ext(audit_svc, "Servicio de Auditoría", "Almacenamiento de eventos :8211")
 
     Rel(user, api, "HTTP", "REST/JSON")
     Rel(api, controller, "Enrutamiento")
+    Rel(api, audit, "Filtra cada request")
     Rel(controller, hexagonal, "Delega a módulos")
     Rel(controller, service, "Llamadas")
     Rel(hexagonal, jpa, "Persistencia")
     Rel(service, client, "Invocación")
     Rel(service, cache, "Cache consultas")
+    Rel(jpa, audit, "Eventos de cambio en afterCommit")
     Rel(client, internal_svc, "HTTP/Feign")
     Rel(jpa, postgresql, "JDBC", "5432")
+    Rel(audit, audit_svc, "POST /api/tesoreria/auditoria/evento/lote", "HTTP/JSON")
 ```
 
 ### Diagrama de Secuencia — Endpoint Hello
@@ -297,6 +312,74 @@ sequenceDiagram
     DB-->>JPA: Proposal offer entities
     JPA-->>REST: Proposal offer responses
     REST-->>User: 200 OK
+```
+
+### Diagrama de Secuencia — Auditoría de Requests y Cambios
+
+```mermaid
+sequenceDiagram
+    participant User as Usuario
+    participant Filter as AuditRequestFilter
+    participant App as Controllers / UseCases
+    participant ORM as Hibernate
+    participant Listener as AuditEntityListener
+    participant Queue as AuditQueue
+    participant Sender as AuditSender
+    participant Audit as Servicio de Auditoría
+
+    User->>Filter: request /api/tesoreria/guarani/...
+    Filter->>Filter: arma contexto (X-Request-Id, X-User-Id, X-Usuario-Login, X-Forwarded-For)
+    Filter->>App: doFilter(request, response)
+    App-->>Filter: status y excepción (si hubo)
+    opt Escritura de entidad
+        App->>ORM: save / delete
+        ORM->>Listener: post-insert / post-update / post-delete
+        Listener->>Listener: arma diff con campos enmascarados
+        Listener->>Queue: evento CHANGE en afterCommit
+    end
+    Filter->>Queue: evento REQUEST (ACCESS o INSERT/UPDATE/DELETE)
+    Queue-->>Sender: drain(batch-size) cada sender-delay-ms
+    Sender->>Audit: POST /api/tesoreria/auditoria/evento/lote (X-API-Key)
+    Audit-->>Sender: 200 OK con eventos rechazados
+    opt Error de transporte o 5xx
+        Sender->>Queue: reencola hasta max-attempts
+    end
+```
+
+### Diagrama de Secuencia — Cursadas por Alumno y Año Académico
+
+```mermaid
+sequenceDiagram
+    participant User as Usuario
+    participant REST as CursadaGuaraniController
+    participant Service as CursadaGuaraniService
+    participant UseCase as GetCursadasByNroDocumentoAndAnioAcademico UseCase
+    participant GetUC as GetAlumnosByNroDocumento UseCase
+    participant JPA as JpaCursadaGuaraniRepositoryAdapter
+    participant DB as PostgreSQL
+
+    User->>REST: GET /api/tesoreria/guarani/cursada/documento/{nroDocumento}/anioAcademico/{anioAcademico}
+    REST->>Service: getAllByNroDocumentoAndAnioAcademico(nroDocumento, anioAcademico)
+    Service->>UseCase: getByNroDocumentoAndAnioAcademico(nroDocumento, anioAcademico)
+    UseCase->>GetUC: getByNroDocumento(nroDocumento)
+    GetUC-->>UseCase: List~AlumnoGuarani~ (se descartan las personas sin alumno)
+    alt Sin alumnos
+        UseCase-->>REST: lista vacía
+    else Con alumnos
+        UseCase->>JPA: findAllByAlumnoInAndAnioAcademico(alumnos, anioAcademico)
+        JPA->>DB: inscripciones en estado A del año académico, con comisión, actividad, período lectivo, período y período genérico
+        DB-->>JPA: List~InscripcionCursadaGuaraniEntity~
+        JPA->>DB: sga_elementos_plan por planVersion y elemento
+        DB-->>JPA: List~ElementoPlanGuaraniEntity~
+        JPA->>DB: propuestas y sus responsables académicas
+        DB-->>JPA: List~PropuestaGuaraniEntity~
+        JPA->>JPA: anioPlan por par exacto (planVersion, elemento), responsable de menor id, período por id genérico
+        JPA-->>UseCase: List~CursadaGuarani~
+        UseCase->>UseCase: una fila por (propuesta, planVersion, actividadCodigo, periodoLectivo) y orden estable
+        UseCase-->>REST: List~CursadaGuarani~
+    end
+    REST->>REST: stream().map(mapper::toResponse)
+    REST-->>User: 200 OK List~CursadaGuaraniResponse~ (nunca 404)
 ```
 
 ### Estructura del Proyecto
@@ -573,12 +656,85 @@ classDiagram
         +builder(T) Builder~T~
     }
 
+    class AuditConfiguration {
+        <<Configuration>>
+        +auditRequestFilter(AuditProperties, AuditQueue) AuditRequestFilter
+    }
+
+    class AuditRequestFilter {
+        <<Filter>>
+        +doFilterInternal(request, response, chain) void
+    }
+
+    class AuditContext {
+        <<Utility>>
+        +correlationId() String
+        +actorId() Long
+        +actorType() String
+        +incrementChanges() void
+    }
+
+    class AuditEventPublisher {
+        <<Component>>
+        +changePayload(entity, entityId, operation, diff, metadata) AuditEventPayload
+        +publish(payload) void
+        +publishScheduled(job, outcome, durationMs, error) void
+    }
+
+    class AuditQueue {
+        <<Component>>
+        +offer(payload) void
+        +drain(max) List~QueuedEvent~
+        +dropped() long
+    }
+
+    class AuditSender {
+        <<Component>>
+        +sendPending() void
+    }
+
+    class AuditProperties {
+        <<ConfigurationProperties>>
+        +Mode mode
+        +String url
+        +String apiKey
+        +List~String~ maskFields
+    }
+
+    class AuditDiffBuilder {
+        <<Component>>
+        +build(persister, beforeState, afterState, operation) DiffResult
+    }
+
+    class AuditEntityListener {
+        <<Component>>
+        +onPostInsert(event) void
+        +onPostUpdate(event) void
+        +onPostDelete(event) void
+    }
+
+    class AuditEventListenerRegistrar {
+        <<Component>>
+        +register() void
+    }
+
     class GuaraniApplicationTests {
         <<SpringBootTest>>
         +contextLoads() void
     }
 
     GuaraniApplication --> GuaraniConfiguration : uses
+    AuditConfiguration --> AuditRequestFilter : creates
+    AuditRequestFilter --> AuditContext : sets
+    AuditRequestFilter --> AuditQueue : offers REQUEST
+    AuditEntityListener --> AuditDiffBuilder : builds diff
+    AuditEntityListener --> AuditEventPublisher : publishes CHANGE
+    AuditEntityListener --> AuditContext : reads actor
+    AuditEventListenerRegistrar --> AuditEntityListener : registers
+    AuditEventPublisher --> AuditQueue : offers
+    AuditSender --> AuditQueue : drains
+    AuditSender --> AuditProperties : reads
+    AuditDiffBuilder --> AuditProperties : masks
     AlumnoGuaraniScheduler --> AlumnoGuaraniService : schedules
     AlumnoGuaraniService --> GetAlumnosByPropuestaTipoAndFechaInscripcionUseCase : uses
     AlumnoGuaraniService --> CreatePreuniversitarioByNroDocumentoUseCase : uses
@@ -616,6 +772,7 @@ classDiagram
 | GET | `/api/tesoreria/guarani/alumno/propuestaTipo/{propuestaTipo}/fechaLimite/{fechaLimite}` | Obtiene alumnos por tipo de propuesta y fecha límite de inscripción |
 | GET | `/api/tesoreria/guarani/alumno/documento/{nroDocumento}` | Obtiene alumnos por número de documento; si el match exacto no devuelve nada, rebusca por la parte numérica |
 | GET | `/api/tesoreria/guarani/alumno/generate/personales/create/{nroDocumento}` | Crea los personales asociados a los alumnos del documento y devuelve `List<CreatePersonalesResponse>` |
+| GET | `/api/tesoreria/guarani/cursada/documento/{nroDocumento}/anioAcademico/{anioAcademico}` | Obtiene las cursadas vigentes del documento en el año académico (una fila por propuesta, plan, actividad y período lectivo); `200 []` si no hay coincidencias |
 | GET | `/api/tesoreria/guarani/persona/{id}` | Obtiene una persona por ID |
 | GET | `/api/tesoreria/guarani/personaContacto/{id}` | Obtiene un contacto de persona por ID |
 | GET | `/api/tesoreria/guarani/personaDocumento/{id}` | Obtiene un documento de persona por ID |
@@ -652,6 +809,18 @@ src/
 │   │   ├── GuaraniApplication.java
 │   │   ├── configuration/
 │   │   │   └── GuaraniConfiguration.java
+│   │   ├── audit/
+│   │   │   ├── AuditConfiguration.java
+│   │   │   ├── AuditContext.java
+│   │   │   ├── AuditDiffBuilder.java
+│   │   │   ├── AuditEntityListener.java
+│   │   │   ├── AuditEventListenerRegistrar.java
+│   │   │   ├── AuditEventPayload.java
+│   │   │   ├── AuditEventPublisher.java
+│   │   │   ├── AuditProperties.java
+│   │   │   ├── AuditQueue.java
+│   │   │   ├── AuditRequestFilter.java
+│   │   │   └── AuditSender.java
 │   │   ├── test/
 │   │   │   └── HelloTest.java
 │   │   ├── util/
@@ -706,6 +875,8 @@ src/
 │   │       │   ├── responsableAcademica/
 │   │       │   ├── ubicacion/
 │   │       │   └── ubicacionTipo/
+│   │       ├── cursadas/
+│   │       │   └── cursada/
 │   │       ├── propuestas/
 │   │       │   ├── propuesta/
 │   │       │   ├── propuestaTipo/
@@ -720,8 +891,14 @@ src/
 │       ├── bootstrap.yml
 │       └── banner.txt
 └── test/
-    └── java/um/tesoreria/guarani/
-        └── GuaraniApplicationTests.java
+    ├── java/um/tesoreria/guarani/
+    │   ├── GuaraniApplicationTests.java
+    │   └── audit/
+    │       ├── AuditDiffBuilderTest.java
+    │       ├── AuditQueueTest.java
+    │       └── AuditRequestFilterTest.java
+    └── resources/
+        └── application.yml
 ```
 
 ## Tecnologías
@@ -729,14 +906,15 @@ src/
 | Tecnología | Versión | Propósito |
 |---|---|---|
 | Java | 25 | Lenguaje de programación |
-| Spring Boot | 4.1.1 | Framework principal |
-| Spring Cloud | 2025.1.3 | Microservicios |
+| Spring Boot | 4.1.2 | Framework principal |
+| Spring Cloud | 2025.1.4 | Microservicios |
 | Spring Data JPA | - | Persistencia ORM |
 | PostgreSQL | - | Base de datos relacional |
 | Consul Discovery | - | Service discovery |
 | OpenFeign | - | Clientes HTTP declarativos |
 | Caffeine | - | Caché en memoria |
-| SpringDoc OpenAPI | 3.1.0 | Documentación de APIs |
+| Auditoría | - | Filtro HTTP + listeners Hibernate con cola en memoria |
+| SpringDoc OpenAPI | 3.1.1 | Documentación de APIs |
 | Lombok | - | Reducción de boilerplate |
 | Maven | 3+ | Build tool |
 
@@ -746,6 +924,7 @@ src/
 - **Maven 3.x** (o usar el wrapper `./mvnw`)
 - **PostgreSQL** (base de datos, esquema `negocio`)
 - **Consul** (para service discovery)
+- **Servicio de Auditoría** (para el envío de eventos cuando `TESORERIA_AUDIT_MODE=SEND`; opcional en `OFF`/`LOG`)
 - **Docker** (opcional, para contenedor)
 
 ## Inicio Rápido
@@ -786,6 +965,34 @@ Las propiedades se definen en `bootstrap.yml` y pueden sobrescribirse por variab
 El servicio se registra en Consul con:
 - **Nombre:** `tesoreria-guarani-service`
 - **Tags:** `tesoreria`, `guarani`
+- **Health check:** `/actuator/health/readiness`; si el chequeo queda en estado crítico durante 5 minutos, el registro se poda (deregistra)
+- **Resolución de instancias:** `query-passing: true`, por lo que Feign/LoadBalancer solo resuelven instancias de otros servicios cuyos checks están en estado `passing`
+
+### Auditoría
+
+La auditoría se envía al servicio de auditoría configurado en `TESORERIA_AUDIT_URL` (por defecto `http://localhost:8211`) y se configura con:
+
+| Variable | Por Defecto | Descripción |
+|---|---|---|
+| `TESORERIA_AUDIT_MODE` | `SEND` | `OFF` no captura, `LOG` captura y loguea, `SEND` encola y envía por HTTP |
+| `TESORERIA_AUDIT_REQUEST_EVENTS` | `true` | Emite el evento `REQUEST` al terminar cada request auditado |
+| `TESORERIA_AUDIT_ACCESS_EVENTS` | `true` | Audita también las lecturas (`GET`) |
+| `TESORERIA_AUDIT_CHANGE_EVENTS` | `true` | Emite `CHANGE` por escritura de entidad vía listeners de Hibernate |
+| `TESORERIA_AUDIT_URL` | `http://localhost:8211` | Base URL del servicio de auditoría |
+| `TESORERIA_AUDIT_API_KEY` | *(vacío)* | API key enviada en el header `X-API-Key` |
+| `TESORERIA_AUDIT_QUEUE_CAPACITY` | `2000` | Tope de la cola en memoria; al llenarse se descartan eventos y se cuenta `dropped` |
+| `TESORERIA_AUDIT_BATCH_SIZE` | `200` | Eventos por lote |
+| `TESORERIA_AUDIT_MAX_ATTEMPTS` | `10` | Reintentos antes de descartar un evento |
+| `TESORERIA_AUDIT_SENDER_DELAY_MS` | `2000` | Intervalo entre envíos |
+| `TESORERIA_AUDIT_SENDER_INITIAL_DELAY_MS` | `5000` | Espera inicial antes del primer envío |
+| `TESORERIA_AUDIT_MAX_PAYLOAD_CHARS` | `32768` | Payload máximo del diff antes de descartarlo y marcar `truncated` |
+| `TESORERIA_AUDIT_MASK_FIELDS` | `password,clave,autenticacion,token,tokenAlta,email,emailTemporal,cbu,cuenta,documento,nroDocumento,telefono,telefonoCodigoArea,telefonoNumero,celular` | Campos enmascarados en el diff |
+| `TESORERIA_AUDIT_INCLUDE_PREFIXES` | `/api/tesoreria/guarani` | Prefijos de path que se auditan |
+
+- **Qué se audita:** requests bajo los prefijos incluidos — `GET` con `access-events` activo y métodos mutantes con `request-events` activo — y escrituras de entidades. Se excluyen `/actuator`, `/error`, `/swagger-ui` y `/v3/api-docs`.
+- **Identidad:** el actor se toma de `X-User-Id` (o el legacy `X-Usuario-Id`) y `X-Usuario-Login`; sin esos headers el evento queda como `ANONYMOUS` con `actor_trust=CLIENT`. La correlación usa `X-Request-Id` (se genera si falta) y la IP sale de `X-Forwarded-For` o del socket.
+- **Entrega:** `POST {url}/api/tesoreria/auditoria/evento/lote` con `X-API-Key`. Los errores de transporte y los `5xx` se reintentan hasta `max-attempts`; los lotes con `400`/`401`/`403`/`422` se descartan y se loguean. Si `url` o `api-key` están vacíos no se envía nada y los eventos permanecen en la cola.
+- **Límites:** la cola es en memoria (sin outbox); si el proceso termina con eventos pendientes, se pierden. Los tests fijan `tesoreria.audit.mode=OFF` en `src/test/resources/application.yml`.
 
 ## API
 
