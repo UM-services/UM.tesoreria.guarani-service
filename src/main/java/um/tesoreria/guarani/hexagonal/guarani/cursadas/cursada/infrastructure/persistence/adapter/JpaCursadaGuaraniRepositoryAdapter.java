@@ -8,9 +8,11 @@ import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.domain.model.Curs
 import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.domain.ports.out.CursadaGuaraniRepository;
 import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.infrastructure.persistence.entity.ElementoPlanGuaraniEntity;
 import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.infrastructure.persistence.entity.InscripcionCursadaGuaraniEntity;
+import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.infrastructure.persistence.entity.PeriodoGenericoGuaraniEntity;
 import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.infrastructure.persistence.mapper.CursadaGuaraniMapper;
 import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.infrastructure.persistence.repository.JpaElementoPlanGuaraniRepository;
 import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.infrastructure.persistence.repository.JpaInscripcionCursadaGuaraniRepository;
+import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.infrastructure.persistence.repository.JpaPeriodoGenericoGuaraniRepository;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuesta.infrastructure.persistence.entity.PropuestaGuaraniEntity;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuesta.infrastructure.persistence.repository.JpaPropuestaGuaraniRepository;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaResponsableAcademica.infrastructure.persistence.entity.PropuestaResponsableAcademicaGuaraniEntity;
@@ -21,6 +23,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -35,6 +38,7 @@ public class JpaCursadaGuaraniRepositoryAdapter implements CursadaGuaraniReposit
     private final JpaInscripcionCursadaGuaraniRepository jpaInscripcionRepository;
     private final JpaElementoPlanGuaraniRepository jpaElementoPlanRepository;
     private final JpaPropuestaGuaraniRepository jpaPropuestaRepository;
+    private final JpaPeriodoGenericoGuaraniRepository jpaPeriodoGenericoRepository;
     private final CursadaGuaraniMapper mapper;
 
     private record ParPlan(Integer planVersion, Integer elemento) {
@@ -51,6 +55,7 @@ public class JpaCursadaGuaraniRepositoryAdapter implements CursadaGuaraniReposit
         }
         Map<ParPlan, List<ElementoPlanGuaraniEntity>> planes = planesPorPar(inscripciones);
         Map<Integer, PropuestaGuaraniEntity> propuestas = propuestasPorId(inscripciones);
+        Map<Integer, String> nombresPeriodo = nombresPeriodo(planes);
         Map<Integer, Integer> responsables = new HashMap<>();
         return inscripciones.stream()
                 .map(inscripcion -> {
@@ -60,7 +65,8 @@ public class JpaCursadaGuaraniRepositoryAdapter implements CursadaGuaraniReposit
                             inscripcion,
                             planes.getOrDefault(par, List.of()),
                             propuestas.get(propuestaId),
-                            responsables.computeIfAbsent(propuestaId, id -> responsableDe(propuestas.get(id))));
+                            responsables.computeIfAbsent(propuestaId, id -> responsableDe(propuestas.get(id))),
+                            nombresPeriodo);
                 })
                 .toList();
     }
@@ -77,6 +83,21 @@ public class JpaCursadaGuaraniRepositoryAdapter implements CursadaGuaraniReposit
                 .findAllByPlanVersionInAndElementoRevisionRel_ElementoIn(planVersiones, elementos).stream()
                 .collect(Collectors.groupingBy(plan ->
                         new ParPlan(plan.getPlanVersion(), plan.getElementoRevisionRel().getElemento())));
+    }
+
+    // Nombres de los períodos genéricos que usan los planes; sin períodos en el plan no se consulta.
+    private Map<Integer, String> nombresPeriodo(Map<ParPlan, List<ElementoPlanGuaraniEntity>> planes) {
+        Set<Integer> ids = planes.values().stream()
+                .flatMap(List::stream)
+                .map(ElementoPlanGuaraniEntity::getPeriodoDeCursada)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        return jpaPeriodoGenericoRepository.findAllById(ids).stream()
+                .filter(generico -> generico.getNombre() != null)
+                .collect(Collectors.toMap(PeriodoGenericoGuaraniEntity::getPeriodoGenerico, PeriodoGenericoGuaraniEntity::getNombre));
     }
 
     private Map<Integer, PropuestaGuaraniEntity> propuestasPorId(List<InscripcionCursadaGuaraniEntity> inscripciones) {

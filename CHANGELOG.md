@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.3.2] - 2026-11-11
+
+### Fixed
+- **Período de las cursadas** (`CursadaGuaraniMapper`): `periodo` y `periodoNombre` salen ahora de `sga_elementos_plan.periodo_de_cursada` del par exacto (`planVersion`, elemento), con la misma regla que `anioPlan`: se usa solo si todas las filas dan un único valor no nulo. Antes salían del período lectivo de la comisión, que en Medicina es anual aunque la materia sea semestral, y todas las cursadas llegaban como `ANUAL`. Si el plan no define un único período, se usa el de la comisión como antes. El mapa de ids no cambia (1 y 103 `ANUAL`; 2 y 4 `PRIMER_SEMESTRE`; 3 y 5 `SEGUNDO_SEMESTRE`; el resto `OTRO`). No cambia el contrato del endpoint.
+- **Updated documentation**: `README.md` (badge, descripción y diagrama) y `docs/diagrams/hexagonal-cursada.mmd` muestran la consulta de nombres de período y la regla nueva.
+- **Nuevo requisito de esquema**: con `ddl-auto: validate`, la columna `sga_elementos_plan.periodo_de_cursada` tiene que existir. `JpaPeriodoGenericoGuaraniRepository` busca los nombres de los períodos del plan en una consulta aparte.
+- **Tests**: `CursadaGuaraniMapperTest` agrega el caso de Medicina (plan versión 219: 202, 205, 207 y 307 en `SEGUNDO_SEMESTRE`; 308 en `PRIMER_SEMESTRE`), el respaldo a la comisión y el período del plan sin traducción. `JpaCursadaGuaraniRepositoryAdapterTest` cubre el par exacto y la consulta de nombres. `CursadaPostgresDevIT.medicinaPlan219TakesTheSemesterFromThePlan` lee las filas reales del plan 219.
+
 ## [6.3.1] - 2026-11-01
 
 ### Changed

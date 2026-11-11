@@ -37,8 +37,14 @@ public final class CursadaEntityFixtures {
     }
 
     public static ElementoPlanGuaraniEntity elementoPlan(int id, int planVersion, int elemento, Short anioDeCursada) {
+        return elementoPlan(id, planVersion, elemento, anioDeCursada, null);
+    }
+
+    public static ElementoPlanGuaraniEntity elementoPlan(int id, int planVersion, int elemento, Short anioDeCursada,
+                                                         Integer periodoDeCursada) {
         var revision = ElementoRevisionGuaraniEntity.builder().elementoRevision(5000 + id).elemento(elemento).build();
         return ElementoPlanGuaraniEntity.builder().elementoPlan(id).planVersion(planVersion).elementoRevision(revision.getElementoRevision())
-                .anioDeCursada(anioDeCursada).elementoRevisionRel(revision).build();
+                .anioDeCursada(anioDeCursada).periodoDeCursada(periodoDeCursada)
+                .elementoRevisionRel(revision).build();
     }
 }

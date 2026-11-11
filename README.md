@@ -3,7 +3,7 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.2-brightgreen)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-25-orange)](https://openjdk.org/projects/jdk/25/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-6.3.1-blue)](pom.xml)
+[![Version](https://img.shields.io/badge/version-6.3.2-blue)](pom.xml)
 [![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2025.1.4-6DB33F?logo=spring&logoColor=white)](https://spring.io/projects/spring-cloud)
 [![SpringDoc OpenAPI](https://img.shields.io/badge/SpringDoc-3.1.1-85EA2D?logo=swagger&logoColor=black)](https://springdoc.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
@@ -13,7 +13,7 @@
 [![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)](https://github.com/features/actions)
 
-Microservicio de tesorería integrado con el sistema Guarani (v6.3.1). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, ofertas de propuestas, tipos de propuestas, propuestas aspiras, responsables académicas, cursadas por alumno y año académico, ubicaciones y tipos de ubicación, requisitos, requisitos presentados y tipos de requisitos, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, creación de personales y preuniversitarios por documento, auditoría de requests y cambios, y documentación OpenAPI.
+Microservicio de tesorería integrado con el sistema Guarani (v6.3.2). Proporciona APIs REST para la gestión de alumnos, personas, contactos de personas, documentos de personas, propuestas, ofertas de propuestas, tipos de propuestas, propuestas aspiras, responsables académicas, cursadas por alumno y año académico, ubicaciones y tipos de ubicación, requisitos, requisitos presentados y tipos de requisitos, con persistencia JPA/PostgreSQL, registro en Consul, comunicación Feign con otros microservicios, creación de personales y preuniversitarios por documento, auditoría de requests y cambios, y documentación OpenAPI.
 
 ## Arquitectura
 
@@ -371,9 +371,11 @@ sequenceDiagram
         DB-->>JPA: List~InscripcionCursadaGuaraniEntity~
         JPA->>DB: sga_elementos_plan por planVersion y elemento
         DB-->>JPA: List~ElementoPlanGuaraniEntity~
+        JPA->>DB: nombres de sga_periodos_genericos de los períodos del plan
+        DB-->>JPA: List~PeriodoGenericoGuaraniEntity~
         JPA->>DB: propuestas y sus responsables académicas
         DB-->>JPA: List~PropuestaGuaraniEntity~
-        JPA->>JPA: anioPlan por par exacto (planVersion, elemento), responsable de menor id, período por id genérico
+        JPA->>JPA: anioPlan y período del plan por par exacto (planVersion, elemento); sin período único en el plan, el de la comisión; responsable de menor id
         JPA-->>UseCase: List~CursadaGuarani~
         UseCase->>UseCase: una fila por (propuesta, planVersion, actividadCodigo, periodoLectivo) y orden estable
         UseCase-->>REST: List~CursadaGuarani~
