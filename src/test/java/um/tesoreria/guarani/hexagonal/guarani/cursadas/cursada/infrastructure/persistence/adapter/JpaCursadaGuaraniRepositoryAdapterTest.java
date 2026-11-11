@@ -6,9 +6,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.domain.model.PeriodoCursada;
+import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.infrastructure.persistence.entity.PeriodoGenericoGuaraniEntity;
 import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.infrastructure.persistence.mapper.CursadaGuaraniMapper;
 import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.infrastructure.persistence.repository.JpaElementoPlanGuaraniRepository;
 import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.infrastructure.persistence.repository.JpaInscripcionCursadaGuaraniRepository;
+import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.infrastructure.persistence.repository.JpaPeriodoGenericoGuaraniRepository;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuesta.infrastructure.persistence.entity.PropuestaGuaraniEntity;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuesta.infrastructure.persistence.repository.JpaPropuestaGuaraniRepository;
 import um.tesoreria.guarani.hexagonal.guarani.propuestas.propuestaResponsableAcademica.infrastructure.persistence.entity.PropuestaResponsableAcademicaGuaraniEntity;
@@ -39,6 +42,9 @@ class JpaCursadaGuaraniRepositoryAdapterTest {
 
     @Mock
     private JpaPropuestaGuaraniRepository jpaPropuestaRepository;
+
+    @Mock
+    private JpaPeriodoGenericoGuaraniRepository jpaPeriodoGenericoRepository;
 
     @Spy
     private CursadaGuaraniMapper mapper = new CursadaGuaraniMapper();
@@ -75,7 +81,7 @@ class JpaCursadaGuaraniRepositoryAdapterTest {
 
         assertThat(adapter.findAllByAlumnoInAndAnioAcademico(Set.of(1), 2026)).isEmpty();
 
-        verifyNoInteractions(jpaElementoPlanRepository, jpaPropuestaRepository);
+        verifyNoInteractions(jpaElementoPlanRepository, jpaPropuestaRepository, jpaPeriodoGenericoRepository);
     }
 
     /*
@@ -146,6 +152,36 @@ class JpaCursadaGuaraniRepositoryAdapterTest {
         assertThat(resultado.get(0).getPropuestaNombre()).isEqualTo("Propuesta A");
         assertThat(resultado.get(1).getResponsableAcademica()).isNull();
         verify(jpaPropuestaRepository).findAllById(eq(Set.of(345, 346)));
+    }
+
+    /*
+     * protects: el período sale del plan del par exacto aunque la comisión sea anual, y su nombre se busca solo
+     *            para los ids de período que usan los planes.
+     * fails_when: el período sigue saliendo de la comisión, se usa el período de otro par (plan 8 o elemento 41),
+     *             o se consultan nombres de períodos que no usa ningún plan.
+     * no_claim: no prueba la consulta contra Postgres (la cubre el IT).
+     */
+    @Test
+    void takesThePeriodoFromThePlanOfTheExactPair() {
+        var insc = inscripcion(11, 219, 40, "04012005-202", 856, 1, "Anual", 5, null);
+        when(jpaInscripcionRepository.findAllByAlumnoInAndEstadoAndComisionRel_PeriodoLectivoRel_PeriodoRel_AnioAcademico(
+                any(), any(), any())).thenReturn(List.of(insc));
+        when(jpaElementoPlanRepository.findAllByPlanVersionInAndElementoRevisionRel_ElementoIn(anyCollection(), anyCollection()))
+                .thenReturn(List.of(
+                        elementoPlan(1, 219, 40, (short) 2, 5),
+                        elementoPlan(2, 8, 40, (short) 2, 4),
+                        elementoPlan(3, 219, 41, (short) 3, 4)));
+        when(jpaPropuestaRepository.findAllById(any())).thenReturn(List.of());
+        when(jpaPeriodoGenericoRepository.findAllById(any())).thenReturn(List.of(
+                PeriodoGenericoGuaraniEntity.builder().periodoGenerico(4).nombre("Semestre 1").build(),
+                PeriodoGenericoGuaraniEntity.builder().periodoGenerico(5).nombre("Semestre 2").build()));
+
+        var resultado = adapter.findAllByAlumnoInAndAnioAcademico(Set.of(43590), 2026);
+
+        assertThat(resultado).hasSize(1);
+        assertThat(resultado.get(0).getPeriodo()).isEqualTo(PeriodoCursada.SEGUNDO_SEMESTRE);
+        assertThat(resultado.get(0).getPeriodoNombre()).isEqualTo("Semestre 2");
+        verify(jpaPeriodoGenericoRepository).findAllById(eq(Set.of(4, 5)));
     }
 
     private static PropuestaGuaraniEntity propuesta(int id, String nombre, Integer... responsables) {
