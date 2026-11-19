@@ -20,9 +20,11 @@ sequenceDiagram
         DB-->>JPA: List~InscripcionCursadaGuaraniEntity~
         JPA->>DB: sga_elementos_plan por planVersion y elemento
         DB-->>JPA: List~ElementoPlanGuaraniEntity~
+        JPA->>DB: nombres de sga_periodos_genericos de los períodos del plan
+        DB-->>JPA: List~PeriodoGenericoGuaraniEntity~
         JPA->>DB: propuestas y sus responsables académicas
         DB-->>JPA: List~PropuestaGuaraniEntity~
-        JPA->>JPA: anioPlan por par exacto (planVersion, elemento), responsable de menor id, período por id genérico
+        JPA->>JPA: anioPlan y período del plan por par exacto (planVersion, elemento); sin período único en el plan, el de la comisión; responsable de menor id
         JPA-->>UseCase: List~CursadaGuarani~
         UseCase->>UseCase: una fila por (propuesta, planVersion, actividadCodigo, periodoLectivo) y orden estable
         UseCase-->>REST: List~CursadaGuarani~

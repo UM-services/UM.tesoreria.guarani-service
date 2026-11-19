@@ -18,6 +18,8 @@ public class ElementoPlanGuaraniEntity {
     private Integer planVersion;
     private Integer elementoRevision;
     private Short anioDeCursada;
+    // Id de sga_periodos_genericos: el período en que el plan dicta la actividad (semestre, anual, ...).
+    private Integer periodoDeCursada;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "elementoRevision", insertable = false, updatable = false)

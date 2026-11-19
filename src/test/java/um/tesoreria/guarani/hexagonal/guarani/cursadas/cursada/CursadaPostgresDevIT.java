@@ -1,5 +1,6 @@
 package um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada;
 
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,15 +10,21 @@ import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.application.service.CursadaGuaraniService;
 import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.domain.model.CursadaGuarani;
+import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.domain.model.PeriodoCursada;
 import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.domain.ports.out.CursadaGuaraniRepository;
+import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.infrastructure.persistence.entity.ElementoGuaraniEntity;
 import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.infrastructure.persistence.entity.InscripcionCursadaGuaraniEntity;
+import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.infrastructure.persistence.mapper.CursadaGuaraniMapper;
+import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.infrastructure.persistence.repository.JpaElementoPlanGuaraniRepository;
 import um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.infrastructure.persistence.repository.JpaInscripcionCursadaGuaraniRepository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static um.tesoreria.guarani.hexagonal.guarani.cursadas.cursada.infrastructure.persistence.CursadaEntityFixtures.inscripcion;
 
 /**
  * Prueba de mapeo y consultas contra el Postgres de desarrollo de Guaraní. Solo lectura y opt-in.
@@ -50,6 +57,15 @@ class CursadaPostgresDevIT {
 
     @Autowired
     private CursadaGuaraniService service;
+
+    @Autowired
+    private JpaElementoPlanGuaraniRepository jpaElementoPlanRepository;
+
+    @Autowired
+    private CursadaGuaraniMapper mapper;
+
+    @Autowired
+    private EntityManager entityManager;
 
     /*
      * protects: las 8 entidades validan contra el esquema (ddl-auto: validate), y la consulta del adaptador devuelve,
@@ -97,6 +113,41 @@ class CursadaPostgresDevIT {
 
         assertThat(service.getAllByNroDocumentoAndAnioAcademico(documento, 1900)).isEmpty();
         assertThat(service.getAllByNroDocumentoAndAnioAcademico("DOCUMENTO-INEXISTENTE", anio)).isEmpty();
+    }
+
+    /*
+     * protects: el caso de Medicina (plan versión 219, DNI 45258117, lectivo 2026) con las filas reales de
+     *            sga_elementos_plan: con una comisión anual, 202, 205, 207 y 307 salen en SEGUNDO_SEMESTRE y 308 en
+     *            PRIMER_SEMESTRE.
+     * fails_when: la columna periodo_de_cursada no se mapea, el repositorio no la trae, o el período vuelve a salir
+     *             de la comisión.
+     * no_claim: la inscripción y la comisión son sintéticas (la base importada no trae sga_insc_cursada ni sga_periodos).
+     *           Que 202 sea del 2do semestre es el dato de Guaraní (SIUM lo muestra en el 1ro; confirmado como correcto).
+     */
+    @Test
+    void medicinaPlan219TakesTheSemesterFromThePlan() {
+        Map<String, PeriodoCursada> esperado = Map.of(
+                "04012005-202", PeriodoCursada.SEGUNDO_SEMESTRE,
+                "04012005-205", PeriodoCursada.SEGUNDO_SEMESTRE,
+                "04012005-207", PeriodoCursada.SEGUNDO_SEMESTRE,
+                "04012005-307", PeriodoCursada.SEGUNDO_SEMESTRE,
+                "04012005-308", PeriodoCursada.PRIMER_SEMESTRE);
+        var elementos = entityManager.createQuery(
+                        "select e from ElementoGuaraniEntity e where e.codigo in :codigos", ElementoGuaraniEntity.class)
+                .setParameter("codigos", esperado.keySet())
+                .getResultList();
+        assertThat(elementos).extracting(ElementoGuaraniEntity::getCodigo).containsExactlyInAnyOrderElementsOf(esperado.keySet());
+
+        for (var elemento : elementos) {
+            var planes = jpaElementoPlanRepository.findAllByPlanVersionInAndElementoRevisionRel_ElementoIn(
+                    Set.of(219), Set.of(elemento.getElemento()));
+            var comisionAnual = inscripcion(1, 219, elemento.getElemento(), elemento.getCodigo(), 856, 1, "Anual", 5, null);
+
+            var cursada = mapper.toDomain(comisionAnual, planes, null, null, Map.of());
+
+            assertThat(planes).as(elemento.getCodigo()).isNotEmpty();
+            assertThat(cursada.getPeriodo()).as(elemento.getCodigo()).isEqualTo(esperado.get(elemento.getCodigo()));
+        }
     }
 
     // Elige, en la misma base, una inscripción aceptada reciente cuyo alumno tiene documento.
